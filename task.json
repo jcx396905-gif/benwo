@@ -1,0 +1,480 @@
+{
+  "project": "BenWo",
+  "description": "AI驱动的自我探索与目标达成应用 - 本我",
+  "tasks": [
+    {
+      "id": 1,
+      "title": "项目基础配置",
+      "category": "infrastructure",
+      "description": "配置 Flutter 项目的基础设置、依赖和主题",
+      "steps": [
+        "使用 flutter create 创建项目，包名为 com.benwo.app",
+        "配置 pubspec.yaml 核心依赖：flutter_riverpod, riverpod_annotation, isar, isar_flutter_libs, go_router, dio, flutter_localizations, intl, shared_preferences",
+        "配置 dev_dependencies：riverpod_generator, build_runner, isar_generator",
+        "配置 analysis_options.yaml 启用严格模式",
+        "配置 lib/core/theme/app_theme.dart 使用 MD3 ColorScheme（莫兰迪蓝绿 #7FA99B + 暖橙 #E8A87C）",
+        "创建 Material 3 主题，配置 TextTheme",
+        "配置 Tabler Icons 依赖 tabler_icons",
+        "配置静态渐变背景组件（跟随主题色）",
+        "配置国际化框架 flutter_localizations + intl（中文优先）",
+        "创建 lib/core/constants/app_constants.dart"
+      ],
+      "passes": true
+    },
+    {
+      "id": 2,
+      "title": "应用入口和路由配置",
+      "category": "infrastructure",
+      "description": "配置应用入口和导航路由",
+      "steps": [
+        "创建 lib/main.dart 应用入口",
+        "创建 lib/app.dart 应用根组件",
+        "配置 go_router 路由表：/login, /register, /onboarding, /home, /goals, /goal/:id, /calendar, /settings",
+        "创建路由守卫 AuthGuard（未登录跳转登录）",
+        "配置错误页面路由 /not-found"
+      ],
+      "passes": true
+    },
+    {
+      "id": 3,
+      "title": "依赖注入配置",
+      "category": "infrastructure",
+      "description": "配置 Riverpod 和 GetIt 服务定位器",
+      "steps": [
+        "创建 lib/core/di/injection.dart",
+        "配置 Riverpod ProviderScope",
+        "注册 Isar 数据库实例",
+        "注册 Dio HTTP 客户端（为 MinMax API 预留）",
+        "注册 Repository 实例",
+        "配置懒加载（lazy singleton）"
+      ],
+      "passes": true
+    },
+    {
+      "id": 4,
+      "title": "数据模型定义",
+      "category": "infrastructure",
+      "description": "定义所有核心数据实体",
+      "steps": [
+        "创建 lib/data/models/user_model.dart（id, email, createdAt）",
+        "创建 lib/data/models/user_profile_model.dart（name, age, occupation, region, mbti, communicationStyle, motivationSensitivity, bestWorkTime, stressResponse, socialPreference, otherDimensions）",
+        "创建 lib/data/models/big_goal_model.dart（id, userId, title, description, targetDate, status, color, createdAt, updatedAt）",
+        "创建 lib/data/models/todo_item_model.dart（id, goalId, content, isAIGenerated, scheduledDate, isCompleted, estimatedMinutes, color, createdAt, completedAt）",
+        "创建 lib/data/models/user_settings_model.dart（pushEnabled, morningPushTime, afternoonPushTime, eveningPushTime, pushFrequency）",
+        "使用 Isar 的 @collection 注解",
+        "创建各模型的 Repository 接口"
+      ],
+      "passes": true
+    },
+    {
+      "id": 5,
+      "title": "本地数据库配置",
+      "category": "infrastructure",
+      "description": "配置 Isar 本地数据库",
+      "steps": [
+        "初始化 Isar 数据库",
+        "创建 lib/data/datasources/local/isar_database.dart",
+        "实现 UserRepository（CRUD）",
+        "实现 UserProfileRepository（CRUD）",
+        "实现 BigGoalRepository（CRUD）",
+        "实现 TodoItemRepository（CRUD，按日期查询）",
+        "实现 UserSettingsRepository（CRUD）",
+        "配置数据库迁移（如果需要）"
+      ],
+      "passes": true
+    },
+    {
+      "id": 6,
+      "title": "登录页实现",
+      "category": "ui",
+      "description": "实现用户邮箱登录功能",
+      "steps": [
+        "创建 lib/presentation/pages/auth/login_page.dart",
+        "创建 LoginForm widget",
+        "实现邮箱+密码表单验证（邮箱格式、密码非空）",
+        "实现登录逻辑（调用 AuthRepository）",
+        "实现登录成功跳转首页",
+        "实现登录失败错误提示",
+        "显示加载状态",
+        "配置路由跳转"
+      ],
+      "passes": true
+    },
+    {
+      "id": 7,
+      "title": "注册页实现",
+      "category": "ui",
+      "description": "实现用户邮箱注册功能",
+      "steps": [
+        "创建 lib/presentation/pages/auth/register_page.dart",
+        "创建 RegisterForm widget",
+        "实现邮箱+密码+确认密码表单验证",
+        "实现注册逻辑（调用 AuthRepository）",
+        "实现注册成功跳转登录页",
+        "实现注册失败错误提示",
+        "显示加载状态"
+      ],
+      "passes": true
+    },
+    {
+      "id": 8,
+      "title": "用户认证状态管理",
+      "category": "business",
+      "description": "实现用户登录状态管理",
+      "steps": [
+        "创建 lib/application/auth/auth_notifier.dart（Riverpod Notifier）",
+        "实现 AuthState（loading, authenticated, unauthenticated, error）",
+        "实现登录/注册/登出逻辑",
+        "实现会话持久化（SharedPreferences 存 token）",
+        "实现自动登录功能（启动时检查会话）",
+        "配置 AuthGuard 路由守卫"
+      ],
+      "passes": true
+    },
+    {
+      "id": 9,
+      "title": "Onboarding Step 1 - 我是谁",
+      "category": "ui",
+      "description": "实现 Onboarding 第一步：基础信息",
+      "steps": [
+        "创建 lib/presentation/pages/onboarding/onboarding_page.dart",
+        "创建 OnboardingController（Riverpod Notifier）",
+        "实现 Step 1：姓名、年龄职业、地区输入",
+        "职业使用下拉选择器（学生/在职/自由职业/退休/其他）",
+        "地区使用文本输入",
+        "实现下一步按钮和进度指示器（1/4）",
+        "配置页面动画过渡"
+      ],
+      "passes": true
+    },
+    {
+      "id": 10,
+      "title": "Onboarding Step 2 - 我的现状",
+      "category": "ui",
+      "description": "实现 Onboarding 第二步：当前状态",
+      "steps": [
+        "实现 Step 2：面临挑战多选",
+        "挑战选项预设：工作效率低/时间管理差/缺乏动力/拖延症/生活失衡/健康问题/人际关系/其他",
+        "实现生活状态选择（学生/在职/自由职业/退休）",
+        "AI 会根据 Step 1 的职业/年龄动态调整问题（可选）",
+        "实现进度指示器（2/4）"
+      ],
+      "passes": true
+    },
+    {
+      "id": 11,
+      "title": "Onboarding Step 3 - 我想要什么",
+      "category": "ui",
+      "description": "实现 Onboarding 第三步：目标设定",
+      "steps": [
+        "实现 Step 3：最想改变的三个方面（文本输入）",
+        "实现期望改变时间设定（用户自己设定，如 3 个月/半年/一年）",
+        "AI 根据用户描述动态生成建议（可选）",
+        "用户可以选择 AI 生成的建议或自己写",
+        "实现进度指示器（3/4）"
+      ],
+      "passes": true
+    },
+    {
+      "id": 12,
+      "title": "Onboarding Step 4 - AI分析确认",
+      "category": "ui",
+      "description": "实现 Onboarding 第四步：AI 确认",
+      "steps": [
+        "实现 Step 4：显示 AI 理解总结（文字形式）",
+        "AI 生成大目标建议给用户确认",
+        "用户可以调整 AI 生成的目标",
+        "用户确认后保存到数据库",
+        "创建初始用户画像（MBTI 等维度默认待完善）",
+        "实现进度指示器（4/4）",
+        "完成 Onboarding 跳转首页"
+      ],
+      "passes": true
+    },
+    {
+      "id": 13,
+      "title": "首页实现 - 今日 To-Do",
+      "category": "ui",
+      "description": "实现首页：今日 To-Do 列表（App 开屏即显示）",
+      "steps": [
+        "创建 lib/presentation/pages/home/home_page.dart",
+        "显示今日日期和大目标摘要",
+        "创建今日 To-Do 列表组件（优先显示大目标关联的 To-Do）",
+        "AI 生成的 To-Do 用大目标对应颜色显示在左上角",
+        "用户自建的 To-Do 用单独颜色显示（如灰色）",
+        "To-Do 项显示：复选框、内容、预计时长、所属大目标标签",
+        "AI 生成的 To-Do 显示"需确认完成"按钮",
+        "用户自建的 To-Do 点击直接标记完成",
+        "实现下拉刷新"
+      ],
+      "passes": true
+    },
+    {
+      "id": 14,
+      "title": "To-Do 添加功能",
+      "category": "ui",
+      "description": "实现 To-Do 添加功能（用户自建）",
+      "steps": [
+        "创建 FloatingActionButton 添加按钮",
+        "创建添加 To-Do 底部弹窗",
+        "输入 To-Do 内容",
+        "选择关联的大目标（可选，不选则为用户自建）",
+        "设置预计完成时间（分钟）",
+        "AI 生成的 To-Do 有每日上限（如 5 个），用户自建的没有上限",
+        "保存到数据库"
+      ],
+      "passes": true
+    },
+    {
+      "id": 15,
+      "title": "To-Do 编辑和完成",
+      "category": "ui",
+      "description": "实现 To-Do 编辑，完成和关联功能",
+      "steps": [
+        "点击 To-Do 展开详情",
+        "编辑 To-Do 内容",
+        "修改后重新关联回大目标",
+        "AI 生成的 To-Do 完成前需点击"确认完成"按钮（弹出确认对话框问几个问题）",
+        "用户自建的 To-Do 点击直接完成",
+        "已完成 To-Do 变灰色，归档到日历历史记录",
+        "刷新首页列表"
+      ],
+      "passes": true
+    },
+    {
+      "id": 16,
+      "title": "大目标创建页",
+      "category": "ui",
+      "description": "实现大目标创建功能",
+      "steps": [
+        "创建 lib/presentation/pages/goals/create_goal_page.dart",
+        "AI 引导式目标设定界面",
+        "输入目标标题和描述",
+        "选择目标分类（学业/职业/健康/关系/个人成长等）",
+        "设定目标时间（用户自己设定，如 3 个月）",
+        "保存到数据库"
+      ],
+      "passes": true
+    },
+    {
+      "id": 17,
+      "title": "大目标列表和详情",
+      "category": "ui",
+      "description": "实现大目标列表和详情页",
+      "steps": [
+        "创建 lib/presentation/pages/goals/goals_list_page.dart",
+        "显示用户所有大目标（卡片形式，每个目标有不同颜色）",
+        "创建 lib/presentation/pages/goals/goal_detail_page.dart",
+        "显示目标详情、描述、目标时间",
+        "显示该目标下的所有 To-Do 列表",
+        "显示目标进度（完成的 To-Do / 总 To-Do）",
+        "实现删除目标功能"
+      ],
+      "passes": true
+    },
+    {
+      "id": 18,
+      "title": "AI 目标拆解",
+      "category": "business",
+      "description": "实现 AI 将大目标拆分为日任务",
+      "steps": [
+        "创建 lib/application/goal/goal_split_notifier.dart",
+        "AI 根据大目标描述 + 用户设定的目标时间，生成日任务 To-Do List",
+        "AI 估算每个 To-Do 的预计完成时间（分钟）",
+        "生成大目标时间范围内的完整 To-Do List",
+        "显示给用户确认/修改",
+        "用户可以调整 To-Do 的日期和内容",
+        "确认后保存到数据库，关联到大目标",
+        "预留 MinMax API 接口（先用 Mock 数据）"
+      ],
+      "passes": true
+    },
+    {
+      "id": 19,
+      "title": "大目标完成检测和动画",
+      "category": "business",
+      "description": "实现大目标完成检测和庆祝动画",
+      "steps": [
+        "检测所有关联的 To-Do 都完成时，自动标记大目标为已完成",
+        "实现目标完成庆祝动画：目标卡片变绿色 + 弹出动画",
+        "显示"恭喜达成目标"提示",
+        "保存目标完成状态到数据库",
+        "记录完成时间"
+      ],
+      "passes": true
+    },
+    {
+      "id": 20,
+      "title": "日历视图 - 日视图",
+      "category": "ui",
+      "description": "实现日历日视图（App 开屏默认显示）",
+      "steps": [
+        "创建 lib/presentation/pages/calendar/calendar_page.dart",
+        "默认显示日视图",
+        "日视图显示今日完整 To-Do 列表",
+        "显示日期和大目标摘要",
+        "不同大目标的 To-Do 显示对应颜色",
+        "日视图可通过滑动切换日期",
+        "已完成 To-Do 灰色显示（默认不显示，可在历史记录中查看）"
+      ],
+      "passes": true
+    },
+    {
+      "id": 21,
+      "title": "日历视图 - 周视图和月视图",
+      "category": "ui",
+      "description": "实现周视图和月视图",
+      "steps": [
+        "实现周视图：显示一周每天的 To-Do 摘要",
+        "实现月视图：显示每月有任务的日期（点状标记）",
+        "周/月视图每日标签显示摘要（X个大目标任务，X个个人任务）",
+        "点击标签展开查看详情",
+        "TabBar 切换日/周/月视图",
+        "默认选中日视图"
+      ],
+      "passes": true
+    },
+    {
+      "id": 22,
+      "title": "日历拖拽功能",
+      "category": "ui",
+      "description": "实现 To-Do 拖拽改日期功能",
+      "steps": [
+        "长按 To-Do 触发拖拽",
+        "拖拽到其他日期释放",
+        "更新 To-Do 的 scheduledDate",
+        "重新计算大目标进度（因为任务时间变了）",
+        "显示拖拽反馈动画",
+        "保存更新到数据库"
+      ],
+      "passes": true
+    },
+    {
+      "id": 23,
+      "title": "已完成 To-Do 历史记录",
+      "category": "ui",
+      "description": "实现已完成 To-Do 的历史记录",
+      "steps": [
+        "在日历中提供"查看已完成"入口",
+        "显示所有已完成 To-Do（灰色显示）",
+        "按日期分组显示",
+        "显示所属大目标（如 ~学会游泳）",
+        "可筛选查看特定大目标的已完成 To-Do"
+      ],
+      "passes": true
+    },
+    {
+      "id": 24,
+      "title": "用户画像多维度",
+      "category": "business",
+      "description": "实现用户画像多维度持续更新",
+      "steps": [
+        "创建 lib/application/profile/profile_notifier.dart",
+        "MBTI 选择（16 型）",
+        "沟通偏好：鼓励型/直接型/分析型",
+        "激励敏感度：高/中/低",
+        "最佳工作时间：早起型/夜猫型/弹性",
+        "压力反应：喜欢被推动/需要缓冲空间",
+        "社交偏好：独立完成/喜欢协作",
+        "画像持续更新（根据用户行为观察）",
+        "本地 Isar 存储"
+      ],
+      "passes": true
+    },
+    {
+      "id": 25,
+      "title": "本地推送通知",
+      "category": "business",
+      "description": "实现本地推送通知功能",
+      "steps": [
+        "配置 flutter_local_notifications",
+        "创建通知渠道（To-Do 提醒、激励推送）",
+        "实现 To-Do 定时提醒功能",
+        "实现 AI 主动鼓励推送",
+        "用户自定义推送频率",
+        "设置免打扰时段（可选）",
+        "AI 智能判断推送时机（根据用户画像的最佳工作时间）",
+        "本地存储推送偏好"
+      ],
+      "passes": true
+    },
+    {
+      "id": 26,
+      "title": "设置页",
+      "category": "ui",
+      "description": "实现设置页面",
+      "steps": [
+        "创建 lib/presentation/pages/settings/settings_page.dart",
+        "推送通知开关",
+        "推送频率设置（早上/下午/晚上/自定义）",
+        "用户画像查看和编辑入口",
+        "登出按钮",
+        "App 版本信息"
+      ],
+      "passes": true
+    },
+    {
+      "id": 27,
+      "title": "MinMax API 接口预留",
+      "category": "infrastructure",
+      "description": "预留 MinMax AI API 接口",
+      "steps": [
+        "创建 lib/data/datasources/remote/minimax_api_client.dart",
+        "实现 chat completions 接口（格式参考 OpenAI）",
+        "创建 lib/core/constants/api_constants.dart（API 地址、模型名称）",
+        "实现错误处理和重试逻辑",
+        "先用 Mock 数据跑通流程",
+        "预留接口，等用户提供真实 Key 后替换"
+      ],
+      "passes": true
+    },
+    {
+      "id": 28,
+      "title": "Error handling",
+      "category": "infrastructure",
+      "description": "错误处理和边界情况",
+      "steps": [
+        "创建 lib/core/error/failures.dart 错误类型定义",
+        "创建 lib/core/error/exceptions.dart 异常类型定义",
+        "实现全局错误捕获",
+        "网络错误处理",
+        "数据库错误处理",
+        "创建 ErrorWidget 全局错误页面",
+        "Form 验证错误显示"
+      ],
+      "passes": true
+    },
+    {
+      "id": 29,
+      "title": "Loading and empty states",
+      "category": "ui",
+      "description": "Loading 状态和空状态",
+      "steps": [
+        "创建 lib/shared/widgets/loading_indicator.dart",
+        "创建骨架屏组件 SkeletonLoader",
+        "实现各页面的 Loading 状态",
+        "实现空状态显示（无 To-Do、无大目标等）",
+        "实现错误状态显示"
+      ],
+      "passes": true
+    },
+    {
+      "id": 30,
+      "title": "最终测试和优化",
+      "category": "infrastructure",
+      "description": "完整流程测试和优化",
+      "steps": [
+        "运行 flutter analyze 检查代码规范",
+        "运行 flutter test 运行所有测试",
+        "运行 flutter build apk --debug 确保构建成功",
+        "测试完整用户流程：注册→登录→Onboarding→创建大目标→生成 To-Do→完成 To-Do→日历查看",
+        "测试周视图和月视图切换",
+        "测试 To-Do 拖拽功能",
+        "测试推送通知（本地）",
+        "性能优化检查",
+        "清理未使用的代码和资源"
+      ],
+      "passes": true
+    }
+  ]
+}
