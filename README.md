@@ -244,6 +244,14 @@ APK 文件位于 `build/app/outputs/flutter-apk/app-release.apk`
 
 ---
 
+## 📥 下载 APK
+
+最新版本 APK 可在 [GitHub Releases](https://github.com/jcx396905-gif/benwo/releases) 页面下载。
+
+> ⚠️ 安装前请在手机设置中允许「未知来源」或「安装未知应用」。
+
+---
+
 ## 🔄 版本历史
 
 - **v1.0.0** - 首个完整版本
