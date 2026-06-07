@@ -3,9 +3,7 @@ import '../models/user_settings_model.dart';
 /// Repository interface for UserSettings operations
 abstract class UserSettingsRepository {
   /// Create default settings for a user
-  Future<UserSettingsModel> createSettings({
-    required int userId,
-  });
+  Future<UserSettingsModel> createSettings({required int userId});
 
   /// Get settings by user ID
   Future<UserSettingsModel?> getSettingsByUserId(int userId);

@@ -201,7 +201,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // Clear session from SharedPreferences
       await _prefs.remove(AppConstants.keyAccessToken);
       await _prefs.remove(AppConstants.keyUserId);
-      await _prefs.remove(AppConstants.keyHasCompletedOnboarding);
 
       state = AuthState.unauthenticated();
     } catch (e) {

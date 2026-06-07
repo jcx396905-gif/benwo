@@ -48,60 +48,50 @@ class AppConstants {
 
   // MBTI Types
   static const List<String> mbtiTypes = [
-    'INTJ', 'INTP', 'ENTJ', 'ENTP',
-    'INFJ', 'INFP', 'ENFJ', 'ENFP',
-    'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ',
-    'ISTP', 'ISFP', 'ESTP', 'ESFP',
+    'INTJ',
+    'INTP',
+    'ENTJ',
+    'ENTP',
+    'INFJ',
+    'INFP',
+    'ENFJ',
+    'ENFP',
+    'ISTJ',
+    'ISFJ',
+    'ESTJ',
+    'ESFJ',
+    'ISTP',
+    'ISFP',
+    'ESTP',
+    'ESFP',
   ];
 
   // Communication Styles
-  static const List<String> communicationStyles = [
-    '鼓励型',
-    '直接型',
-    '分析型',
-  ];
+  static const List<String> communicationStyles = ['鼓励型', '直接型', '分析型'];
 
   // Motivation Sensitivity
-  static const List<String> motivationSensitivityLevels = [
-    '高',
-    '中',
-    '低',
-  ];
+  static const List<String> motivationSensitivityLevels = ['高', '中', '低'];
 
   // Work Time Preferences
-  static const List<String> workTimePreferences = [
-    '早起型',
-    '夜猫型',
-    '弹性',
-  ];
+  static const List<String> workTimePreferences = ['早起型', '夜猫型', '弹性'];
 
   // Stress Response
-  static const List<String> stressResponses = [
-    '喜欢被推动',
-    '需要缓冲空间',
-  ];
+  static const List<String> stressResponses = ['喜欢被推动', '需要缓冲空间'];
 
   // Social Preferences
-  static const List<String> socialPreferences = [
-    '独立完成',
-    '喜欢协作',
-  ];
+  static const List<String> socialPreferences = ['独立完成', '喜欢协作'];
 
   // Occupations
-  static const List<String> occupations = [
-    '学生',
-    '在职',
-    '自由职业',
-    '退休',
-    '其他',
-  ];
+  static const List<String> occupations = ['学生', '在职', '自由职业', '退休', '其他'];
 
   // Life Status
   static const List<String> lifeStatuses = [
-    '学生',
-    '在职',
-    '自由职业',
-    '退休',
+    '节奏稳定，想继续优化',
+    '事情很多，容易分心',
+    '想改变，但方向还不清楚',
+    '时间碎片化，需要重新规划',
+    '正在过渡期，需要建立新习惯',
+    '压力较大，需要更轻的计划',
   ];
 
   // Challenges

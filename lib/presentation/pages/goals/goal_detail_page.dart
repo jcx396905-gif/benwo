@@ -1,4 +1,6 @@
 import 'dart:math';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,10 +15,7 @@ import '../../../data/models/todo_item_model.dart';
 class GoalDetailPage extends ConsumerStatefulWidget {
   final String goalId;
 
-  const GoalDetailPage({
-    super.key,
-    required this.goalId,
-  });
+  const GoalDetailPage({required this.goalId, super.key});
 
   @override
   ConsumerState<GoalDetailPage> createState() => _GoalDetailPageState();
@@ -88,9 +87,7 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('删除目标'),
-        content: const Text(
-          '确定要删除这个目标吗？\n删除后将同时删除该目标下的所有任务。',
-        ),
+        content: const Text('确定要删除这个目标吗？\n删除后将同时删除该目标下的所有任务。'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -142,31 +139,124 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
     WidgetRef ref,
     BigGoalModel goal,
   ) async {
-    final splitNotifier = ref.read(goalSplitNotifierProvider.notifier);
+    final options = await showDialog<({int? desiredCount, DateTime startDate})>(
+      context: context,
+      builder: (context) {
+        int? desiredCount;
+        DateTime startDate = DateTime.now();
 
-    // Reset state first
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: const Text('AI 拆分设置'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('选择数量', style: Theme.of(context).textTheme.labelLarge),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ChoiceChip(
+                      label: const Text('AI 自动选择'),
+                      selected: desiredCount == null,
+                      onSelected: (_) => setState(() => desiredCount = null),
+                    ),
+                    ...[3, 5, 8, 10].map((count) {
+                      return ChoiceChip(
+                        label: Text('$count 个'),
+                        selected: desiredCount == count,
+                        onSelected: (_) {
+                          setState(() {
+                            desiredCount = count;
+                          });
+                        },
+                      );
+                    }),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.event_rounded),
+                  title: const Text('选择开始时间'),
+                  subtitle: Text(
+                    '${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}',
+                  ),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: startDate,
+                      firstDate: DateTime.now().subtract(
+                        const Duration(days: 1),
+                      ),
+                      lastDate: goal.targetDate.isAfter(DateTime.now())
+                          ? goal.targetDate
+                          : DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        startDate = DateTime(
+                          picked.year,
+                          picked.month,
+                          picked.day,
+                        );
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('取消'),
+              ),
+              FilledButton.icon(
+                onPressed: () => Navigator.of(
+                  context,
+                ).pop((desiredCount: desiredCount, startDate: startDate)),
+                icon: const Icon(Icons.auto_awesome_rounded),
+                label: const Text('开始拆分'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (options == null) return;
+
+    final splitNotifier = ref.read(goalSplitNotifierProvider.notifier);
     splitNotifier.reset();
 
-    // Show loading dialog
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('AI 正在分析目标并生成任务...'),
-          ],
+    if (!context.mounted) return;
+
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('AI 正在分析目标并生成任务...'),
+            ],
+          ),
         ),
       ),
     );
 
-    // Generate todos
-    final success = await splitNotifier.generateTodosForGoal(goal);
+    final success = await splitNotifier.generateTodosForGoal(
+      goal,
+      desiredCount: options.desiredCount,
+      startDate: options.startDate,
+    );
 
-    // Close loading dialog
     if (context.mounted) {
       Navigator.of(context).pop();
     }
@@ -184,7 +274,6 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
       return;
     }
 
-    // Show confirmation dialog
     if (context.mounted) {
       await showModalBottomSheet<void>(
         context: context,
@@ -196,30 +285,33 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
   }
 }
 
-final _watchGoalProvider = StreamProvider.family<BigGoalModel?, int>(
-  (ref, goalId) {
-    final repo = ref.watch(bigGoalRepositoryProvider);
-    return repo.watchGoalById(goalId);
-  },
-);
+final _watchGoalProvider = StreamProvider.family<BigGoalModel?, int>((
+  ref,
+  goalId,
+) {
+  final repo = ref.watch(bigGoalRepositoryProvider);
+  return repo.watchGoalById(goalId);
+});
 
 final _watchGoalTodosProvider =
-    StreamProvider.family<List<TodoItemModel>, ({int goalId, int userId})>(
-  (ref, params) {
-    final repo = ref.watch(todoItemRepositoryProvider);
-    return repo.watchTodosByUserId(params.userId).map((todos) =>
-        todos.where((todo) => todo.goalId == params.goalId).toList());
-  },
-);
+    StreamProvider.family<List<TodoItemModel>, ({int goalId, int userId})>((
+      ref,
+      params,
+    ) {
+      final repo = ref.watch(todoItemRepositoryProvider);
+      return repo
+          .watchTodosByUserId(params.userId)
+          .map(
+            (todos) =>
+                todos.where((todo) => todo.goalId == params.goalId).toList(),
+          );
+    });
 
 class _GoalDetailContent extends ConsumerWidget {
   final BigGoalModel goal;
   final VoidCallback onSplitWithAI;
 
-  const _GoalDetailContent({
-    required this.goal,
-    required this.onSplitWithAI,
-  });
+  const _GoalDetailContent({required this.goal, required this.onSplitWithAI});
 
   Color get _goalColor {
     if (goal.color != null && goal.color!.isNotEmpty) {
@@ -280,10 +372,15 @@ class _GoalDetailContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final todosAsync = ref.watch(_watchGoalTodosProvider((goalId: goal.id, userId: goal.userId)));
+    final todosAsync = ref.watch(
+      _watchGoalTodosProvider((goalId: goal.id, userId: goal.userId)),
+    );
 
     // Watch for goal completion state and show celebration
-    ref.listen<GoalCompletionState>(goalCompletionNotifierProvider, (previous, next) {
+    ref.listen<GoalCompletionState>(goalCompletionNotifierProvider, (
+      previous,
+      next,
+    ) {
       if (next.justCompleted && next.completedGoal != null) {
         _showGoalCompletionCelebration(context, next.completedGoal!);
         // Reset after showing celebration
@@ -301,11 +398,11 @@ class _GoalDetailContent extends ConsumerWidget {
           // Goal Header Card
           Card(
             elevation: 4,
-            shadowColor: _goalColor.withOpacity(0.3),
+            shadowColor: _goalColor.withValues(alpha: 0.3),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
               side: BorderSide(
-                color: _goalColor.withOpacity(0.3),
+                color: _goalColor.withValues(alpha: 0.3),
                 width: 1.5,
               ),
             ),
@@ -318,8 +415,8 @@ class _GoalDetailContent extends ConsumerWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    _goalColor.withOpacity(0.1),
-                    _goalColor.withOpacity(0.05),
+                    _goalColor.withValues(alpha: 0.1),
+                    _goalColor.withValues(alpha: 0.05),
                   ],
                 ),
               ),
@@ -336,7 +433,7 @@ class _GoalDetailContent extends ConsumerWidget {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: _goalColor.withOpacity(0.4),
+                              color: _goalColor.withValues(alpha: 0.4),
                               blurRadius: 8,
                               spreadRadius: 2,
                             ),
@@ -352,10 +449,8 @@ class _GoalDetailContent extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           goal.title,
-                          style:
-                              Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
@@ -366,9 +461,9 @@ class _GoalDetailContent extends ConsumerWidget {
                     Text(
                       goal.description!,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: AppColors.textSecondary,
-                            height: 1.5,
-                          ),
+                        color: AppColors.textSecondary,
+                        height: 1.5,
+                      ),
                     ),
                   ],
                   const SizedBox(height: 20),
@@ -406,14 +501,14 @@ class _GoalDetailContent extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
+                          const Row(
                             children: [
                               Icon(
                                 Icons.auto_awesome_rounded,
                                 size: 16,
                                 color: AppColors.secondary,
                               ),
-                              const SizedBox(width: 6),
+                              SizedBox(width: 6),
                               Text(
                                 'AI 解读',
                                 style: TextStyle(
@@ -427,7 +522,7 @@ class _GoalDetailContent extends ConsumerWidget {
                           const SizedBox(height: 8),
                           Text(
                             goal.aiSummary!,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 13,
                               color: AppColors.textSecondary,
                               height: 1.4,
@@ -447,11 +542,13 @@ class _GoalDetailContent extends ConsumerWidget {
           // Progress Section
           todosAsync.when(
             loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
             data: (todos) {
               final completedCount = todos.where((t) => t.isCompleted).length;
               final totalCount = todos.length;
-              final progress = totalCount > 0 ? completedCount / totalCount : 0.0;
+              final progress = totalCount > 0
+                  ? completedCount / totalCount
+                  : 0.0;
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -461,13 +558,12 @@ class _GoalDetailContent extends ConsumerWidget {
                     children: [
                       Text(
                         '目标进度',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       Text(
                         '$completedCount / $totalCount 任务',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 14,
                           color: AppColors.textSecondary,
                         ),
@@ -503,9 +599,9 @@ class _GoalDetailContent extends ConsumerWidget {
           // Todos Section
           Text(
             '相关任务',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
 
@@ -524,13 +620,13 @@ class _GoalDetailContent extends ConsumerWidget {
                   ),
                   child: Column(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.task_alt_rounded,
                         size: 48,
                         color: AppColors.textHint,
                       ),
                       const SizedBox(height: 12),
-                      Text(
+                      const Text(
                         '暂无任务',
                         style: TextStyle(
                           fontSize: 16,
@@ -538,7 +634,7 @@ class _GoalDetailContent extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
+                      const Text(
                         'AI 将会为目标生成任务',
                         style: TextStyle(
                           fontSize: 13,
@@ -570,10 +666,7 @@ class _GoalDetailContent extends ConsumerWidget {
                 itemCount: todos.length,
                 itemBuilder: (context, index) {
                   final todo = todos[index];
-                  return _TodoItemCard(
-                    todo: todo,
-                    goalColor: _goalColor,
-                  );
+                  return _TodoItemCard(todo: todo, goalColor: _goalColor);
                 },
               );
             },
@@ -591,7 +684,7 @@ class _GoalDetailContent extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -613,11 +706,15 @@ class _GoalDetailContent extends ConsumerWidget {
   }
 
   /// Show goal completion celebration dialog with animation
-  void _showGoalCompletionCelebration(BuildContext context, BigGoalModel completedGoal) {
+  void _showGoalCompletionCelebration(
+    BuildContext context,
+    BigGoalModel completedGoal,
+  ) {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => _GoalCompletionCelebrationDialog(completedGoal: completedGoal),
+      builder: (context) =>
+          _GoalCompletionCelebrationDialog(completedGoal: completedGoal),
     );
   }
 }
@@ -629,10 +726,12 @@ class _GoalCompletionCelebrationDialog extends StatefulWidget {
   const _GoalCompletionCelebrationDialog({required this.completedGoal});
 
   @override
-  State<_GoalCompletionCelebrationDialog> createState() => _GoalCompletionCelebrationDialogState();
+  State<_GoalCompletionCelebrationDialog> createState() =>
+      _GoalCompletionCelebrationDialogState();
 }
 
-class _GoalCompletionCelebrationDialogState extends State<_GoalCompletionCelebrationDialog>
+class _GoalCompletionCelebrationDialogState
+    extends State<_GoalCompletionCelebrationDialog>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
@@ -693,8 +792,14 @@ class _GoalCompletionCelebrationDialogState extends State<_GoalCompletionCelebra
                 final angle = (index / 20) * 2 * 3.14159;
                 final distance = 150 * _confettiAnimation.value;
                 return Positioned(
-                  left: MediaQuery.of(context).size.width / 2 - 10 + distance * cos(angle),
-                  top: MediaQuery.of(context).size.height / 2 - 10 + distance * sin(angle),
+                  left:
+                      MediaQuery.of(context).size.width / 2 -
+                      10 +
+                      distance * cos(angle),
+                  top:
+                      MediaQuery.of(context).size.height / 2 -
+                      10 +
+                      distance * sin(angle),
                   child: Opacity(
                     opacity: 1 - _confettiAnimation.value,
                     child: Transform.scale(
@@ -747,13 +852,13 @@ class _GoalCompletionCelebrationDialogState extends State<_GoalCompletionCelebra
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.sage.withOpacity(0.4),
+            color: AppColors.sage.withValues(alpha: 0.4),
             blurRadius: 30,
             spreadRadius: 5,
           ),
         ],
         border: Border.all(
-          color: AppColors.sage.withOpacity(0.3),
+          color: AppColors.sage.withValues(alpha: 0.3),
           width: 2,
         ),
       ),
@@ -765,11 +870,11 @@ class _GoalCompletionCelebrationDialogState extends State<_GoalCompletionCelebra
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppColors.sage.withOpacity(0.15),
+              color: AppColors.sage.withValues(alpha: 0.15),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.sage.withOpacity(0.4),
+                  color: AppColors.sage.withValues(alpha: 0.4),
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),
@@ -786,9 +891,9 @@ class _GoalCompletionCelebrationDialogState extends State<_GoalCompletionCelebra
           Text(
             '🎉 恭喜达成目标！',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.sage,
-                ),
+              fontWeight: FontWeight.bold,
+              color: AppColors.sage,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
@@ -796,15 +901,15 @@ class _GoalCompletionCelebrationDialogState extends State<_GoalCompletionCelebra
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.sage.withOpacity(0.1),
+              color: AppColors.sage.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               widget.completedGoal.title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -813,9 +918,9 @@ class _GoalCompletionCelebrationDialogState extends State<_GoalCompletionCelebra
           Text(
             '你已完成所有任务！\n继续加油，保持这个势头！',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                  height: 1.5,
-                ),
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -834,10 +939,7 @@ class _GoalCompletionCelebrationDialogState extends State<_GoalCompletionCelebra
               ),
               child: const Text(
                 '太棒了！',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -851,10 +953,7 @@ class _TodoItemCard extends StatelessWidget {
   final TodoItemModel todo;
   final Color goalColor;
 
-  const _TodoItemCard({
-    required this.todo,
-    required this.goalColor,
-  });
+  const _TodoItemCard({required this.todo, required this.goalColor});
 
   String get _formattedDate {
     return '${todo.scheduledDate.month}/${todo.scheduledDate.day}';
@@ -865,9 +964,7 @@ class _TodoItemCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
@@ -878,7 +975,9 @@ class _TodoItemCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: todo.isCompleted
                     ? AppColors.textHint
-                    : (todo.isAIGenerated ? goalColor : AppColors.textSecondary),
+                    : (todo.isAIGenerated
+                          ? goalColor
+                          : AppColors.textSecondary),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -891,8 +990,9 @@ class _TodoItemCard extends StatelessWidget {
                     todo.content,
                     style: TextStyle(
                       fontSize: 14,
-                      decoration:
-                          todo.isCompleted ? TextDecoration.lineThrough : null,
+                      decoration: todo.isCompleted
+                          ? TextDecoration.lineThrough
+                          : null,
                       color: todo.isCompleted
                           ? AppColors.textHint
                           : AppColors.textPrimary,
@@ -908,7 +1008,7 @@ class _TodoItemCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: goalColor.withOpacity(0.15),
+                            color: goalColor.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -922,7 +1022,7 @@ class _TodoItemCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                       ],
-                      Icon(
+                      const Icon(
                         Icons.schedule_rounded,
                         size: 12,
                         color: AppColors.textHint,
@@ -930,14 +1030,14 @@ class _TodoItemCard extends StatelessWidget {
                       const SizedBox(width: 2),
                       Text(
                         _formattedDate,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11,
                           color: AppColors.textHint,
                         ),
                       ),
                       if (todo.estimatedMinutes != null) ...[
                         const SizedBox(width: 8),
-                        Icon(
+                        const Icon(
                           Icons.timer_outlined,
                           size: 12,
                           color: AppColors.textHint,
@@ -945,7 +1045,7 @@ class _TodoItemCard extends StatelessWidget {
                         const SizedBox(width: 2),
                         Text(
                           '${todo.estimatedMinutes}分钟',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11,
                             color: AppColors.textHint,
                           ),
@@ -957,13 +1057,13 @@ class _TodoItemCard extends StatelessWidget {
               ),
             ),
             if (todo.isCompleted)
-              Icon(
+              const Icon(
                 Icons.check_circle_rounded,
                 color: AppColors.sage,
                 size: 24,
               )
             else
-              Icon(
+              const Icon(
                 Icons.radio_button_unchecked_rounded,
                 color: AppColors.border,
                 size: 24,
@@ -1034,7 +1134,7 @@ class _AISplitConfirmationSheetState
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.secondary.withOpacity(0.15),
+                    color: AppColors.secondary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -1049,14 +1149,13 @@ class _AISplitConfirmationSheetState
                     children: [
                       Text(
                         'AI 任务拆解',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Text(
                         '共 ${splitState.generatedTodos.length} 个任务',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,
                         ),
@@ -1080,7 +1179,7 @@ class _AISplitConfirmationSheetState
               margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.1),
+                color: AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -1120,6 +1219,14 @@ class _AISplitConfirmationSheetState
                         onDateChanged: (date) {
                           splitNotifier.updateTodoDate(index, date);
                         },
+                        onTimeChanged: (time) {
+                          splitNotifier.updateTodoTime(
+                            index,
+                            time == null
+                                ? null
+                                : TimeOfDayLike(time.hour, time.minute),
+                          );
+                        },
                         onMinutesChanged: (minutes) {
                           splitNotifier.updateTodoMinutes(index, minutes);
                         },
@@ -1138,7 +1245,7 @@ class _AISplitConfirmationSheetState
               color: AppColors.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -4),
                 ),
@@ -1150,11 +1257,13 @@ class _AISplitConfirmationSheetState
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        splitNotifier.addTodo(GeneratedTodoItem(
-                          content: '新任务',
-                          scheduledDate: DateTime.now(),
-                          estimatedMinutes: 30,
-                        ));
+                        splitNotifier.addTodo(
+                          GeneratedTodoItem(
+                            content: '新任务',
+                            scheduledDate: DateTime.now(),
+                            estimatedMinutes: 30,
+                          ),
+                        );
                       },
                       icon: const Icon(Icons.add_rounded),
                       label: const Text('添加任务'),
@@ -1227,6 +1336,7 @@ class _GeneratedTodoCard extends StatelessWidget {
   final Color goalColor;
   final ValueChanged<String> onContentChanged;
   final ValueChanged<DateTime> onDateChanged;
+  final ValueChanged<TimeOfDay?> onTimeChanged;
   final ValueChanged<int> onMinutesChanged;
   final VoidCallback onRemove;
 
@@ -1236,12 +1346,23 @@ class _GeneratedTodoCard extends StatelessWidget {
     required this.goalColor,
     required this.onContentChanged,
     required this.onDateChanged,
+    required this.onTimeChanged,
     required this.onMinutesChanged,
     required this.onRemove,
   });
 
   String get _formattedDate {
-    return '${todo.scheduledDate.month}月${todo.scheduledDate.day}日';
+    return '${todo.scheduledDate.month}?${todo.scheduledDate.day}?';
+  }
+
+  String get _formattedTime {
+    return '${todo.scheduledDate.hour.toString().padLeft(2, '0')}:${todo.scheduledDate.minute.toString().padLeft(2, '0')}';
+  }
+
+  bool get _hasPreciseTime {
+    return todo.scheduledDate.hour != 0 ||
+        todo.scheduledDate.minute != 0 ||
+        todo.scheduledDate.second != 0;
   }
 
   @override
@@ -1249,13 +1370,10 @@ class _GeneratedTodoCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      shadowColor: goalColor.withOpacity(0.2),
+      shadowColor: goalColor.withValues(alpha: 0.2),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: goalColor.withOpacity(0.3),
-          width: 1,
-        ),
+        side: BorderSide(color: goalColor.withValues(alpha: 0.3), width: 1),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1312,6 +1430,41 @@ class _GeneratedTodoCard extends StatelessWidget {
               ),
               maxLines: 2,
               onChanged: onContentChanged,
+            ),
+
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime: _hasPreciseTime
+                            ? TimeOfDay(
+                                hour: todo.scheduledDate.hour,
+                                minute: todo.scheduledDate.minute,
+                              )
+                            : TimeOfDay.now(),
+                      );
+                      if (picked != null) {
+                        onTimeChanged(picked);
+                      }
+                    },
+                    icon: const Icon(Icons.schedule_rounded, size: 18),
+                    label: Text(_hasPreciseTime ? _formattedTime : '加入精准时间'),
+                  ),
+                ),
+                if (_hasPreciseTime) ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    tooltip: '清除精准时间',
+                    onPressed: () => onTimeChanged(null),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ],
             ),
 
             const SizedBox(height: 12),

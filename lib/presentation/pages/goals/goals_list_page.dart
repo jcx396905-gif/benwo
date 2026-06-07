@@ -111,7 +111,7 @@ class _GoalsListContent extends ConsumerWidget {
           child: ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: goals.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final goal = goals[index];
               return _GoalCard(
@@ -236,7 +236,7 @@ class _GoalCard extends StatelessWidget {
               ],
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.event_available_rounded,
                     size: 16,
                     color: AppColors.textSecondary,
@@ -291,7 +291,11 @@ class _EmptyGoalsState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.flag_outlined, size: 80, color: AppColors.textHint),
+            const Icon(
+              Icons.flag_outlined,
+              size: 80,
+              color: AppColors.textHint,
+            ),
             const SizedBox(height: 16),
             Text('暂无目标', style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),

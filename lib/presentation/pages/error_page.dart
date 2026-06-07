@@ -10,8 +10,8 @@ class ErrorWidget extends StatelessWidget {
   final IconData icon;
 
   const ErrorWidget({
-    super.key,
     required this.message,
+    super.key,
     this.onRetry,
     this.icon = Icons.error_outline_rounded,
   });
@@ -24,17 +24,13 @@ class ErrorWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 64,
-              color: AppColors.error.withValues(alpha: 0.7),
-            ),
+            Icon(icon, size: 64, color: AppColors.error.withValues(alpha: 0.7)),
             const SizedBox(height: 16),
             Text(
               message,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
@@ -65,8 +61,8 @@ class EmptyStateWidget extends StatelessWidget {
   final VoidCallback? onAction;
 
   const EmptyStateWidget({
-    super.key,
     required this.title,
+    super.key,
     this.subtitle,
     this.icon = Icons.inbox_rounded,
     this.actionLabel,
@@ -90,17 +86,17 @@ class EmptyStateWidget extends StatelessWidget {
             Text(
               title,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                color: AppColors.textSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(
                 subtitle!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textHint,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.textHint),
                 textAlign: TextAlign.center,
               ),
             ],

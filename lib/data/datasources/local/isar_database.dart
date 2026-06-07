@@ -20,7 +20,8 @@ class IsarDatabase {
   IsarDatabase._();
 
   /// Schema list for Isar.open()
-  static List<CollectionSchema<dynamic>> get schemas => <CollectionSchema<dynamic>>[
+  static List<CollectionSchema<dynamic>> get schemas =>
+      <CollectionSchema<dynamic>>[
         UserModelSchema,
         UserProfileModelSchema,
         BigGoalModelSchema,
@@ -31,11 +32,7 @@ class IsarDatabase {
   /// Initialize Isar database
   static Future<Isar> initialize() async {
     final dir = await getApplicationDocumentsDirectory();
-    return Isar.open(
-      schemas,
-      directory: dir.path,
-      name: 'benwo_db',
-    );
+    return Isar.open(schemas, directory: dir.path, name: 'benwo_db');
   }
 }
 
@@ -145,15 +142,15 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     String? threeChanges,
     bool? hasCompletedOnboarding,
   }) async {
-    UserProfileModel? profile =
-        await _isar.userProfileModels.where().userIdEqualTo(userId).findFirst();
+    UserProfileModel? profile = await _isar.userProfileModels
+        .where()
+        .userIdEqualTo(userId)
+        .findFirst();
 
-    if (profile == null) {
-      profile = UserProfileModel()
-        ..userId = userId
-        ..name = name ?? ''
-        ..createdAt = DateTime.now();
-    }
+    profile ??= UserProfileModel()
+      ..userId = userId
+      ..name = name ?? ''
+      ..createdAt = DateTime.now();
 
     // Update provided fields
     if (name != null) profile.name = name;
@@ -161,16 +158,24 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     if (occupation != null) profile.occupation = occupation;
     if (region != null) profile.region = region;
     if (mbti != null) profile.mbti = mbti;
-    if (communicationStyle != null) profile.communicationStyle = communicationStyle;
-    if (motivationSensitivity != null) profile.motivationSensitivity = motivationSensitivity;
+    if (communicationStyle != null) {
+      profile.communicationStyle = communicationStyle;
+    }
+    if (motivationSensitivity != null) {
+      profile.motivationSensitivity = motivationSensitivity;
+    }
     if (bestWorkTime != null) profile.bestWorkTime = bestWorkTime;
     if (stressResponse != null) profile.stressResponse = stressResponse;
     if (socialPreference != null) profile.socialPreference = socialPreference;
     if (challenges != null) profile.challenges = challenges;
     if (lifeStatus != null) profile.lifeStatus = lifeStatus;
-    if (changeTimeframeMonths != null) profile.changeTimeframeMonths = changeTimeframeMonths;
+    if (changeTimeframeMonths != null) {
+      profile.changeTimeframeMonths = changeTimeframeMonths;
+    }
     if (threeChanges != null) profile.threeChanges = threeChanges;
-    if (hasCompletedOnboarding != null) profile.hasCompletedOnboarding = hasCompletedOnboarding;
+    if (hasCompletedOnboarding != null) {
+      profile.hasCompletedOnboarding = hasCompletedOnboarding;
+    }
     profile.updatedAt = DateTime.now();
 
     await _isar.writeTxn(() async {
@@ -197,8 +202,10 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   @override
   Future<void> completeOnboarding(int userId) async {
     await _isar.writeTxn(() async {
-      final profile =
-          await _isar.userProfileModels.where().userIdEqualTo(userId).findFirst();
+      final profile = await _isar.userProfileModels
+          .where()
+          .userIdEqualTo(userId)
+          .findFirst();
       if (profile != null) {
         profile.hasCompletedOnboarding = true;
         profile.updatedAt = DateTime.now();
@@ -210,8 +217,10 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   @override
   Future<void> deleteProfile(int userId) async {
     await _isar.writeTxn(() async {
-      final profile =
-          await _isar.userProfileModels.where().userIdEqualTo(userId).findFirst();
+      final profile = await _isar.userProfileModels
+          .where()
+          .userIdEqualTo(userId)
+          .findFirst();
       if (profile != null) {
         await _isar.userProfileModels.delete(profile.id);
       }
@@ -271,7 +280,10 @@ class BigGoalRepositoryImpl implements BigGoalRepository {
   }
 
   @override
-  Future<List<BigGoalModel>> getGoalsByStatus(int userId, GoalStatus status) async {
+  Future<List<BigGoalModel>> getGoalsByStatus(
+    int userId,
+    GoalStatus status,
+  ) async {
     return _isar.bigGoalModels
         .where()
         .userIdEqualTo(userId)
@@ -574,8 +586,10 @@ class UserSettingsRepositoryImpl implements UserSettingsRepository {
   @override
   Future<void> updatePushEnabled(int userId, bool enabled) async {
     await _isar.writeTxn(() async {
-      final settings =
-          await _isar.userSettingsModels.where().userIdEqualTo(userId).findFirst();
+      final settings = await _isar.userSettingsModels
+          .where()
+          .userIdEqualTo(userId)
+          .findFirst();
       if (settings != null) {
         settings.pushEnabled = enabled;
         settings.updatedAt = DateTime.now();
@@ -587,8 +601,10 @@ class UserSettingsRepositoryImpl implements UserSettingsRepository {
   @override
   Future<void> updatePushFrequency(int userId, PushFrequency frequency) async {
     await _isar.writeTxn(() async {
-      final settings =
-          await _isar.userSettingsModels.where().userIdEqualTo(userId).findFirst();
+      final settings = await _isar.userSettingsModels
+          .where()
+          .userIdEqualTo(userId)
+          .findFirst();
       if (settings != null) {
         settings.pushFrequency = frequency;
         settings.updatedAt = DateTime.now();
@@ -604,8 +620,10 @@ class UserSettingsRepositoryImpl implements UserSettingsRepository {
     String? endTime,
   }) async {
     await _isar.writeTxn(() async {
-      final settings =
-          await _isar.userSettingsModels.where().userIdEqualTo(userId).findFirst();
+      final settings = await _isar.userSettingsModels
+          .where()
+          .userIdEqualTo(userId)
+          .findFirst();
       if (settings != null) {
         if (startTime != null) settings.quietHoursStart = startTime;
         if (endTime != null) settings.quietHoursEnd = endTime;
@@ -618,8 +636,10 @@ class UserSettingsRepositoryImpl implements UserSettingsRepository {
   @override
   Future<void> updateThemePreference(int userId, String themeMode) async {
     await _isar.writeTxn(() async {
-      final settings =
-          await _isar.userSettingsModels.where().userIdEqualTo(userId).findFirst();
+      final settings = await _isar.userSettingsModels
+          .where()
+          .userIdEqualTo(userId)
+          .findFirst();
       if (settings != null) {
         settings.themePreference = themeMode;
         settings.updatedAt = DateTime.now();
@@ -631,8 +651,10 @@ class UserSettingsRepositoryImpl implements UserSettingsRepository {
   @override
   Future<void> deleteSettings(int userId) async {
     await _isar.writeTxn(() async {
-      final settings =
-          await _isar.userSettingsModels.where().userIdEqualTo(userId).findFirst();
+      final settings = await _isar.userSettingsModels
+          .where()
+          .userIdEqualTo(userId)
+          .findFirst();
       if (settings != null) {
         await _isar.userSettingsModels.delete(settings.id);
       }

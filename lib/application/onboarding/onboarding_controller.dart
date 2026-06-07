@@ -106,15 +106,11 @@ class OnboardingController extends StateNotifier<OnboardingState> {
 
   /// Update Step 1 data
   void updateStep1Name(String name) {
-    state = state.copyWith(
-      step1Data: state.step1Data.copyWith(name: name),
-    );
+    state = state.copyWith(step1Data: state.step1Data.copyWith(name: name));
   }
 
   void updateStep1Age(int? age) {
-    state = state.copyWith(
-      step1Data: state.step1Data.copyWith(age: age),
-    );
+    state = state.copyWith(step1Data: state.step1Data.copyWith(age: age));
   }
 
   void updateStep1Occupation(String occupation) {
@@ -124,9 +120,7 @@ class OnboardingController extends StateNotifier<OnboardingState> {
   }
 
   void updateStep1Region(String region) {
-    state = state.copyWith(
-      step1Data: state.step1Data.copyWith(region: region),
-    );
+    state = state.copyWith(step1Data: state.step1Data.copyWith(region: region));
   }
 
   /// Move to next step
@@ -192,19 +186,13 @@ class OnboardingController extends StateNotifier<OnboardingState> {
     try {
       final userIdStr = _prefs.getString(AppConstants.keyUserId);
       if (userIdStr == null) {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: '用户未登录',
-        );
+        state = state.copyWith(isLoading: false, errorMessage: '用户未登录');
         return false;
       }
 
       final userId = int.tryParse(userIdStr);
       if (userId == null) {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: '无效的用户ID',
-        );
+        state = state.copyWith(isLoading: false, errorMessage: '无效的用户ID');
         return false;
       }
 
@@ -253,19 +241,13 @@ class OnboardingController extends StateNotifier<OnboardingState> {
     try {
       final userIdStr = _prefs.getString(AppConstants.keyUserId);
       if (userIdStr == null) {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: '用户未登录',
-        );
+        state = state.copyWith(isLoading: false, errorMessage: '用户未登录');
         return false;
       }
 
       final userId = int.tryParse(userIdStr);
       if (userId == null) {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: '无效的用户ID',
-        );
+        state = state.copyWith(isLoading: false, errorMessage: '无效的用户ID');
         return false;
       }
 
@@ -297,7 +279,7 @@ class OnboardingController extends StateNotifier<OnboardingState> {
         targetDate: targetDate,
         color: AppConstants.defaultGoalColor,
         category: _inferCategory(state),
-        aiSummary: '基于用户期望：${threeChangesString}',
+        aiSummary: '基于用户期望：$threeChangesString',
       );
 
       await _prefs.setBool(AppConstants.keyHasCompletedOnboarding, true);
@@ -397,8 +379,12 @@ final sharedPreferencesOnboardingProvider = Provider<SharedPreferences>((ref) {
 /// Onboarding Controller Provider
 final onboardingControllerProvider =
     StateNotifierProvider<OnboardingController, OnboardingState>((ref) {
-  final prefs = ref.watch(sharedPreferencesOnboardingProvider);
-  final userProfileRepository = ref.watch(userProfileRepositoryProvider);
-  final bigGoalRepository = ref.watch(bigGoalRepositoryProvider);
-  return OnboardingController(prefs, userProfileRepository, bigGoalRepository);
-});
+      final prefs = ref.watch(sharedPreferencesOnboardingProvider);
+      final userProfileRepository = ref.watch(userProfileRepositoryProvider);
+      final bigGoalRepository = ref.watch(bigGoalRepositoryProvider);
+      return OnboardingController(
+        prefs,
+        userProfileRepository,
+        bigGoalRepository,
+      );
+    });

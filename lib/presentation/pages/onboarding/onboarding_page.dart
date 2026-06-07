@@ -88,7 +88,10 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               // Progress bar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _buildProgressBar(onboardingState.currentStep, onboardingState.totalSteps),
+                child: _buildProgressBar(
+                  onboardingState.currentStep,
+                  onboardingState.totalSteps,
+                ),
               ),
 
               const SizedBox(height: 24),
@@ -97,7 +100,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               Expanded(
                 child: PageView(
                   controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(), // Controlled programmatically
+                  physics:
+                      const NeverScrollableScrollPhysics(), // Controlled programmatically
                   onPageChanged: (index) {
                     onboardingNotifier.goToStep(index + 1);
                   },
@@ -133,7 +137,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
             decoration: BoxDecoration(
               color: isCompleted || isCurrent
                   ? Colors.white
-                  : Colors.white.withOpacity(0.3),
+                  : Colors.white.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -161,7 +165,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           Text(
             '告诉我们一些关于您的基础信息',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontSize: 16,
             ),
           ),
@@ -187,7 +191,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   style: const TextStyle(color: AppColors.textPrimary),
                   decoration: InputDecoration(
                     hintText: '请输入您的姓名',
-                    hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.5)),
+                    hintStyle: TextStyle(
+                      color: AppColors.textSecondary.withValues(alpha: 0.5),
+                    ),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -227,7 +233,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                         style: const TextStyle(color: AppColors.textPrimary),
                         decoration: InputDecoration(
                           hintText: '年龄',
-                          hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.5)),
+                          hintStyle: TextStyle(
+                            color: AppColors.textSecondary.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -259,7 +269,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                               : state.step1Data.occupation,
                           hint: Text(
                             '选择职业',
-                            style: TextStyle(color: AppColors.textSecondary.withOpacity(0.5)),
+                            style: TextStyle(
+                              color: AppColors.textSecondary.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
                           ),
                           isExpanded: true,
                           dropdownColor: AppColors.surface,
@@ -268,7 +282,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                               value: occupation,
                               child: Text(
                                 occupation,
-                                style: const TextStyle(color: AppColors.textPrimary),
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
                             );
                           }).toList(),
@@ -307,7 +323,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   style: const TextStyle(color: AppColors.textPrimary),
                   decoration: InputDecoration(
                     hintText: '如：北京市、上海市',
-                    hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.5)),
+                    hintStyle: TextStyle(
+                      color: AppColors.textSecondary.withValues(alpha: 0.5),
+                    ),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -351,7 +369,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           Text(
             '您目前面临哪些挑战？（可多选）',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontSize: 16,
             ),
           ),
@@ -367,22 +385,23 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 onTap: () => notifier.toggleChallenge(challenge),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.secondary
-                        : AppColors.surface,
+                    color: isSelected ? AppColors.secondary : AppColors.surface,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isSelected
                           ? AppColors.secondary
-                          : AppColors.textSecondary.withOpacity(0.3),
+                          : AppColors.textSecondary.withValues(alpha: 0.3),
                       width: 1.5,
                     ),
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: AppColors.secondary.withOpacity(0.3),
+                              color: AppColors.secondary.withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -392,11 +411,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   child: Text(
                     challenge,
                     style: TextStyle(
-                      color: isSelected
-                          ? Colors.white
-                          : AppColors.textPrimary,
+                      color: isSelected ? Colors.white : AppColors.textPrimary,
                       fontSize: 14,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                   ),
                 ),
@@ -430,13 +449,13 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   border: Border.all(
                     color: isSelected
                         ? AppColors.secondary
-                        : AppColors.textSecondary.withOpacity(0.2),
+                        : AppColors.textSecondary.withValues(alpha: 0.2),
                     width: isSelected ? 2 : 1,
                   ),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: AppColors.secondary.withOpacity(0.3),
+                            color: AppColors.secondary.withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -447,16 +466,22 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   children: [
                     Icon(
                       _getLifeStatusIcon(status),
-                      color: isSelected ? Colors.white : AppColors.textSecondary,
+                      color: isSelected
+                          ? Colors.white
+                          : AppColors.textSecondary,
                       size: 24,
                     ),
                     const SizedBox(width: 12),
                     Text(
                       status,
                       style: TextStyle(
-                        color: isSelected ? Colors.white : AppColors.textPrimary,
+                        color: isSelected
+                            ? Colors.white
+                            : AppColors.textPrimary,
                         fontSize: 16,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                     ),
                     const Spacer(),
@@ -497,7 +522,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               Expanded(
                 flex: 2,
                 child: AnimatedElevatedButton(
-                  onPressed: state.selectedChallenges.isNotEmpty &&
+                  onPressed:
+                      state.selectedChallenges.isNotEmpty &&
                           state.lifeStatus.isNotEmpty
                       ? () => _goToNextStep(state.currentStep)
                       : null,
@@ -513,6 +539,18 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
   IconData _getLifeStatusIcon(String status) {
     switch (status) {
+      case '节奏稳定，想继续优化':
+        return Icons.trending_up_rounded;
+      case '事情很多，容易分心':
+        return Icons.bubble_chart_rounded;
+      case '想改变，但方向还不清楚':
+        return Icons.explore_rounded;
+      case '时间碎片化，需要重新规划':
+        return Icons.schedule_rounded;
+      case '正在过渡期，需要建立新习惯':
+        return Icons.sync_alt_rounded;
+      case '压力较大，需要更轻的计划':
+        return Icons.self_improvement_rounded;
       case '学生':
         return Icons.school_rounded;
       case '在职':
@@ -556,7 +594,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           Text(
             '您最想改变的三个方面是什么？',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontSize: 16,
             ),
           ),
@@ -565,11 +603,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           // Three input fields for desired changes
           ...List.generate(3, (index) {
             final labels = ['第一个改变', '第二个改变', '第三个改变'];
-            final hints = [
-              '例如：提高英语水平',
-              '例如：养成早起习惯',
-              '例如：增加运动时间',
-            ];
+            final hints = ['例如：提高英语水平', '例如：养成早起习惯', '例如：增加运动时间'];
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: _buildInputCard(
@@ -599,7 +633,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                       decoration: InputDecoration(
                         hintText: hints[index],
                         hintStyle: TextStyle(
-                          color: AppColors.textSecondary.withOpacity(0.5),
+                          color: AppColors.textSecondary.withValues(alpha: 0.5),
                         ),
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.zero,
@@ -643,13 +677,13 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     border: Border.all(
                       color: isSelected
                           ? AppColors.secondary
-                          : AppColors.textSecondary.withOpacity(0.3),
+                          : AppColors.textSecondary.withValues(alpha: 0.3),
                       width: 1.5,
                     ),
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: AppColors.secondary.withOpacity(0.3),
+                              color: AppColors.secondary.withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -659,11 +693,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   child: Text(
                     timeframe,
                     style: TextStyle(
-                      color: isSelected
-                          ? Colors.white
-                          : AppColors.textPrimary,
+                      color: isSelected ? Colors.white : AppColors.textPrimary,
                       fontSize: 14,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                   ),
                 ),
@@ -721,14 +755,17 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     // Generate AI summary based on user's inputs from Steps 1-3
     final aiSummary = _generateAISummary(state);
     // Generate suggested goal from user's desired changes
-    final suggestedGoalTitle = state.desiredChanges.isNotEmpty && state.desiredChanges[0].isNotEmpty
+    final suggestedGoalTitle =
+        state.desiredChanges.isNotEmpty && state.desiredChanges[0].isNotEmpty
         ? state.desiredChanges[0]
         : '我的成长目标';
     final suggestedGoalDescription = _generateGoalDescription(state);
 
     // Controllers for editable goal
     final goalTitleController = TextEditingController(text: suggestedGoalTitle);
-    final goalDescController = TextEditingController(text: suggestedGoalDescription);
+    final goalDescController = TextEditingController(
+      text: suggestedGoalDescription,
+    );
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -748,7 +785,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           Text(
             'AI 已经理解了您的目标和期望',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontSize: 16,
             ),
           ),
@@ -764,7 +801,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.2),
+                        color: AppColors.primary.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
@@ -808,7 +845,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.secondary.withOpacity(0.2),
+                        color: AppColors.secondary.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
@@ -849,7 +886,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   decoration: InputDecoration(
                     hintText: '输入目标标题',
                     hintStyle: TextStyle(
-                      color: AppColors.textSecondary.withOpacity(0.5),
+                      color: AppColors.textSecondary.withValues(alpha: 0.5),
                     ),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
@@ -876,7 +913,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   decoration: InputDecoration(
                     hintText: '描述您的目标',
                     hintStyle: TextStyle(
-                      color: AppColors.textSecondary.withOpacity(0.5),
+                      color: AppColors.textSecondary.withValues(alpha: 0.5),
                     ),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
@@ -910,17 +947,17 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: AppColors.primary.withOpacity(0.3),
+                color: AppColors.primary.withValues(alpha: 0.3),
               ),
             ),
             child: Row(
               children: [
                 Icon(
                   Icons.info_outline_rounded,
-                  color: AppColors.primary.withOpacity(0.8),
+                  color: AppColors.primary.withValues(alpha: 0.8),
                   size: 18,
                 ),
                 const SizedBox(width: 12),
@@ -928,7 +965,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   child: Text(
                     'MBTI 等性格维度可以在设置中后续完善，AI 会根据您的使用习惯持续优化建议',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 12,
                     ),
                   ),
@@ -966,7 +1003,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     ? Container(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         decoration: BoxDecoration(
-                          color: AppColors.secondary.withOpacity(0.7),
+                          color: AppColors.secondary.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Center(
@@ -975,18 +1012,22 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           ),
                         ),
                       )
                     : GestureDetector(
                         onTap: () async {
-                          final success = await notifier.completeOnboardingWithGoal(
-                            goalTitle: goalTitleController.text.trim(),
-                            goalDescription: goalDescController.text.trim(),
-                          );
-                          if (success && context.mounted) {
+                          final success = await notifier
+                              .completeOnboardingWithGoal(
+                                goalTitle: goalTitleController.text.trim(),
+                                goalDescription: goalDescController.text.trim(),
+                              );
+                          if (!mounted) return;
+                          if (success) {
                             // Navigate to home
                             context.go('/home');
                           }
@@ -995,14 +1036,17 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [AppColors.secondaryLight, AppColors.secondary],
+                              colors: [
+                                AppColors.secondaryLight,
+                                AppColors.secondary,
+                              ],
                               begin: Alignment.centerLeft,
                               end: Alignment.centerRight,
                             ),
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withOpacity(0.3),
+                                color: AppColors.primary.withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -1030,9 +1074,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.withOpacity(0.3)),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -1055,12 +1099,16 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
   String _generateAISummary(OnboardingState state) {
     final name = state.step1Data.name.isNotEmpty ? state.step1Data.name : '朋友';
-    final occupation = state.step1Data.occupation.isNotEmpty ? state.step1Data.occupation : '未知';
+    final occupation = state.step1Data.occupation.isNotEmpty
+        ? state.step1Data.occupation
+        : '未知';
     final challenges = state.selectedChallenges.isNotEmpty
         ? state.selectedChallenges.join('、')
         : '暂未选择';
     final changes = state.desiredChanges.where((c) => c.isNotEmpty).toList();
-    final timeframe = state.changeTimeframe.isNotEmpty ? state.changeTimeframe : '待定';
+    final timeframe = state.changeTimeframe.isNotEmpty
+        ? state.changeTimeframe
+        : '待定';
 
     final changesText = changes.isNotEmpty
         ? changes.map((c) => '「$c」').join('、')
@@ -1074,7 +1122,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
   String _generateGoalDescription(OnboardingState state) {
     final changes = state.desiredChanges.where((c) => c.isNotEmpty).toList();
-    final timeframe = state.changeTimeframe.isNotEmpty ? state.changeTimeframe : '一段时间内';
+    final timeframe = state.changeTimeframe.isNotEmpty
+        ? state.changeTimeframe
+        : '一段时间内';
 
     if (changes.isEmpty) {
       return '在$timeframe内完成个人成长目标';
@@ -1110,19 +1160,19 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   }
 
   void _showExitDialog(BuildContext context) {
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('退出 Onboarding?'),
         content: const Text('您的进度将不会被保存。'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('取消'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              Navigator.of(dialogContext).pop();
               ref.read(onboardingControllerProvider.notifier).reset();
               context.go('/login');
             },
@@ -1140,9 +1190,9 @@ class AnimatedElevatedButton extends StatefulWidget {
   final Widget child;
 
   const AnimatedElevatedButton({
-    super.key,
     required this.onPressed,
     required this.child,
+    super.key,
   });
 
   @override
@@ -1163,7 +1213,11 @@ class _AnimatedElevatedButtonState extends State<AnimatedElevatedButton> {
       onTap: widget.onPressed,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        transform: Matrix4.identity()..scale(_isPressed ? 0.98 : 1.0),
+        transform: Matrix4.diagonal3Values(
+          _isPressed ? 0.98 : 1.0,
+          _isPressed ? 0.98 : 1.0,
+          1,
+        ),
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           gradient: isEnabled
@@ -1173,16 +1227,13 @@ class _AnimatedElevatedButtonState extends State<AnimatedElevatedButton> {
                   end: Alignment.centerRight,
                 )
               : LinearGradient(
-                  colors: [
-                    Colors.grey.shade400,
-                    Colors.grey.shade500,
-                  ],
+                  colors: [Colors.grey.shade400, Colors.grey.shade500],
                 ),
           borderRadius: BorderRadius.circular(12),
           boxShadow: isEnabled
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),

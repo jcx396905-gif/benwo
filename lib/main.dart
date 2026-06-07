@@ -22,10 +22,7 @@ Future<void> main() async {
 
   // Initialize Isar database
   final dir = await getApplicationDocumentsDirectory();
-  final isar = await Isar.open(
-    IsarDatabase.schemas,
-    directory: dir.path,
-  );
+  final isar = await Isar.open(IsarDatabase.schemas, directory: dir.path);
 
   // Initialize dependency injection container
   final injectionContainer = InjectionContainer();
@@ -41,7 +38,9 @@ Future<void> main() async {
         // Override SharedPreferences provider
         sharedPreferencesProvider.overrideWithValue(sharedPreferences),
         sharedPreferencesAuthProvider.overrideWithValue(sharedPreferences),
-        sharedPreferencesOnboardingProvider.overrideWithValue(sharedPreferences),
+        sharedPreferencesOnboardingProvider.overrideWithValue(
+          sharedPreferences,
+        ),
         // Override Isar database provider
         isarDatabaseProvider.overrideWithValue(isar),
         // Override user repository provider

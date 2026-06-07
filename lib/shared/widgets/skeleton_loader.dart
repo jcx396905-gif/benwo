@@ -68,11 +68,7 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
                 _animation.value.clamp(0.0, 1.0),
                 (_animation.value + 1).clamp(0.0, 1.0),
               ],
-              colors: [
-                baseColor,
-                highlightColor,
-                baseColor,
-              ],
+              colors: [baseColor, highlightColor, baseColor],
             ),
           ),
         );
@@ -98,40 +94,25 @@ class SkeletonListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Row(
+      child: const Row(
         children: [
           // Leading skeleton (avatar or icon placeholder)
-          SkeletonLoader(
-            width: 40,
-            height: 40,
-            borderRadius: 8,
-          ),
-          const SizedBox(width: 12),
+          SkeletonLoader(width: 40, height: 40, borderRadius: 8),
+          SizedBox(width: 12),
           // Content skeleton
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SkeletonLoader(
-                  height: 16,
-                  borderRadius: 4,
-                ),
-                const SizedBox(height: 8),
-                SkeletonLoader(
-                  height: 12,
-                  width: 120,
-                  borderRadius: 4,
-                ),
+                SkeletonLoader(height: 16, borderRadius: 4),
+                SizedBox(height: 8),
+                SkeletonLoader(height: 12, width: 120, borderRadius: 4),
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           // Trailing skeleton (checkbox or chevron)
-          SkeletonLoader(
-            width: 24,
-            height: 24,
-            borderRadius: 6,
-          ),
+          SkeletonLoader(width: 24, height: 24, borderRadius: 6),
         ],
       ),
     );
@@ -143,11 +124,7 @@ class SkeletonCard extends StatelessWidget {
   final double height;
   final EdgeInsets? margin;
 
-  const SkeletonCard({
-    super.key,
-    this.height = 100.0,
-    this.margin,
-  });
+  const SkeletonCard({super.key, this.height = 100.0, this.margin});
 
   @override
   Widget build(BuildContext context) {
@@ -159,17 +136,13 @@ class SkeletonCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              SkeletonLoader(
-                width: 32,
-                height: 32,
-                borderRadius: 8,
-              ),
-              const SizedBox(width: 12),
+              SkeletonLoader(width: 32, height: 32, borderRadius: 8),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,28 +152,17 @@ class SkeletonCard extends StatelessWidget {
                       width: double.infinity,
                       borderRadius: 4,
                     ),
-                    const SizedBox(height: 8),
-                    SkeletonLoader(
-                      height: 12,
-                      width: 100,
-                      borderRadius: 4,
-                    ),
+                    SizedBox(height: 8),
+                    SkeletonLoader(height: 12, width: 100, borderRadius: 4),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          SkeletonLoader(
-            height: 12,
-            borderRadius: 4,
-          ),
-          const SizedBox(height: 8),
-          SkeletonLoader(
-            height: 12,
-            width: 200,
-            borderRadius: 4,
-          ),
+          SizedBox(height: 16),
+          SkeletonLoader(height: 12, borderRadius: 4),
+          SizedBox(height: 8),
+          SkeletonLoader(height: 12, width: 200, borderRadius: 4),
         ],
       ),
     );
@@ -255,17 +217,13 @@ class SkeletonGoalCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              SkeletonLoader(
-                width: 48,
-                height: 48,
-                borderRadius: 12,
-              ),
-              const SizedBox(width: 16),
+              SkeletonLoader(width: 48, height: 48, borderRadius: 12),
+              SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,22 +233,15 @@ class SkeletonGoalCard extends StatelessWidget {
                       width: double.infinity,
                       borderRadius: 4,
                     ),
-                    const SizedBox(height: 8),
-                    SkeletonLoader(
-                      height: 14,
-                      width: 150,
-                      borderRadius: 4,
-                    ),
+                    SizedBox(height: 8),
+                    SkeletonLoader(height: 14, width: 150, borderRadius: 4),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          SkeletonLoader(
-            height: 8,
-            borderRadius: 4,
-          ),
+          SizedBox(height: 16),
+          SkeletonLoader(height: 8, borderRadius: 4),
         ],
       ),
     );

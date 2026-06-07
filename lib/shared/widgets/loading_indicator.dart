@@ -36,9 +36,9 @@ class LoadingIndicator extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               message!,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
           ],
@@ -55,9 +55,9 @@ class LoadingOverlay extends StatelessWidget {
   final String? message;
 
   const LoadingOverlay({
-    super.key,
     required this.isLoading,
     required this.child,
+    super.key,
     this.message,
   });
 
@@ -81,11 +81,7 @@ class ButtonLoadingIndicator extends StatelessWidget {
   final double size;
   final Color? color;
 
-  const ButtonLoadingIndicator({
-    super.key,
-    this.size = 20.0,
-    this.color,
-  });
+  const ButtonLoadingIndicator({super.key, this.size = 20.0, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -94,9 +90,7 @@ class ButtonLoadingIndicator extends StatelessWidget {
       height: size,
       child: CircularProgressIndicator(
         strokeWidth: 2.0,
-        valueColor: AlwaysStoppedAnimation<Color>(
-          color ?? Colors.white,
-        ),
+        valueColor: AlwaysStoppedAnimation<Color>(color ?? Colors.white),
       ),
     );
   }

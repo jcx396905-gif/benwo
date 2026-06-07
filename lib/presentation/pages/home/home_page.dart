@@ -5,8 +5,10 @@ import 'package:intl/intl.dart';
 
 import '../../../application/auth/auth_notifier.dart';
 import '../../../application/goal/goal_completion_notifier.dart';
+import '../../../application/goal/goal_split_notifier.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/todo_reminder_scheduler.dart';
 import '../../../data/models/big_goal_model.dart';
 import '../../../data/models/todo_item_model.dart';
 
@@ -621,8 +623,10 @@ class _HomePageState extends ConsumerState<HomePage> {
     final todoRepo = ref.read(todoItemRepositoryProvider);
     if (todo.isCompleted) {
       await todoRepo.uncompleteTodo(todo.id);
+      await TodoReminderScheduler.scheduleForTodo(todo);
     } else {
       await todoRepo.completeTodo(todo.id);
+      await TodoReminderScheduler.cancelForTodo(todo.id);
       // Check if goal should be auto-completed after marking todo complete
       if (todo.goalId != null) {
         final userId = todo.userId;
@@ -863,7 +867,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
                 // Goal dropdown
                 DropdownButtonFormField<int?>(
-                  value: selectedGoalId,
+                  initialValue: selectedGoalId,
                   decoration: InputDecoration(
                     labelText: '关联目标',
                     border: OutlineInputBorder(
@@ -1017,6 +1021,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               Navigator.pop(context); // Close dialog
               final todoRepo = ref.read(todoItemRepositoryProvider);
               await todoRepo.deleteTodo(todo.id);
+              await TodoReminderScheduler.cancelForTodo(todo.id);
               if (context.mounted) {
                 Navigator.pop(context); // Close bottom sheet
               }
@@ -1033,8 +1038,12 @@ class _HomePageState extends ConsumerState<HomePage> {
     final contentController = TextEditingController();
     final timeController = TextEditingController();
     int? selectedGoalId;
+    bool useAISplit = false;
+    int? desiredCount;
+    DateTime selectedDate = _homeDateOnly(DateTime.now());
+    TimeOfDay? selectedExactTime;
+    bool isSaving = false;
 
-    // Get user's goals for dropdown
     final goals = ref.read(_homeGoalsProvider(userId)).valueOrNull ?? [];
 
     showModalBottomSheet<void>(
@@ -1050,118 +1059,323 @@ class _HomePageState extends ConsumerState<HomePage> {
             color: AppColors.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                Row(
-                  children: [
-                    Text('添加待办', style: Theme.of(context).textTheme.titleLarge),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close_rounded),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Content input
-                TextField(
-                  controller: contentController,
-                  decoration: InputDecoration(
-                    labelText: '待办内容',
-                    hintText: '输入待办事项...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        '添加待办',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: isSaving
+                            ? null
+                            : () => Navigator.pop(context),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
                   ),
-                  maxLines: 2,
-                  autofocus: true,
-                ),
-                const SizedBox(height: 16),
-
-                // Goal dropdown
-                DropdownButtonFormField<int?>(
-                  initialValue: selectedGoalId,
-                  decoration: InputDecoration(
-                    labelText: '关联目标（可选）',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: contentController,
+                    decoration: InputDecoration(
+                      labelText: useAISplit ? '输入要拆分的事情' : '待办内容',
+                      hintText: useAISplit
+                          ? '例如：今天要整理房间、写周报，明天复习英语'
+                          : '输入待办事项...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
+                    maxLines: useAISplit ? 4 : 2,
+                    autofocus: true,
                   ),
-                  items: [
-                    const DropdownMenuItem<int?>(
-                      value: null,
-                      child: Text('无目标（用户自建）'),
-                    ),
-                    ...goals
-                        .where((g) => g.status == GoalStatus.inProgress)
-                        .map(
-                          (g) => DropdownMenuItem<int?>(
-                            value: g.id,
-                            child: Text(g.title),
-                          ),
+                  const SizedBox(height: 16),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    secondary: const Icon(Icons.auto_awesome_rounded),
+                    title: const Text('AI 拆分'),
+                    subtitle: const Text('把一段话自动拆成多个待办，并按日期安排'),
+                    value: useAISplit,
+                    onChanged: isSaving
+                        ? null
+                        : (value) {
+                            setState(() {
+                              useAISplit = value;
+                            });
+                          },
+                  ),
+                  if (useAISplit) ...[
+                    const SizedBox(height: 8),
+                    Text('选择数量', style: Theme.of(context).textTheme.labelLarge),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('AI 自动选择'),
+                          selected: desiredCount == null,
+                          onSelected: isSaving
+                              ? null
+                              : (_) => setState(() => desiredCount = null),
                         ),
+                        ...[3, 5, 8, 10].map((count) {
+                          return ChoiceChip(
+                            label: Text('$count 个'),
+                            selected: desiredCount == count,
+                            onSelected: isSaving
+                                ? null
+                                : (_) {
+                                    setState(() {
+                                      desiredCount = count;
+                                    });
+                                  },
+                          );
+                        }),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                   ],
-                  onChanged: (value) {
-                    setState(() {
-                      selectedGoalId = value;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.event_rounded),
+                    title: Text(useAISplit ? '默认安排日期' : '选择时间'),
+                    subtitle: Text(
+                      selectedExactTime == null
+                          ? _formatHomeDate(selectedDate)
+                          : '${_formatHomeDate(selectedDate)} ${_formatTimeOfDay(selectedExactTime!)}',
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: isSaving
+                        ? null
+                        : () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: selectedDate,
+                              firstDate: DateTime.now().subtract(
+                                const Duration(days: 1),
+                              ),
+                              lastDate: DateTime.now().add(
+                                const Duration(days: 365),
+                              ),
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                selectedDate = _homeDateOnly(picked);
+                              });
+                            }
+                          },
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    secondary: const Icon(Icons.schedule_rounded),
+                    title: const Text('精准完成时间'),
+                    subtitle: Text(
+                      selectedExactTime == null
+                          ? '未设置具体几点几分'
+                          : _formatTimeOfDay(selectedExactTime!),
+                    ),
+                    value: selectedExactTime != null,
+                    onChanged: isSaving
+                        ? null
+                        : (value) async {
+                            if (!value) {
+                              setState(() => selectedExactTime = null);
+                              return;
+                            }
+                            final picked = await showTimePicker(
+                              context: context,
+                              initialTime: selectedExactTime ?? TimeOfDay.now(),
+                            );
+                            if (picked != null) {
+                              setState(() => selectedExactTime = picked);
+                            }
+                          },
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int?>(
+                    initialValue: selectedGoalId,
+                    decoration: InputDecoration(
+                      labelText: '关联目标（可选）',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    items: [
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('无目标'),
+                      ),
+                      ...goals
+                          .where((g) => g.status == GoalStatus.inProgress)
+                          .map(
+                            (g) => DropdownMenuItem<int?>(
+                              value: g.id,
+                              child: Text(g.title),
+                            ),
+                          ),
+                    ],
+                    onChanged: isSaving
+                        ? null
+                        : (value) {
+                            setState(() {
+                              selectedGoalId = value;
+                            });
+                          },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: timeController,
+                    decoration: InputDecoration(
+                      labelText: useAISplit ? '默认每项分钟数（可选）' : '预计完成时间（分钟）',
+                      hintText: '例如：30',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: isSaving
+                          ? null
+                          : () async {
+                              final content = contentController.text.trim();
+                              if (content.isEmpty) return;
 
-                // Estimated time
-                TextField(
-                  controller: timeController,
-                  decoration: InputDecoration(
-                    labelText: '预计完成时间（分钟）',
-                    hintText: '例如：30',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                              final estimatedMinutes = int.tryParse(
+                                timeController.text.trim(),
+                              );
+
+                              setState(() {
+                                isSaving = true;
+                              });
+
+                              try {
+                                final todoRepo = ref.read(
+                                  todoItemRepositoryProvider,
+                                );
+                                if (useAISplit) {
+                                  final generatedTodos = await ref
+                                      .read(goalSplitNotifierProvider.notifier)
+                                      .generateTodosFromText(
+                                        input: content,
+                                        userId: userId,
+                                        desiredCount: desiredCount,
+                                        defaultDate: selectedDate,
+                                      );
+
+                                  for (final todo in generatedTodos) {
+                                    final scheduledDate = _applyFallbackTime(
+                                      todo.scheduledDate,
+                                      selectedExactTime,
+                                    );
+                                    final savedTodo = await todoRepo.createTodo(
+                                      userId: userId,
+                                      content: todo.content,
+                                      goalId: selectedGoalId,
+                                      isAIGenerated: true,
+                                      scheduledDate: scheduledDate,
+                                      estimatedMinutes:
+                                          estimatedMinutes ??
+                                          todo.estimatedMinutes,
+                                    );
+                                    await TodoReminderScheduler.scheduleForTodo(
+                                      savedTodo,
+                                    );
+                                  }
+
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          '已生成 ${generatedTodos.length} 个 AI 待办',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                } else {
+                                  final scheduledDate = _applyFallbackTime(
+                                    selectedDate,
+                                    selectedExactTime,
+                                  );
+                                  final savedTodo = await todoRepo.createTodo(
+                                    userId: userId,
+                                    content: content,
+                                    goalId: selectedGoalId,
+                                    isAIGenerated: false,
+                                    scheduledDate: scheduledDate,
+                                    estimatedMinutes: estimatedMinutes,
+                                  );
+                                  await TodoReminderScheduler.scheduleForTodo(
+                                    savedTodo,
+                                  );
+                                }
+
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                }
+                              } catch (e) {
+                                setState(() {
+                                  isSaving = false;
+                                });
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('添加失败：$e'),
+                                      backgroundColor: AppColors.error,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                      child: isSaving
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(useAISplit ? 'AI 拆分并添加' : '添加'),
                     ),
                   ),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 24),
-
-                // Add button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      final content = contentController.text.trim();
-                      if (content.isEmpty) return;
-
-                      final estimatedMinutes = int.tryParse(
-                        timeController.text.trim(),
-                      );
-
-                      final todoRepo = ref.read(todoItemRepositoryProvider);
-                      await todoRepo.createTodo(
-                        userId: userId,
-                        content: content,
-                        goalId: selectedGoalId,
-                        isAIGenerated: false,
-                        estimatedMinutes: estimatedMinutes,
-                      );
-
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                      }
-                    },
-                    child: const Text('添加'),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  String _formatHomeDate(DateTime date) {
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day';
+  }
+
+  String _formatTimeOfDay(TimeOfDay time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  DateTime _applyFallbackTime(DateTime date, TimeOfDay? fallbackTime) {
+    if (TodoReminderScheduler.hasPreciseTime(date) || fallbackTime == null) {
+      return date;
+    }
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
+      fallbackTime.hour,
+      fallbackTime.minute,
     );
   }
 
@@ -1268,7 +1482,7 @@ class _HomeGoalCompletionDialogState extends State<_HomeGoalCompletionDialog>
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: AppColors.sage.withOpacity(0.3),
+                color: AppColors.sage.withValues(alpha: 0.3),
                 blurRadius: 20,
                 spreadRadius: 5,
               ),
@@ -1288,7 +1502,7 @@ class _HomeGoalCompletionDialogState extends State<_HomeGoalCompletionDialog>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.sage.withOpacity(0.4),
+                        color: AppColors.sage.withValues(alpha: 0.4),
                         blurRadius: 20,
                         spreadRadius: 5,
                       ),
@@ -1322,9 +1536,11 @@ class _HomeGoalCompletionDialogState extends State<_HomeGoalCompletionDialog>
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.sage.withOpacity(0.1),
+                  color: AppColors.sage.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.sage.withOpacity(0.3)),
+                  border: Border.all(
+                    color: AppColors.sage.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,

@@ -46,7 +46,7 @@ class GoalCompletionNotifier extends StateNotifier<GoalCompletionState> {
   final TodoItemRepository _todoRepo;
 
   GoalCompletionNotifier(this._goalRepo, this._todoRepo)
-      : super(const GoalCompletionState());
+    : super(const GoalCompletionState());
 
   /// Check if all todos for a goal are completed and auto-complete the goal
   Future<bool> checkAndCompleteGoal(int goalId, int userId) async {
@@ -90,10 +90,7 @@ class GoalCompletionNotifier extends StateNotifier<GoalCompletionState> {
         );
         return true;
       } else if (!allCompleted) {
-        state = state.copyWith(
-          allTodosCompleted: false,
-          justCompleted: false,
-        );
+        state = state.copyWith(allTodosCompleted: false, justCompleted: false);
         return false;
       }
 
@@ -118,18 +115,19 @@ class GoalCompletionNotifier extends StateNotifier<GoalCompletionState> {
 /// Provider for GoalCompletionNotifier
 final goalCompletionNotifierProvider =
     StateNotifierProvider<GoalCompletionNotifier, GoalCompletionState>((ref) {
-  final goalRepo = ref.watch(bigGoalRepositoryProvider);
-  final todoRepo = ref.watch(todoItemRepositoryProvider);
-  return GoalCompletionNotifier(goalRepo, todoRepo);
-});
+      final goalRepo = ref.watch(bigGoalRepositoryProvider);
+      final todoRepo = ref.watch(todoItemRepositoryProvider);
+      return GoalCompletionNotifier(goalRepo, todoRepo);
+    });
 
 /// Provider to check if all todos for a goal are completed
 final allTodosCompletedProvider =
-    FutureProvider.family<bool, ({int goalId, int userId})>(
-  (ref, params) async {
-    final todoRepo = ref.watch(todoItemRepositoryProvider);
-    final todos = await todoRepo.getTodosByGoalId(params.goalId);
-    if (todos.isEmpty) return false;
-    return todos.every((todo) => todo.isCompleted);
-  },
-);
+    FutureProvider.family<bool, ({int goalId, int userId})>((
+      ref,
+      params,
+    ) async {
+      final todoRepo = ref.watch(todoItemRepositoryProvider);
+      final todos = await todoRepo.getTodosByGoalId(params.goalId);
+      if (todos.isEmpty) return false;
+      return todos.every((todo) => todo.isCompleted);
+    });

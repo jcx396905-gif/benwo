@@ -7,6 +7,7 @@ import '../../../application/auth/auth_notifier.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/notification_service.dart';
+import '../../../core/utils/todo_reminder_scheduler.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -21,8 +22,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   final NotificationService _notificationService = NotificationService();
   bool _pushEnabled = true;
+  bool _dueRemindersEnabled = true;
   String _pushFrequency = 'daily';
   bool _notificationsInitialized = false;
+  int _authorTapCount = 0;
+  bool _showAuthorEgg = false;
 
   @override
   void initState() {
@@ -48,6 +52,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     if (!mounted) return;
     setState(() {
       _pushEnabled = prefs.getBool(_pushEnabledKey) ?? true;
+      _dueRemindersEnabled =
+          prefs.getBool(TodoReminderScheduler.reminderEnabledKey) ?? true;
       _pushFrequency = prefs.getString(_pushFrequencyKey) ?? 'daily';
     });
   }
@@ -61,6 +67,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     if (!value) {
       await _notificationService.cancelAllNotifications();
     }
+  }
+
+  Future<void> _saveDueRemindersEnabled(bool value) async {
+    await TodoReminderScheduler.setEnabled(value);
+    if (!mounted) return;
+    setState(() => _dueRemindersEnabled = value);
   }
 
   Future<void> _savePushFrequency(String value) async {
@@ -108,6 +120,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
             value: _pushEnabled,
             onChanged: _notificationsInitialized ? _savePushEnabled : null,
+            activeThumbColor: AppColors.primary,
+          ),
+          const Divider(height: 1),
+          SwitchListTile(
+            title: const Text('到点提醒'),
+            subtitle: const Text('待办设置精准时间后，到点自动提醒'),
+            value: _dueRemindersEnabled,
+            onChanged: _saveDueRemindersEnabled,
             activeThumbColor: AppColors.primary,
           ),
           if (_pushEnabled) ...[
@@ -163,7 +183,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           const Divider(height: 1),
           ListTile(
             leading: _iconBox(Icons.logout_rounded, AppColors.error),
-            title: Text('退出登录', style: TextStyle(color: AppColors.error)),
+            title: const Text('退出登录', style: TextStyle(color: AppColors.error)),
             onTap: () => _showLogoutDialog(context),
           ),
         ],
@@ -178,10 +198,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       child: Column(
         children: [
           ListTile(
-            leading: _iconBox(
-              Icons.info_outline_rounded,
-              AppColors.textSecondary,
-            ),
+            leading: _benwoIconBox(),
             title: const Text('版本'),
             trailing: Text(
               '1.0.0',
@@ -197,12 +214,22 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               AppColors.textSecondary,
             ),
             title: const Text('作者'),
+            subtitle: _showAuthorEgg
+                ? const Text(
+                    '金诚熙牛逼',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  )
+                : null,
             trailing: Text(
               'JCX',
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             ),
+            onTap: _handleAuthorTap,
           ),
           const Divider(height: 1),
           ListTile(
@@ -290,6 +317,51 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
+  Widget _benwoIconBox() {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF00796B), Color(0xFF4285F4)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: const Stack(
+        alignment: Alignment.center,
+        children: [
+          Icon(Icons.psychology_alt_rounded, color: Colors.white, size: 24),
+          Positioned(
+            right: 7,
+            bottom: 7,
+            child: Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFFFD54F),
+              size: 13,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleAuthorTap() {
+    if (_showAuthorEgg) return;
+
+    setState(() {
+      _authorTapCount += 1;
+      _showAuthorEgg = _authorTapCount >= 5;
+    });
+
+    if (_showAuthorEgg) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('金诚熙牛逼')));
+    }
+  }
+
   String _getFrequencyText(String frequency) {
     switch (frequency) {
       case 'twice':
@@ -362,7 +434,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 pageContext.go('/login');
               }
             },
-            child: Text('退出', style: TextStyle(color: AppColors.error)),
+            child: const Text('退出', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),

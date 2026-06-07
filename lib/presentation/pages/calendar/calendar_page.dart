@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../application/auth/auth_notifier.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/todo_reminder_scheduler.dart';
 import '../../../data/models/big_goal_model.dart';
 import '../../../data/models/todo_item_model.dart';
 import '_completed_history_sheet.dart';
@@ -19,6 +20,17 @@ typedef _CalendarUserRangeParams = ({
 
 DateTime _calendarDateOnly(DateTime date) =>
     DateTime(date.year, date.month, date.day);
+
+DateTime _mergeDateWithExistingTime(DateTime date, DateTime existing) {
+  return DateTime(
+    date.year,
+    date.month,
+    date.day,
+    existing.hour,
+    existing.minute,
+    existing.second,
+  );
+}
 
 final _calendarDayTodosProvider =
     StreamProvider.family<List<TodoItemModel>, _CalendarUserDateParams>((
@@ -909,6 +921,7 @@ class _DayViewContent extends ConsumerWidget {
     // Mark as complete
     final todoRepo = ref.read(todoItemRepositoryProvider);
     await todoRepo.completeTodo(todo.id);
+    await TodoReminderScheduler.cancelForTodo(todo.id);
 
     // If this goal's all todos are done, mark goal complete
     if (goal != null) {
@@ -965,7 +978,7 @@ class _DayViewContent extends ConsumerWidget {
         ..goalId = todo.goalId
         ..content = todo.content
         ..isAIGenerated = todo.isAIGenerated
-        ..scheduledDate = picked
+        ..scheduledDate = _mergeDateWithExistingTime(picked, todo.scheduledDate)
         ..isCompleted = todo.isCompleted
         ..estimatedMinutes = todo.estimatedMinutes
         ..color = todo.color
@@ -975,6 +988,7 @@ class _DayViewContent extends ConsumerWidget {
 
       final todoRepo = ref.read(todoItemRepositoryProvider);
       await todoRepo.updateTodo(updatedTodo);
+      await TodoReminderScheduler.scheduleForTodo(updatedTodo);
 
       // Show success feedback
       if (context.mounted) {
@@ -1133,13 +1147,6 @@ class _DayViewContent extends ConsumerWidget {
             );
       });
     }
-  }
-
-  void _showCompletedHistory(BuildContext context) {
-    final userId =
-        ProviderScope.containerOf(context).read(authNotifierProvider).userId ??
-        0;
-    CompletedHistorySheet.show(context, userId);
   }
 
   String _getWeekdayString(int weekday) {
@@ -1681,7 +1688,7 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
       ..goalId = todo.goalId
       ..content = todo.content
       ..isAIGenerated = todo.isAIGenerated
-      ..scheduledDate = newDate
+      ..scheduledDate = _mergeDateWithExistingTime(newDate, todo.scheduledDate)
       ..isCompleted = todo.isCompleted
       ..estimatedMinutes = todo.estimatedMinutes
       ..color = todo.color
@@ -1691,6 +1698,7 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
 
     final todoRepo = ref.read(todoItemRepositoryProvider);
     await todoRepo.updateTodo(updatedTodo);
+    await TodoReminderScheduler.scheduleForTodo(updatedTodo);
 
     // Show success feedback
     if (context.mounted) {
@@ -2252,7 +2260,7 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
       ..goalId = todo.goalId
       ..content = todo.content
       ..isAIGenerated = todo.isAIGenerated
-      ..scheduledDate = newDate
+      ..scheduledDate = _mergeDateWithExistingTime(newDate, todo.scheduledDate)
       ..isCompleted = todo.isCompleted
       ..estimatedMinutes = todo.estimatedMinutes
       ..color = todo.color
@@ -2262,6 +2270,7 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
 
     final todoRepo = ref.read(todoItemRepositoryProvider);
     await todoRepo.updateTodo(updatedTodo);
+    await TodoReminderScheduler.scheduleForTodo(updatedTodo);
 
     // Show success feedback
     if (context.mounted) {

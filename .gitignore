@@ -51,3 +51,16 @@ lib/core/constants/api_constants.dart
 /*.jpg
 /*.jpeg
 /*.png
+
+# Local emulator QA captures
+screenshots/qa-*.png
+screenshots/after-start.png
+screenshots/calendar.png
+screenshots/calendar-real.png
+screenshots/completed-history.png
+screenshots/goal-detail.png
+screenshots/goals.png
+screenshots/home-add-sheet.png
+screenshots/home-ai-split-options.png
+screenshots/settings.png
+screenshots/time-picker.png

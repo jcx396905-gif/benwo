@@ -7,11 +7,7 @@ import 'package:benwo/app.dart';
 void main() {
   testWidgets('BenWo app builds successfully', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: BenWoApp(),
-      ),
-    );
+    await tester.pumpWidget(const ProviderScope(child: BenWoApp()));
 
     // Verify that the app builds without throwing
     expect(tester.takeException(), isNull);

@@ -36,10 +36,7 @@ class _BenWoAppState extends ConsumerState<BenWoApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('zh', ''),
-        Locale('en', ''),
-      ],
+      supportedLocales: const [Locale('zh', ''), Locale('en', '')],
       routerConfig: router,
     );
   }

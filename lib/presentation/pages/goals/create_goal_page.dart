@@ -21,6 +21,7 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
 
   String? _selectedCategory;
   String? _selectedTimeframe;
+  DateTime? _customTargetDate;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -52,6 +53,9 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
 
   DateTime _calculateTargetDate(String? timeframe) {
     final now = DateTime.now();
+    if (timeframe == '自定义' && _customTargetDate != null) {
+      return _customTargetDate!;
+    }
     switch (timeframe) {
       case '1个月':
         return DateTime(now.year, now.month + 1, now.day);
@@ -76,6 +80,13 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
     if (_selectedTimeframe == null) {
       setState(() {
         _errorMessage = '请选择目标时间';
+      });
+      return;
+    }
+
+    if (_selectedTimeframe == '自定义' && _customTargetDate == null) {
+      setState(() {
+        _errorMessage = '请选择自定义完成日期';
       });
       return;
     }
@@ -126,6 +137,41 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
         });
       }
     }
+  }
+
+  Future<String?> _showCustomCategoryDialog() async {
+    final controller = TextEditingController(text: _selectedCategory);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('自定义目标类型'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: '目标类型',
+            hintText: '例如：副业、家庭、作品集',
+          ),
+          maxLength: 12,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    return result;
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -182,16 +228,14 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                           children: [
                             Text(
                               'AI 目标设定',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               '设定一个清晰的目标，让 AI 帮你拆解成每日任务',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: AppColors.textSecondary),
                             ),
                           ],
                         ),
@@ -206,15 +250,15 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                 Text(
                   '目标标题',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _titleController,
                   decoration: InputDecoration(
                     hintText: '例如：学会游泳、减肥10斤、升职加薪',
-                    hintStyle: TextStyle(color: AppColors.textHint),
+                    hintStyle: const TextStyle(color: AppColors.textHint),
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
@@ -227,13 +271,19 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
                     ),
                     errorBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(color: Colors.red),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -252,8 +302,8 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                 Text(
                   '目标描述（可选）',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
@@ -261,7 +311,7 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                   maxLines: 3,
                   decoration: InputDecoration(
                     hintText: '详细描述你的目标，越具体越好...',
-                    hintStyle: TextStyle(color: AppColors.textHint),
+                    hintStyle: const TextStyle(color: AppColors.textHint),
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
@@ -274,9 +324,15 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                   ),
                 ),
 
@@ -286,34 +342,61 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                 Text(
                   '目标分类',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: AppConstants.goalCategories.map((category) {
-                    final isSelected = _selectedCategory == category;
+                  children: [...AppConstants.goalCategories, '自定义'].map((
+                    category,
+                  ) {
+                    final isCustomCategory =
+                        category == '自定义' &&
+                        !AppConstants.goalCategories.contains(
+                          _selectedCategory,
+                        );
+                    final isSelected =
+                        _selectedCategory == category || isCustomCategory;
                     return GestureDetector(
-                      onTap: () {
+                      onTap: () async {
+                        if (category == '自定义') {
+                          final customCategory =
+                              await _showCustomCategoryDialog();
+                          if (customCategory == null ||
+                              customCategory.isEmpty) {
+                            return;
+                          }
+                          setState(() {
+                            _selectedCategory = customCategory;
+                          });
+                          return;
+                        }
                         setState(() {
                           _selectedCategory = category;
                         });
                       },
                       child: AnimatedContainer(
                         duration: AppConstants.shortAnimation,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: isSelected ? AppColors.primary : Colors.white,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: isSelected ? AppColors.primary : Colors.grey.shade300,
+                            color: isSelected
+                                ? AppColors.primary
+                                : Colors.grey.shade300,
                           ),
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: AppColors.primary.withValues(alpha: 0.3),
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.3,
+                                    ),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -321,10 +404,14 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                               : null,
                         ),
                         child: Text(
-                          category,
+                          isCustomCategory ? _selectedCategory! : category,
                           style: TextStyle(
-                            color: isSelected ? Colors.white : AppColors.textPrimary,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.textPrimary,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                           ),
                         ),
                       ),
@@ -338,34 +425,68 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                 Text(
                   '预计完成时间',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: AppConstants.changeTimeframes.map((timeframe) {
+                  children: [...AppConstants.changeTimeframes, '自定义'].map((
+                    timeframe,
+                  ) {
                     final isSelected = _selectedTimeframe == timeframe;
                     return GestureDetector(
-                      onTap: () {
+                      onTap: () async {
+                        if (timeframe == '自定义') {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate:
+                                _customTargetDate ??
+                                DateTime.now().add(const Duration(days: 90)),
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 3650),
+                            ),
+                          );
+                          if (picked == null) return;
+                          setState(() {
+                            _selectedTimeframe = timeframe;
+                            _customTargetDate = DateTime(
+                              picked.year,
+                              picked.month,
+                              picked.day,
+                            );
+                          });
+                          return;
+                        }
                         setState(() {
                           _selectedTimeframe = timeframe;
+                          _customTargetDate = null;
                         });
                       },
                       child: AnimatedContainer(
                         duration: AppConstants.shortAnimation,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
-                          color: isSelected ? AppColors.secondary : Colors.white,
+                          color: isSelected
+                              ? AppColors.secondary
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: isSelected ? AppColors.secondary : Colors.grey.shade300,
+                            color: isSelected
+                                ? AppColors.secondary
+                                : Colors.grey.shade300,
                           ),
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: AppColors.secondary.withValues(alpha: 0.3),
+                                    color: AppColors.secondary.withValues(
+                                      alpha: 0.3,
+                                    ),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -373,10 +494,16 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                               : null,
                         ),
                         child: Text(
-                          timeframe,
+                          timeframe == '自定义' && _customTargetDate != null
+                              ? '自定义：${_formatDate(_customTargetDate!)}'
+                              : timeframe,
                           style: TextStyle(
-                            color: isSelected ? Colors.white : AppColors.textPrimary,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.textPrimary,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                           ),
                         ),
                       ),
@@ -390,8 +517,8 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                 Text(
                   '目标颜色',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
@@ -399,7 +526,11 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                   runSpacing: 12,
                   children: _colorOptions.map((colorOption) {
                     final isSelected = _selectedColor == colorOption['color'];
-                    final color = Color(int.parse(colorOption['color']!.replaceFirst('#', '0xFF')));
+                    final color = Color(
+                      int.parse(
+                        colorOption['color']!.replaceFirst('#', '0xFF'),
+                      ),
+                    );
                     return GestureDetector(
                       onTap: () {
                         setState(() {
@@ -416,7 +547,9 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                               color: color,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: isSelected ? AppColors.textPrimary : Colors.transparent,
+                                color: isSelected
+                                    ? AppColors.textPrimary
+                                    : Colors.transparent,
                                 width: 3,
                               ),
                               boxShadow: isSelected
@@ -440,9 +573,14 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                           const SizedBox(height: 4),
                           Text(
                             colorOption['name']!,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : AppColors.textSecondary,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
                                 ),
                           ),
                         ],
@@ -463,7 +601,11 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline_rounded, color: Colors.red, size: 20),
+                        const Icon(
+                          Icons.error_outline_rounded,
+                          color: Colors.red,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(

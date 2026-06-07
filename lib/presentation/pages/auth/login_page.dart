@@ -53,17 +53,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    final success = await ref.read(authNotifierProvider.notifier).login(
-          email: email,
-          password: password,
-        );
+    final success = await ref
+        .read(authNotifierProvider.notifier)
+        .login(email: email, password: password);
 
     if (!mounted) return;
 
     if (success) {
       // Check if onboarding is completed
-      final hasCompletedOnboarding =
-          ref.read(authNotifierProvider.notifier).hasCompletedOnboarding;
+      final hasCompletedOnboarding = ref
+          .read(authNotifierProvider.notifier)
+          .hasCompletedOnboarding;
       if (hasCompletedOnboarding) {
         context.go('/home');
       } else {
@@ -104,16 +104,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   Text(
                     'BenWo',
                     style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '探索本我，达成目标',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
                   ),
                   const SizedBox(height: 48),
 
@@ -216,7 +216,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                           strokeWidth: 2,
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                                  Colors.white),
+                                                Colors.white,
+                                              ),
                                         ),
                                       )
                                     : const Text(
@@ -240,10 +241,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     onPressed: isLoading ? null : () => context.go('/register'),
                     child: const Text(
                       '还没有账号？立即注册',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
                 ],

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -73,21 +74,23 @@ class InjectionContainer {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          // Log request in debug mode
-          // ignore: avoid_print
-          print('[Dio] Request: ${options.method} ${options.uri}');
+          if (kDebugMode) {
+            debugPrint('[Dio] Request: ${options.method} ${options.uri}');
+          }
           handler.next(options);
         },
         onResponse: (response, handler) {
-          // ignore: avoid_print
-          print(
-            '[Dio] Response: ${response.statusCode} ${response.requestOptions.uri}',
-          );
+          if (kDebugMode) {
+            debugPrint(
+              '[Dio] Response: ${response.statusCode} ${response.requestOptions.uri}',
+            );
+          }
           handler.next(response);
         },
         onError: (error, handler) {
-          // ignore: avoid_print
-          print('[Dio] Error: ${error.message}');
+          if (kDebugMode) {
+            debugPrint('[Dio] Error: ${error.message}');
+          }
           handler.next(error);
         },
       ),
@@ -119,9 +122,6 @@ final deepseekApiClientProvider = Provider<DeepSeekApiClient>((ref) {
   final dio = ref.watch(dioProvider);
   return DeepSeekApiClient(dio);
 });
-
-/// Backward-compatible provider name used by older feature code.
-final minmaxApiClientProvider = deepseekApiClientProvider;
 
 /// DeepSeek API Client wrapper
 /// Provides a clean interface for AI-related operations
@@ -178,13 +178,11 @@ class DeepSeekApiClient {
   }
 }
 
-typedef MinMaxApiClient = DeepSeekApiClient;
-
 /// Repository provider factory pattern
 /// Usage: ref.watch(repositoryProvider(RepositoryType))
 ///
 /// Example:
-/// final userRepositoryProvider = repositoryProvider<UserRepository>();
+/// final userRepositoryProvider = `repositoryProvider<UserRepository>()`;
 /// final userRepo = ref.watch(userRepositoryProvider);
 
 typedef RepositoryFactory<T> = T Function(Ref ref);

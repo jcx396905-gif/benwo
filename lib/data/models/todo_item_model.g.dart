@@ -22,21 +22,13 @@ const TodoItemModelSchema = CollectionSchema(
       name: r'aiConfirmationQuestions',
       type: IsarType.string,
     ),
-    r'color': PropertySchema(
-      id: 1,
-      name: r'color',
-      type: IsarType.string,
-    ),
+    r'color': PropertySchema(id: 1, name: r'color', type: IsarType.string),
     r'completedAt': PropertySchema(
       id: 2,
       name: r'completedAt',
       type: IsarType.dateTime,
     ),
-    r'content': PropertySchema(
-      id: 3,
-      name: r'content',
-      type: IsarType.string,
-    ),
+    r'content': PropertySchema(id: 3, name: r'content', type: IsarType.string),
     r'createdAt': PropertySchema(
       id: 4,
       name: r'createdAt',
@@ -47,11 +39,7 @@ const TodoItemModelSchema = CollectionSchema(
       name: r'estimatedMinutes',
       type: IsarType.long,
     ),
-    r'goalId': PropertySchema(
-      id: 6,
-      name: r'goalId',
-      type: IsarType.long,
-    ),
+    r'goalId': PropertySchema(id: 6, name: r'goalId', type: IsarType.long),
     r'isAIGenerated': PropertySchema(
       id: 7,
       name: r'isAIGenerated',
@@ -67,11 +55,7 @@ const TodoItemModelSchema = CollectionSchema(
       name: r'scheduledDate',
       type: IsarType.dateTime,
     ),
-    r'userId': PropertySchema(
-      id: 10,
-      name: r'userId',
-      type: IsarType.long,
-    )
+    r'userId': PropertySchema(id: 10, name: r'userId', type: IsarType.long),
   },
   estimateSize: _todoItemModelEstimateSize,
   serialize: _todoItemModelSerialize,
@@ -89,7 +73,7 @@ const TodoItemModelSchema = CollectionSchema(
           name: r'goalId',
           type: IndexType.value,
           caseSensitive: false,
-        )
+        ),
       ],
     ),
     r'userId': IndexSchema(
@@ -102,7 +86,7 @@ const TodoItemModelSchema = CollectionSchema(
           name: r'userId',
           type: IndexType.value,
           caseSensitive: false,
-        )
+        ),
       ],
     ),
     r'scheduledDate': IndexSchema(
@@ -115,7 +99,7 @@ const TodoItemModelSchema = CollectionSchema(
           name: r'scheduledDate',
           type: IndexType.value,
           caseSensitive: false,
-        )
+        ),
       ],
     ),
     r'isCompleted': IndexSchema(
@@ -128,9 +112,9 @@ const TodoItemModelSchema = CollectionSchema(
           name: r'isCompleted',
           type: IndexType.value,
           caseSensitive: false,
-        )
+        ),
       ],
-    )
+    ),
   },
   links: {},
   embeddedSchemas: {},
@@ -246,7 +230,10 @@ List<IsarLinkBase<dynamic>> _todoItemModelGetLinks(TodoItemModel object) {
 }
 
 void _todoItemModelAttach(
-    IsarCollection<dynamic> col, Id id, TodoItemModel object) {
+  IsarCollection<dynamic> col,
+  Id id,
+  TodoItemModel object,
+) {
   object.id = id;
 }
 
@@ -294,17 +281,16 @@ extension TodoItemModelQueryWhereSort
 extension TodoItemModelQueryWhere
     on QueryBuilder<TodoItemModel, TodoItemModel, QWhereClause> {
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause> idEqualTo(
-      Id id) {
+    Id id,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: id,
-        upper: id,
-      ));
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause> idNotEqualTo(
-      Id id) {
+    Id id,
+  ) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -327,8 +313,9 @@ extension TodoItemModelQueryWhere
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause> idGreaterThan(
-      Id id,
-      {bool include = false}) {
+    Id id, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -337,8 +324,9 @@ extension TodoItemModelQueryWhere
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause> idLessThan(
-      Id id,
-      {bool include = false}) {
+    Id id, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -353,93 +341,103 @@ extension TodoItemModelQueryWhere
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: lowerId,
-        includeLower: includeLower,
-        upper: upperId,
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause> goalIdIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'goalId',
-        value: [null],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'goalId', value: [null]),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause>
-      goalIdIsNotNull() {
+  goalIdIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'goalId',
-        lower: [null],
-        includeLower: false,
-        upper: [],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'goalId',
+          lower: [null],
+          includeLower: false,
+          upper: [],
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause> goalIdEqualTo(
-      int? goalId) {
+    int? goalId,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'goalId',
-        value: [goalId],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'goalId', value: [goalId]),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause>
-      goalIdNotEqualTo(int? goalId) {
+  goalIdNotEqualTo(int? goalId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'goalId',
-              lower: [],
-              upper: [goalId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'goalId',
-              lower: [goalId],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'goalId',
+                lower: [],
+                upper: [goalId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'goalId',
+                lower: [goalId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'goalId',
-              lower: [goalId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'goalId',
-              lower: [],
-              upper: [goalId],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'goalId',
+                lower: [goalId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'goalId',
+                lower: [],
+                upper: [goalId],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause>
-      goalIdGreaterThan(
-    int? goalId, {
-    bool include = false,
-  }) {
+  goalIdGreaterThan(int? goalId, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'goalId',
-        lower: [goalId],
-        includeLower: include,
-        upper: [],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'goalId',
+          lower: [goalId],
+          includeLower: include,
+          upper: [],
+        ),
+      );
     });
   }
 
@@ -448,12 +446,14 @@ extension TodoItemModelQueryWhere
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'goalId',
-        lower: [],
-        upper: [goalId],
-        includeUpper: include,
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'goalId',
+          lower: [],
+          upper: [goalId],
+          includeUpper: include,
+        ),
+      );
     });
   }
 
@@ -464,73 +464,82 @@ extension TodoItemModelQueryWhere
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'goalId',
-        lower: [lowerGoalId],
-        includeLower: includeLower,
-        upper: [upperGoalId],
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'goalId',
+          lower: [lowerGoalId],
+          includeLower: includeLower,
+          upper: [upperGoalId],
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause> userIdEqualTo(
-      int userId) {
+    int userId,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'userId',
-        value: [userId],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'userId', value: [userId]),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause>
-      userIdNotEqualTo(int userId) {
+  userIdNotEqualTo(int userId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'userId',
-              lower: [],
-              upper: [userId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'userId',
-              lower: [userId],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'userId',
+                lower: [],
+                upper: [userId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'userId',
+                lower: [userId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'userId',
-              lower: [userId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'userId',
-              lower: [],
-              upper: [userId],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'userId',
+                lower: [userId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'userId',
+                lower: [],
+                upper: [userId],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause>
-      userIdGreaterThan(
-    int userId, {
-    bool include = false,
-  }) {
+  userIdGreaterThan(int userId, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'userId',
-        lower: [userId],
-        includeLower: include,
-        upper: [],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'userId',
+          lower: [userId],
+          includeLower: include,
+          upper: [],
+        ),
+      );
     });
   }
 
@@ -539,12 +548,14 @@ extension TodoItemModelQueryWhere
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'userId',
-        lower: [],
-        upper: [userId],
-        includeUpper: include,
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'userId',
+          lower: [],
+          upper: [userId],
+          includeUpper: include,
+        ),
+      );
     });
   }
 
@@ -555,150 +566,172 @@ extension TodoItemModelQueryWhere
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'userId',
-        lower: [lowerUserId],
-        includeLower: includeLower,
-        upper: [upperUserId],
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'userId',
+          lower: [lowerUserId],
+          includeLower: includeLower,
+          upper: [upperUserId],
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause>
-      scheduledDateEqualTo(DateTime scheduledDate) {
+  scheduledDateEqualTo(DateTime scheduledDate) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'scheduledDate',
-        value: [scheduledDate],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(
+          indexName: r'scheduledDate',
+          value: [scheduledDate],
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause>
-      scheduledDateNotEqualTo(DateTime scheduledDate) {
+  scheduledDateNotEqualTo(DateTime scheduledDate) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'scheduledDate',
-              lower: [],
-              upper: [scheduledDate],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'scheduledDate',
-              lower: [scheduledDate],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'scheduledDate',
+                lower: [],
+                upper: [scheduledDate],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'scheduledDate',
+                lower: [scheduledDate],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'scheduledDate',
-              lower: [scheduledDate],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'scheduledDate',
-              lower: [],
-              upper: [scheduledDate],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'scheduledDate',
+                lower: [scheduledDate],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'scheduledDate',
+                lower: [],
+                upper: [scheduledDate],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause>
-      scheduledDateGreaterThan(
-    DateTime scheduledDate, {
-    bool include = false,
-  }) {
+  scheduledDateGreaterThan(DateTime scheduledDate, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'scheduledDate',
-        lower: [scheduledDate],
-        includeLower: include,
-        upper: [],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'scheduledDate',
+          lower: [scheduledDate],
+          includeLower: include,
+          upper: [],
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause>
-      scheduledDateLessThan(
-    DateTime scheduledDate, {
-    bool include = false,
-  }) {
+  scheduledDateLessThan(DateTime scheduledDate, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'scheduledDate',
-        lower: [],
-        upper: [scheduledDate],
-        includeUpper: include,
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'scheduledDate',
+          lower: [],
+          upper: [scheduledDate],
+          includeUpper: include,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause>
-      scheduledDateBetween(
+  scheduledDateBetween(
     DateTime lowerScheduledDate,
     DateTime upperScheduledDate, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'scheduledDate',
-        lower: [lowerScheduledDate],
-        includeLower: includeLower,
-        upper: [upperScheduledDate],
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'scheduledDate',
+          lower: [lowerScheduledDate],
+          includeLower: includeLower,
+          upper: [upperScheduledDate],
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause>
-      isCompletedEqualTo(bool isCompleted) {
+  isCompletedEqualTo(bool isCompleted) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'isCompleted',
-        value: [isCompleted],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(
+          indexName: r'isCompleted',
+          value: [isCompleted],
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause>
-      isCompletedNotEqualTo(bool isCompleted) {
+  isCompletedNotEqualTo(bool isCompleted) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'isCompleted',
-              lower: [],
-              upper: [isCompleted],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'isCompleted',
-              lower: [isCompleted],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'isCompleted',
+                lower: [],
+                upper: [isCompleted],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'isCompleted',
+                lower: [isCompleted],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'isCompleted',
-              lower: [isCompleted],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'isCompleted',
-              lower: [],
-              upper: [isCompleted],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'isCompleted',
+                lower: [isCompleted],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'isCompleted',
+                lower: [],
+                upper: [isCompleted],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
@@ -707,71 +740,74 @@ extension TodoItemModelQueryWhere
 extension TodoItemModelQueryFilter
     on QueryBuilder<TodoItemModel, TodoItemModel, QFilterCondition> {
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      aiConfirmationQuestionsIsNull() {
+  aiConfirmationQuestionsIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'aiConfirmationQuestions',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'aiConfirmationQuestions'),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      aiConfirmationQuestionsIsNotNull() {
+  aiConfirmationQuestionsIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'aiConfirmationQuestions',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'aiConfirmationQuestions'),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      aiConfirmationQuestionsEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
+  aiConfirmationQuestionsEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'aiConfirmationQuestions',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'aiConfirmationQuestions',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      aiConfirmationQuestionsGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'aiConfirmationQuestions',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      aiConfirmationQuestionsLessThan(
+  aiConfirmationQuestionsGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'aiConfirmationQuestions',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'aiConfirmationQuestions',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      aiConfirmationQuestionsBetween(
+  aiConfirmationQuestionsLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'aiConfirmationQuestions',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
+  aiConfirmationQuestionsBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -779,155 +815,164 @@ extension TodoItemModelQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'aiConfirmationQuestions',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'aiConfirmationQuestions',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      aiConfirmationQuestionsStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  aiConfirmationQuestionsStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'aiConfirmationQuestions',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'aiConfirmationQuestions',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      aiConfirmationQuestionsEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  aiConfirmationQuestionsEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'aiConfirmationQuestions',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'aiConfirmationQuestions',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      aiConfirmationQuestionsContains(String value,
-          {bool caseSensitive = true}) {
+  aiConfirmationQuestionsContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'aiConfirmationQuestions',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'aiConfirmationQuestions',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      aiConfirmationQuestionsMatches(String pattern,
-          {bool caseSensitive = true}) {
+  aiConfirmationQuestionsMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'aiConfirmationQuestions',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'aiConfirmationQuestions',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      aiConfirmationQuestionsIsEmpty() {
+  aiConfirmationQuestionsIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'aiConfirmationQuestions',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'aiConfirmationQuestions',
+          value: '',
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      aiConfirmationQuestionsIsNotEmpty() {
+  aiConfirmationQuestionsIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'aiConfirmationQuestions',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          property: r'aiConfirmationQuestions',
+          value: '',
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      colorIsNull() {
+  colorIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'color',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'color'),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      colorIsNotNull() {
+  colorIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'color',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'color'),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      colorEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
+  colorEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'color',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'color',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      colorGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'color',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      colorLessThan(
+  colorGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'color',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'color',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      colorBetween(
+  colorLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'color',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
+  colorBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -935,209 +980,213 @@ extension TodoItemModelQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'color',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'color',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      colorStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  colorStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'color',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'color',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      colorEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  colorEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'color',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'color',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      colorContains(String value, {bool caseSensitive = true}) {
+  colorContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'color',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'color',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      colorMatches(String pattern, {bool caseSensitive = true}) {
+  colorMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'color',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'color',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      colorIsEmpty() {
+  colorIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'color',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'color', value: ''),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      colorIsNotEmpty() {
+  colorIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'color',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'color', value: ''),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      completedAtIsNull() {
+  completedAtIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'completedAt',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'completedAt'),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      completedAtIsNotNull() {
+  completedAtIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'completedAt',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'completedAt'),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      completedAtEqualTo(DateTime? value) {
+  completedAtEqualTo(DateTime? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'completedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'completedAt', value: value),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      completedAtGreaterThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
+  completedAtGreaterThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'completedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'completedAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      completedAtLessThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
+  completedAtLessThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'completedAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'completedAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      completedAtBetween(
+  completedAtBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'completedAt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'completedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      contentEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  contentEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'content',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'content',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      contentGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'content',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      contentLessThan(
+  contentGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'content',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'content',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      contentBetween(
+  contentLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'content',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
+  contentBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1145,312 +1194,310 @@ extension TodoItemModelQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'content',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'content',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      contentStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  contentStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'content',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'content',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      contentEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  contentEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'content',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'content',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      contentContains(String value, {bool caseSensitive = true}) {
+  contentContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'content',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'content',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      contentMatches(String pattern, {bool caseSensitive = true}) {
+  contentMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'content',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'content',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      contentIsEmpty() {
+  contentIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'content',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'content', value: ''),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      contentIsNotEmpty() {
+  contentIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'content',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'content', value: ''),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      createdAtEqualTo(DateTime value) {
+  createdAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'createdAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'createdAt', value: value),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      createdAtGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  createdAtGreaterThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'createdAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'createdAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      createdAtLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  createdAtLessThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'createdAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'createdAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      createdAtBetween(
+  createdAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'createdAt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'createdAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      estimatedMinutesIsNull() {
+  estimatedMinutesIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'estimatedMinutes',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'estimatedMinutes'),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      estimatedMinutesIsNotNull() {
+  estimatedMinutesIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'estimatedMinutes',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'estimatedMinutes'),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      estimatedMinutesEqualTo(int? value) {
+  estimatedMinutesEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'estimatedMinutes',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'estimatedMinutes', value: value),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      estimatedMinutesGreaterThan(
-    int? value, {
-    bool include = false,
-  }) {
+  estimatedMinutesGreaterThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'estimatedMinutes',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'estimatedMinutes',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      estimatedMinutesLessThan(
-    int? value, {
-    bool include = false,
-  }) {
+  estimatedMinutesLessThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'estimatedMinutes',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'estimatedMinutes',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      estimatedMinutesBetween(
+  estimatedMinutesBetween(
     int? lower,
     int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'estimatedMinutes',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'estimatedMinutes',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      goalIdIsNull() {
+  goalIdIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'goalId',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'goalId'),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      goalIdIsNotNull() {
+  goalIdIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'goalId',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'goalId'),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      goalIdEqualTo(int? value) {
+  goalIdEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'goalId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'goalId', value: value),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      goalIdGreaterThan(
-    int? value, {
-    bool include = false,
-  }) {
+  goalIdGreaterThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'goalId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'goalId',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      goalIdLessThan(
-    int? value, {
-    bool include = false,
-  }) {
+  goalIdLessThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'goalId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'goalId',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      goalIdBetween(
+  goalIdBetween(
     int? lower,
     int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'goalId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'goalId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition> idEqualTo(
-      Id value) {
+    Id value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      idGreaterThan(
-    Id value, {
-    bool include = false,
-  }) {
+  idGreaterThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -1459,11 +1506,13 @@ extension TodoItemModelQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -1474,145 +1523,143 @@ extension TodoItemModelQueryFilter
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'id',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      isAIGeneratedEqualTo(bool value) {
+  isAIGeneratedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'isAIGenerated',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'isAIGenerated', value: value),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      isCompletedEqualTo(bool value) {
+  isCompletedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'isCompleted',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'isCompleted', value: value),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      scheduledDateEqualTo(DateTime value) {
+  scheduledDateEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'scheduledDate',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'scheduledDate', value: value),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      scheduledDateGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  scheduledDateGreaterThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'scheduledDate',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'scheduledDate',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      scheduledDateLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  scheduledDateLessThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'scheduledDate',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'scheduledDate',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      scheduledDateBetween(
+  scheduledDateBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'scheduledDate',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'scheduledDate',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      userIdEqualTo(int value) {
+  userIdEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'userId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'userId', value: value),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      userIdGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  userIdGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'userId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'userId',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      userIdLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  userIdLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'userId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'userId',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-      userIdBetween(
+  userIdBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'userId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'userId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
@@ -1626,14 +1673,14 @@ extension TodoItemModelQueryLinks
 extension TodoItemModelQuerySortBy
     on QueryBuilder<TodoItemModel, TodoItemModel, QSortBy> {
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      sortByAiConfirmationQuestions() {
+  sortByAiConfirmationQuestions() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'aiConfirmationQuestions', Sort.asc);
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      sortByAiConfirmationQuestionsDesc() {
+  sortByAiConfirmationQuestionsDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'aiConfirmationQuestions', Sort.desc);
     });
@@ -1658,7 +1705,7 @@ extension TodoItemModelQuerySortBy
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      sortByCompletedAtDesc() {
+  sortByCompletedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'completedAt', Sort.desc);
     });
@@ -1683,21 +1730,21 @@ extension TodoItemModelQuerySortBy
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      sortByCreatedAtDesc() {
+  sortByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      sortByEstimatedMinutes() {
+  sortByEstimatedMinutes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'estimatedMinutes', Sort.asc);
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      sortByEstimatedMinutesDesc() {
+  sortByEstimatedMinutesDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'estimatedMinutes', Sort.desc);
     });
@@ -1716,14 +1763,14 @@ extension TodoItemModelQuerySortBy
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      sortByIsAIGenerated() {
+  sortByIsAIGenerated() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isAIGenerated', Sort.asc);
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      sortByIsAIGeneratedDesc() {
+  sortByIsAIGeneratedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isAIGenerated', Sort.desc);
     });
@@ -1736,21 +1783,21 @@ extension TodoItemModelQuerySortBy
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      sortByIsCompletedDesc() {
+  sortByIsCompletedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isCompleted', Sort.desc);
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      sortByScheduledDate() {
+  sortByScheduledDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'scheduledDate', Sort.asc);
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      sortByScheduledDateDesc() {
+  sortByScheduledDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'scheduledDate', Sort.desc);
     });
@@ -1772,14 +1819,14 @@ extension TodoItemModelQuerySortBy
 extension TodoItemModelQuerySortThenBy
     on QueryBuilder<TodoItemModel, TodoItemModel, QSortThenBy> {
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      thenByAiConfirmationQuestions() {
+  thenByAiConfirmationQuestions() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'aiConfirmationQuestions', Sort.asc);
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      thenByAiConfirmationQuestionsDesc() {
+  thenByAiConfirmationQuestionsDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'aiConfirmationQuestions', Sort.desc);
     });
@@ -1804,7 +1851,7 @@ extension TodoItemModelQuerySortThenBy
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      thenByCompletedAtDesc() {
+  thenByCompletedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'completedAt', Sort.desc);
     });
@@ -1829,21 +1876,21 @@ extension TodoItemModelQuerySortThenBy
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      thenByCreatedAtDesc() {
+  thenByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      thenByEstimatedMinutes() {
+  thenByEstimatedMinutes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'estimatedMinutes', Sort.asc);
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      thenByEstimatedMinutesDesc() {
+  thenByEstimatedMinutesDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'estimatedMinutes', Sort.desc);
     });
@@ -1874,14 +1921,14 @@ extension TodoItemModelQuerySortThenBy
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      thenByIsAIGenerated() {
+  thenByIsAIGenerated() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isAIGenerated', Sort.asc);
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      thenByIsAIGeneratedDesc() {
+  thenByIsAIGeneratedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isAIGenerated', Sort.desc);
     });
@@ -1894,21 +1941,21 @@ extension TodoItemModelQuerySortThenBy
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      thenByIsCompletedDesc() {
+  thenByIsCompletedDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isCompleted', Sort.desc);
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      thenByScheduledDate() {
+  thenByScheduledDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'scheduledDate', Sort.asc);
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy>
-      thenByScheduledDateDesc() {
+  thenByScheduledDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'scheduledDate', Sort.desc);
     });
@@ -1930,29 +1977,33 @@ extension TodoItemModelQuerySortThenBy
 extension TodoItemModelQueryWhereDistinct
     on QueryBuilder<TodoItemModel, TodoItemModel, QDistinct> {
   QueryBuilder<TodoItemModel, TodoItemModel, QDistinct>
-      distinctByAiConfirmationQuestions({bool caseSensitive = true}) {
+  distinctByAiConfirmationQuestions({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'aiConfirmationQuestions',
-          caseSensitive: caseSensitive);
+      return query.addDistinctBy(
+        r'aiConfirmationQuestions',
+        caseSensitive: caseSensitive,
+      );
     });
   }
 
-  QueryBuilder<TodoItemModel, TodoItemModel, QDistinct> distinctByColor(
-      {bool caseSensitive = true}) {
+  QueryBuilder<TodoItemModel, TodoItemModel, QDistinct> distinctByColor({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'color', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QDistinct>
-      distinctByCompletedAt() {
+  distinctByCompletedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'completedAt');
     });
   }
 
-  QueryBuilder<TodoItemModel, TodoItemModel, QDistinct> distinctByContent(
-      {bool caseSensitive = true}) {
+  QueryBuilder<TodoItemModel, TodoItemModel, QDistinct> distinctByContent({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'content', caseSensitive: caseSensitive);
     });
@@ -1965,7 +2016,7 @@ extension TodoItemModelQueryWhereDistinct
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QDistinct>
-      distinctByEstimatedMinutes() {
+  distinctByEstimatedMinutes() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'estimatedMinutes');
     });
@@ -1978,21 +2029,21 @@ extension TodoItemModelQueryWhereDistinct
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QDistinct>
-      distinctByIsAIGenerated() {
+  distinctByIsAIGenerated() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isAIGenerated');
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QDistinct>
-      distinctByIsCompleted() {
+  distinctByIsCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isCompleted');
     });
   }
 
   QueryBuilder<TodoItemModel, TodoItemModel, QDistinct>
-      distinctByScheduledDate() {
+  distinctByScheduledDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'scheduledDate');
     });
@@ -2014,7 +2065,7 @@ extension TodoItemModelQueryProperty
   }
 
   QueryBuilder<TodoItemModel, String?, QQueryOperations>
-      aiConfirmationQuestionsProperty() {
+  aiConfirmationQuestionsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'aiConfirmationQuestions');
     });
@@ -2027,7 +2078,7 @@ extension TodoItemModelQueryProperty
   }
 
   QueryBuilder<TodoItemModel, DateTime?, QQueryOperations>
-      completedAtProperty() {
+  completedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'completedAt');
     });
@@ -2046,7 +2097,7 @@ extension TodoItemModelQueryProperty
   }
 
   QueryBuilder<TodoItemModel, int?, QQueryOperations>
-      estimatedMinutesProperty() {
+  estimatedMinutesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'estimatedMinutes');
     });
@@ -2071,7 +2122,7 @@ extension TodoItemModelQueryProperty
   }
 
   QueryBuilder<TodoItemModel, DateTime, QQueryOperations>
-      scheduledDateProperty() {
+  scheduledDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'scheduledDate');
     });

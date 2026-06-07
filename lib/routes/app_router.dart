@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../presentation/pages/auth/login_page.dart';
@@ -18,6 +19,8 @@ class AppRouter {
   final GoRouter router;
 
   AppRouter() : router = _createRouter();
+
+  static int _lastMainRouteIndex = 0;
 
   static GoRouter _createRouter() {
     return GoRouter(
@@ -58,12 +61,17 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.home,
           name: 'home',
-          builder: (context, state) => const HomePage(),
+          pageBuilder: (context, state) =>
+              _mainTabPage(state: state, index: 0, child: const HomePage()),
         ),
         GoRoute(
           path: AppRoutes.goals,
           name: 'goals',
-          builder: (context, state) => const GoalsListPage(),
+          pageBuilder: (context, state) => _mainTabPage(
+            state: state,
+            index: 1,
+            child: const GoalsListPage(),
+          ),
         ),
         GoRoute(
           path: AppRoutes.createGoal,
@@ -81,12 +89,14 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.calendar,
           name: 'calendar',
-          builder: (context, state) => const CalendarPage(),
+          pageBuilder: (context, state) =>
+              _mainTabPage(state: state, index: 2, child: const CalendarPage()),
         ),
         GoRoute(
           path: AppRoutes.settings,
           name: 'settings',
-          builder: (context, state) => const SettingsPage(),
+          pageBuilder: (context, state) =>
+              _mainTabPage(state: state, index: 3, child: const SettingsPage()),
         ),
         GoRoute(
           path: AppRoutes.profile,
@@ -115,5 +125,37 @@ class AppRouter {
     } catch (e) {
       return null;
     }
+  }
+
+  static CustomTransitionPage<void> _mainTabPage({
+    required GoRouterState state,
+    required int index,
+    required Widget child,
+  }) {
+    final previousIndex = _lastMainRouteIndex;
+    _lastMainRouteIndex = index;
+    final direction = index >= previousIndex ? 1.0 : -1.0;
+
+    return CustomTransitionPage<void>(
+      key: state.pageKey,
+      child: child,
+      transitionDuration: const Duration(milliseconds: 240),
+      reverseTransitionDuration: const Duration(milliseconds: 220),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: Offset(direction, 0),
+            end: Offset.zero,
+          ).animate(curvedAnimation),
+          child: child,
+        );
+      },
+    );
   }
 }

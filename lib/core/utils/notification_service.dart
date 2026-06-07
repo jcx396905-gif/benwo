@@ -11,7 +11,8 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
 
   /// Initialize the notification service
@@ -22,7 +23,9 @@ class NotificationService {
     tz_data.initializeTimeZones();
 
     // Android settings
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
 
     // iOS settings
     const iosSettings = DarwinInitializationSettings(
@@ -51,15 +54,19 @@ class NotificationService {
 
   /// Request notification permissions
   Future<bool> requestPermissions() async {
-    final android = _notifications.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (android != null) {
       final granted = await android.requestNotificationsPermission();
       return granted ?? false;
     }
 
-    final ios = _notifications.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>();
+    final ios = _notifications
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
     if (ios != null) {
       final granted = await ios.requestPermissions(
         alert: true,
@@ -80,14 +87,14 @@ class NotificationService {
     required DateTime scheduledTime,
     String? payload,
   }) async {
-    final androidDetails = AndroidNotificationDetails(
+    const androidDetails = AndroidNotificationDetails(
       'todo_reminder',
       '任务提醒',
       channelDescription: '待办任务的提醒通知',
       importance: Importance.high,
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
-      color: const Color(0xFF7FA99B),
+      color: Color(0xFF7FA99B),
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -96,7 +103,7 @@ class NotificationService {
       presentSound: true,
     );
 
-    final details = NotificationDetails(
+    const details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
@@ -108,7 +115,8 @@ class NotificationService {
       tz.TZDateTime.from(scheduledTime, tz.local),
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       payload: payload,
     );
   }
@@ -121,14 +129,14 @@ class NotificationService {
     required DateTime scheduledTime,
     String? payload,
   }) async {
-    final androidDetails = AndroidNotificationDetails(
+    const androidDetails = AndroidNotificationDetails(
       'ai_encouragement',
       'AI 激励',
       channelDescription: 'AI 主动鼓励和提醒通知',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
       icon: '@mipmap/ic_launcher',
-      color: const Color(0xFFE8A87C),
+      color: Color(0xFFE8A87C),
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -137,7 +145,7 @@ class NotificationService {
       presentSound: true,
     );
 
-    final details = NotificationDetails(
+    const details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
@@ -149,7 +157,8 @@ class NotificationService {
       tz.TZDateTime.from(scheduledTime, tz.local),
       details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       payload: payload,
     );
   }
@@ -245,11 +254,7 @@ class NotificationService {
 }
 
 /// Push frequency enum
-enum PushFrequency {
-  daily,
-  twiceDaily,
-  custom,
-}
+enum PushFrequency { daily, twiceDaily, custom }
 
 /// Push settings model
 class PushSettings {

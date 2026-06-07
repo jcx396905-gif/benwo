@@ -69,10 +69,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    final success = await ref.read(authNotifierProvider.notifier).register(
-          email: email,
-          password: password,
-        );
+    final success = await ref
+        .read(authNotifierProvider.notifier)
+        .register(email: email, password: password);
 
     if (!mounted) return;
 
@@ -120,16 +119,16 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   Text(
                     '创建账号',
                     style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '开启您的自我探索之旅',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
                   ),
                   const SizedBox(height: 48),
 
@@ -232,8 +231,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                             SizedBox(
                               height: 48,
                               child: ElevatedButton(
-                                onPressed:
-                                    isLoading ? null : _handleRegister,
+                                onPressed: isLoading ? null : _handleRegister,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   foregroundColor: Colors.white,
@@ -249,7 +247,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                           strokeWidth: 2,
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                                  Colors.white),
+                                                Colors.white,
+                                              ),
                                         ),
                                       )
                                     : const Text(
@@ -270,14 +269,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
                   // Login link
                   TextButton(
-                    onPressed:
-                        isLoading ? null : () => context.go('/login'),
+                    onPressed: isLoading ? null : () => context.go('/login'),
                     child: const Text(
                       '已有账号？立即登录',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
                 ],

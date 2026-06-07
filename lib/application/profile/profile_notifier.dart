@@ -10,11 +10,7 @@ class ProfileState {
   final bool isLoading;
   final String? errorMessage;
 
-  const ProfileState({
-    this.profile,
-    this.isLoading = false,
-    this.errorMessage,
-  });
+  const ProfileState({this.profile, this.isLoading = false, this.errorMessage});
 
   ProfileState copyWith({
     UserProfileModel? profile,
@@ -41,10 +37,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
     try {
       final profile = await _profileRepository.getProfileByUserId(userId);
-      state = state.copyWith(
-        isLoading: false,
-        profile: profile,
-      );
+      state = state.copyWith(isLoading: false, profile: profile);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -66,7 +59,10 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
   }
 
   /// Update motivation sensitivity
-  Future<bool> updateMotivationSensitivity(int userId, String sensitivity) async {
+  Future<bool> updateMotivationSensitivity(
+    int userId,
+    String sensitivity,
+  ) async {
     return _updateProfile(userId, motivationSensitivity: sensitivity);
   }
 
@@ -144,10 +140,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         threeChanges: threeChanges,
       );
 
-      state = state.copyWith(
-        isLoading: false,
-        profile: updatedProfile,
-      );
+      state = state.copyWith(isLoading: false, profile: updatedProfile);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -165,10 +158,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     try {
       await _profileRepository.completeOnboarding(userId);
       final profile = await _profileRepository.getProfileByUserId(userId);
-      state = state.copyWith(
-        isLoading: false,
-        profile: profile,
-      );
+      state = state.copyWith(isLoading: false, profile: profile);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -193,49 +183,41 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 /// Provider for ProfileNotifier
 final profileNotifierProvider =
     StateNotifierProvider<ProfileNotifier, ProfileState>((ref) {
-  final profileRepository = ref.watch(userProfileRepositoryProvider);
-  return ProfileNotifier(profileRepository);
-});
+      final profileRepository = ref.watch(userProfileRepositoryProvider);
+      return ProfileNotifier(profileRepository);
+    });
 
 /// Available MBTI types
 const List<String> mbtiTypes = [
-  'INTJ', 'INTP', 'ENTJ', 'ENTP',
-  'INFJ', 'INFP', 'ENFJ', 'ENFP',
-  'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ',
-  'ISTP', 'ISFP', 'ESTP', 'ESFP',
+  'INTJ',
+  'INTP',
+  'ENTJ',
+  'ENTP',
+  'INFJ',
+  'INFP',
+  'ENFJ',
+  'ENFP',
+  'ISTJ',
+  'ISFJ',
+  'ESTJ',
+  'ESFJ',
+  'ISTP',
+  'ISFP',
+  'ESTP',
+  'ESFP',
 ];
 
 /// Communication style options
-const List<String> communicationStyles = [
-  '鼓励型',
-  '直接型',
-  '分析型',
-];
+const List<String> communicationStyles = ['鼓励型', '直接型', '分析型'];
 
 /// Motivation sensitivity options
-const List<String> motivationSensitivityLevels = [
-  '高',
-  '中',
-  '低',
-];
+const List<String> motivationSensitivityLevels = ['高', '中', '低'];
 
 /// Best work time options
-const List<String> bestWorkTimeOptions = [
-  '早起型',
-  '夜猫型',
-  '弹性',
-];
+const List<String> bestWorkTimeOptions = ['早起型', '夜猫型', '弹性'];
 
 /// Stress response options
-const List<String> stressResponseOptions = [
-  '喜欢被推动',
-  '需要缓冲空间',
-  '视情况而定',
-];
+const List<String> stressResponseOptions = ['喜欢被推动', '需要缓冲空间', '视情况而定'];
 
 /// Social preference options
-const List<String> socialPreferenceOptions = [
-  '独立完成',
-  '喜欢协作',
-  '视任务而定',
-];
+const List<String> socialPreferenceOptions = ['独立完成', '喜欢协作', '视任务而定'];

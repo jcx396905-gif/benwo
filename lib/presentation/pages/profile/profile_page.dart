@@ -30,7 +30,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authNotifierProvider);
     final profileState = ref.watch(profileNotifierProvider);
 
     return Scaffold(
@@ -85,9 +84,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.bold,
-            ),
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -125,15 +124,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       Text(
                         profile?.name ?? '未设置',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         _getBasicInfoText(profile),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -143,11 +142,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             const SizedBox(height: 16),
             Row(
               children: [
-                _buildBasicInfoChip(Icons.cake_rounded, profile?.age != null ? '${profile!.age}岁' : '未设置'),
+                _buildBasicInfoChip(
+                  Icons.cake_rounded,
+                  profile?.age != null ? '${profile!.age}岁' : '未设置',
+                ),
                 const SizedBox(width: 8),
-                _buildBasicInfoChip(Icons.work_rounded, profile?.occupation ?? '未设置'),
+                _buildBasicInfoChip(
+                  Icons.work_rounded,
+                  profile?.occupation ?? '未设置',
+                ),
                 const SizedBox(width: 8),
-                _buildBasicInfoChip(Icons.location_on_rounded, profile?.region ?? '未设置'),
+                _buildBasicInfoChip(
+                  Icons.location_on_rounded,
+                  profile?.region ?? '未设置',
+                ),
               ],
             ),
           ],
@@ -277,7 +285,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         title: Text(title),
         subtitle: Text(
           subtitle,
-          style: TextStyle(color: subtitle == '点击选择' ? AppColors.textHint : AppColors.textSecondary),
+          style: TextStyle(
+            color: subtitle == '点击选择'
+                ? AppColors.textHint
+                : AppColors.textSecondary,
+          ),
         ),
         trailing: const Icon(Icons.chevron_right_rounded),
         onTap: onTap,
@@ -289,7 +301,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final userId = ref.read(authNotifierProvider).userId;
     if (userId == null) return;
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       builder: (context) => _MbtiPickerSheet(
         currentValue: ref.read(profileNotifierProvider).profile?.mbti,
@@ -305,14 +317,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final userId = ref.read(authNotifierProvider).userId;
     if (userId == null) return;
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       builder: (context) => _OptionPickerSheet(
         title: '沟通偏好',
         options: communicationStyles,
-        currentValue: ref.read(profileNotifierProvider).profile?.communicationStyle,
+        currentValue: ref
+            .read(profileNotifierProvider)
+            .profile
+            ?.communicationStyle,
         onSelected: (value) {
-          ref.read(profileNotifierProvider.notifier).updateCommunicationStyle(userId, value);
+          ref
+              .read(profileNotifierProvider.notifier)
+              .updateCommunicationStyle(userId, value);
           Navigator.pop(context);
         },
       ),
@@ -323,14 +340,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final userId = ref.read(authNotifierProvider).userId;
     if (userId == null) return;
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       builder: (context) => _OptionPickerSheet(
         title: '激励敏感度',
         options: motivationSensitivityLevels,
-        currentValue: ref.read(profileNotifierProvider).profile?.motivationSensitivity,
+        currentValue: ref
+            .read(profileNotifierProvider)
+            .profile
+            ?.motivationSensitivity,
         onSelected: (value) {
-          ref.read(profileNotifierProvider.notifier).updateMotivationSensitivity(userId, value);
+          ref
+              .read(profileNotifierProvider.notifier)
+              .updateMotivationSensitivity(userId, value);
           Navigator.pop(context);
         },
       ),
@@ -341,14 +363,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final userId = ref.read(authNotifierProvider).userId;
     if (userId == null) return;
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       builder: (context) => _OptionPickerSheet(
         title: '最佳工作时间',
         options: bestWorkTimeOptions,
         currentValue: ref.read(profileNotifierProvider).profile?.bestWorkTime,
         onSelected: (value) {
-          ref.read(profileNotifierProvider.notifier).updateBestWorkTime(userId, value);
+          ref
+              .read(profileNotifierProvider.notifier)
+              .updateBestWorkTime(userId, value);
           Navigator.pop(context);
         },
       ),
@@ -359,14 +383,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final userId = ref.read(authNotifierProvider).userId;
     if (userId == null) return;
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       builder: (context) => _OptionPickerSheet(
         title: '压力反应',
         options: stressResponseOptions,
         currentValue: ref.read(profileNotifierProvider).profile?.stressResponse,
         onSelected: (value) {
-          ref.read(profileNotifierProvider.notifier).updateStressResponse(userId, value);
+          ref
+              .read(profileNotifierProvider.notifier)
+              .updateStressResponse(userId, value);
           Navigator.pop(context);
         },
       ),
@@ -377,14 +403,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final userId = ref.read(authNotifierProvider).userId;
     if (userId == null) return;
 
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       builder: (context) => _OptionPickerSheet(
         title: '社交偏好',
         options: socialPreferenceOptions,
-        currentValue: ref.read(profileNotifierProvider).profile?.socialPreference,
+        currentValue: ref
+            .read(profileNotifierProvider)
+            .profile
+            ?.socialPreference,
         onSelected: (value) {
-          ref.read(profileNotifierProvider.notifier).updateSocialPreference(userId, value);
+          ref
+              .read(profileNotifierProvider.notifier)
+              .updateSocialPreference(userId, value);
           Navigator.pop(context);
         },
       ),
@@ -397,7 +428,7 @@ class _MbtiPickerSheet extends StatelessWidget {
   final String? currentValue;
   final ValueChanged<String> onSelected;
 
-  const _MbtiPickerSheet({this.currentValue, required this.onSelected});
+  const _MbtiPickerSheet({required this.onSelected, this.currentValue});
 
   @override
   Widget build(BuildContext context) {
@@ -426,7 +457,9 @@ class _MbtiPickerSheet extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'MBTI 可以帮助我们更好地了解你的性格特点',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 16),
           SizedBox(
@@ -447,17 +480,23 @@ class _MbtiPickerSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary : AppColors.surfaceVariant,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.surfaceVariant,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: isSelected ? AppColors.primary : AppColors.border,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.border,
                       ),
                     ),
                     child: Center(
                       child: Text(
                         type,
                         style: TextStyle(
-                          color: isSelected ? Colors.white : AppColors.textPrimary,
+                          color: isSelected
+                              ? Colors.white
+                              : AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -483,8 +522,8 @@ class _OptionPickerSheet extends StatelessWidget {
   const _OptionPickerSheet({
     required this.title,
     required this.options,
-    this.currentValue,
     required this.onSelected,
+    this.currentValue,
   });
 
   @override
@@ -512,13 +551,15 @@ class _OptionPickerSheet extends StatelessWidget {
           const SizedBox(height: 16),
           Text(title, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 16),
-          ...options.map((option) => ListTile(
-                title: Text(option),
-                trailing: option == currentValue
-                    ? const Icon(Icons.check_rounded, color: AppColors.primary)
-                    : null,
-                onTap: () => onSelected(option),
-              )),
+          ...options.map(
+            (option) => ListTile(
+              title: Text(option),
+              trailing: option == currentValue
+                  ? const Icon(Icons.check_rounded, color: AppColors.primary)
+                  : null,
+              onTap: () => onSelected(option),
+            ),
+          ),
         ],
       ),
     );

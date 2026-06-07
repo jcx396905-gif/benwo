@@ -20,12 +20,7 @@ class ApiConstants {
   static const Duration receiveTimeout = Duration(seconds: 60);
 
   static Map<String, String> get deepseekHeaders => {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $deepseekApiKey',
-      };
-
-  // Backward-compatible aliases used by the current API client naming.
-  static const String minmaxApiUrl = deepseekApiUrl;
-  static const String minmaxModel = deepseekModel;
-  static Map<String, String> get minmaxHeaders => deepseekHeaders;
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $deepseekApiKey',
+  };
 }
