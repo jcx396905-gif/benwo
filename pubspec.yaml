@@ -1,0 +1,57 @@
+name: benwo
+description: "BenWo - AI驱动的自我探索与目标达成应用"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+
+  # Navigation
+  go_router: ^14.8.1
+
+  # Network
+  dio: ^5.7.0
+
+  # Local Database
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+
+  # Local Storage
+  shared_preferences: ^2.3.4
+  path_provider: ^2.1.5
+
+  # Internationalization
+  intl: any
+
+  # Icons
+  cupertino_icons: ^1.0.8
+  tabler_icons: ^2.1.0
+
+  # Utilities
+  equatable: ^2.0.7
+  uuid: ^4.5.1
+  crypto: ^3.0.6
+
+  # Notifications
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.13
+  isar_generator: ^3.1.0+1
+
+flutter:
+  uses-material-design: true
+  generate: true
