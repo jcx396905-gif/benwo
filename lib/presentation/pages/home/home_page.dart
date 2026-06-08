@@ -406,6 +406,15 @@ class _HomePageState extends ConsumerState<HomePage> {
                         runSpacing: 4,
                         children: [
                           // Estimated time
+                          if (TodoReminderScheduler.hasPreciseTime(
+                            todo.scheduledDate,
+                          ))
+                            _buildMetaChip(
+                              icon: Icons.access_time_rounded,
+                              text: _formatPreciseTodoTime(todo.scheduledDate),
+                            ),
+
+                          // Estimated duration
                           if (todo.estimatedMinutes != null)
                             _buildMetaChip(
                               icon: Icons.schedule_rounded,
@@ -1364,6 +1373,14 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   String _formatTimeOfDay(TimeOfDay time) {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _formatPreciseTodoTime(DateTime date) {
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    if (date.second == 0) return '$hour:$minute';
+    final second = date.second.toString().padLeft(2, '0');
+    return '$hour:$minute:$second';
   }
 
   DateTime _applyFallbackTime(DateTime date, TimeOfDay? fallbackTime) {

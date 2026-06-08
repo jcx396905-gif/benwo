@@ -40,8 +40,9 @@ class GeneratedTodoItem {
 class TimeOfDayLike {
   final int hour;
   final int minute;
+  final int second;
 
-  const TimeOfDayLike(this.hour, this.minute);
+  const TimeOfDayLike(this.hour, this.minute, {this.second = 0});
 }
 
 class GoalSplitState {
@@ -121,6 +122,10 @@ class GoalSplitNotifier extends StateNotifier<GoalSplitState> {
   }) async {
     final trimmedInput = input.trim();
     if (trimmedInput.isEmpty) return const [];
+    final explicitTimedTodos = _extractExplicitTimedTodos(
+      trimmedInput,
+      defaultDate: defaultDate,
+    );
 
     try {
       final response = await _apiClient.simplePrompt(
@@ -132,12 +137,27 @@ class GoalSplitNotifier extends StateNotifier<GoalSplitState> {
         ),
         jsonMode: true,
       );
-      final parsed = _parseFreeTextResponse(response, defaultDate);
+      final parsed = _sanitizeGeneratedTodos(
+        _parseFreeTextResponse(response, defaultDate),
+        sourceText: trimmedInput,
+      );
+      final repaired = _mergeExplicitTimes(
+        parsed,
+        explicitTimedTodos,
+        desiredCount: desiredCount,
+      );
+      if (repaired.isNotEmpty) {
+        return _limitTodos(repaired, desiredCount);
+      }
       if (parsed.isNotEmpty) {
         return _limitTodos(parsed, desiredCount);
       }
     } catch (_) {
       // Keep the add flow usable when the network/API is unavailable.
+    }
+
+    if (explicitTimedTodos.isNotEmpty) {
+      return _limitTodos(explicitTimedTodos, desiredCount);
     }
 
     return _generateLocalTodosFromText(
@@ -162,7 +182,10 @@ class GoalSplitNotifier extends StateNotifier<GoalSplitState> {
         ),
         jsonMode: true,
       );
-      final parsed = _parseGoalResponse(response, goal, startDate);
+      final parsed = _sanitizeGeneratedTodos(
+        _parseGoalResponse(response, goal, startDate),
+        sourceText: '${goal.title} ${goal.description ?? ''}',
+      );
       if (parsed.isNotEmpty) {
         return _limitTodos(parsed, desiredCount);
       }
@@ -206,13 +229,14 @@ class GoalSplitNotifier extends StateNotifier<GoalSplitState> {
 期望任务数量：${_describeDesiredCount(desiredCount)}
 
 要求：
-1. 如果给定了期望数量，请生成接近该数量的任务；如果是 AI 自动选择，请根据目标复杂度生成 3 到 10 个任务。
+1. 如果给定了期望数量，请生成接近该数量的任务；如果是 AI 自动选择，请根据目标复杂度生成 3 到 10 个任务。目标很简单时可以少于 3 个，不能为了凑数量重复同一件事。
 2. 每个任务必须具体、可执行，避免空泛口号。
 3. dayOffset 表示从“拆分起始日期”开始第几天执行，必须是整数，最小 0，最大 $maxDays。
 4. estimatedMinutes 必须是整数，建议 10 到 180。
-5. 如果任务适合安排到具体几点几分，请返回 time，格式为 HH:mm；不确定则返回 null。
+5. 如果任务适合安排到具体几点几分，请返回 time，格式为 HH:mm；如果用户给到秒，请返回 HH:mm:ss；不确定则返回 null。
 6. 拆分时请参考用户画像，让任务粒度、提醒时间和表达方式更贴合用户。
-7. 只返回 JSON，不要 Markdown，不要解释文字。
+7. content 必须是用户要执行的具体动作，不要写“第一步/第二步/我选择/我决定/我将要”这类元描述。
+8. 只返回 JSON，不要 Markdown，不要解释文字。
 
 JSON 格式：
 {
@@ -246,13 +270,16 @@ JSON 格式：
 用户输入：$input
 
 要求：
-1. 如果给定了期望数量，请生成接近该数量的待办；如果是 AI 自动选择，请根据输入复杂度生成 2 到 10 个待办。
+1. 如果给定了期望数量，请生成接近该数量的待办；如果是 AI 自动选择，请根据输入复杂度生成 1 到 10 个待办。
+   - 如果用户只表达一个简单意图，例如“等一下要出门玩”“晚上8点跑步”，只生成 1 个待办。
+   - 只有当输入包含多个事项、明显步骤、长任务或多日期安排时才拆成多个待办。
 2. 如果用户提到“今天、明天、后天、周几、具体日期”，请把任务安排到对应日期；无法判断日期时使用默认安排日期。
 3. 每个任务给出 date，格式为 YYYY-MM-DD。
-4. 如果用户提到具体时间（例如 09:30、下午3点、18点20分、几分几秒），请给出 time，格式 HH:mm；没有明确时间则返回 null。
+4. 如果用户提到具体时间（例如 09:30、下午3点、10点半、18点20分30秒），请给出 time，格式 HH:mm 或 HH:mm:ss；没有明确时间则返回 null。
 5. 每个任务给出 estimatedMinutes，建议 10 到 180。
 6. 请参考用户画像做个性化拆分和时间安排。
-7. 只返回 JSON，不要 Markdown，不要解释文字。
+7. content 必须是自然的待办动作，不要写“第一步/第二步/我选择/我决定/我将要”这类元描述；不要把同一句话重复成多个待办。
+8. 只返回 JSON，不要 Markdown，不要解释文字。
 
 JSON 格式：
 {
@@ -378,13 +405,19 @@ JSON 格式：
     final taskCount = _resolveDesiredCount(desiredCount, fallback: 6);
     final templates = _getTaskTemplatesForGoal(goal);
     final step = (daysUntilTarget / taskCount).ceil().clamp(1, 30);
+    final fallbackTime = _extractTimeFromText(
+      '${goal.title} ${goal.description ?? ''}',
+    );
 
     return List.generate(taskCount, (index) {
       final template = templates[index % templates.length];
       final dayOffset = (index * step).clamp(0, daysUntilTarget);
       return GeneratedTodoItem(
         content: template.content,
-        scheduledDate: baseDate.add(Duration(days: dayOffset)),
+        scheduledDate: _combineDateAndTime(
+          baseDate.add(Duration(days: dayOffset)),
+          fallbackTime,
+        ),
         estimatedMinutes: template.estimatedMinutes,
       );
     });
@@ -396,21 +429,21 @@ JSON 格式：
     int? desiredCount,
   }) {
     final parts = input
-        .split(RegExp(r'[\n，,。；;、]+'))
+        .split(RegExp(r'[\n，,。；;、]+|(?:然后|再去|再|以及|并且|还要)'))
         .map((part) => part.trim())
         .where((part) => part.isNotEmpty)
         .toList();
     final fallbackParts = parts.isEmpty ? [input] : parts;
+    final isSingleSimpleIntent =
+        fallbackParts.length == 1 && _isSimpleSingleIntent(fallbackParts.first);
     final taskCount = _resolveDesiredCount(
-      desiredCount,
-      fallback: fallbackParts.length.clamp(2, 6),
+      isSingleSimpleIntent ? null : desiredCount,
+      fallback: isSingleSimpleIntent ? 1 : fallbackParts.length.clamp(1, 6),
     );
 
     return List.generate(taskCount, (index) {
       final raw = fallbackParts[index % fallbackParts.length];
-      final content = fallbackParts.length == 1 && taskCount > 1
-          ? '$raw - 第 ${index + 1} 步'
-          : raw;
+      final content = _normalizeTodoContent(raw);
       return GeneratedTodoItem(
         content: content,
         scheduledDate: _combineDateAndTime(
@@ -420,6 +453,94 @@ JSON 格式：
         estimatedMinutes: 30,
       );
     });
+  }
+
+  List<GeneratedTodoItem> _extractExplicitTimedTodos(
+    String input, {
+    required DateTime defaultDate,
+  }) {
+    final clauses = input
+        .split(RegExp(r'[\n，,。；;、]+|(?:然后|再去|以及|并且|还要)'))
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .toList();
+    final todos = <GeneratedTodoItem>[];
+
+    for (final clause in clauses) {
+      final timeText = _extractTimeFromText(clause);
+      if (timeText == null) continue;
+      final content = _normalizeTodoContent(_removeTimeExpressions(clause));
+      if (content.isEmpty) continue;
+
+      todos.add(
+        GeneratedTodoItem(
+          content: content,
+          scheduledDate: _combineDateAndTime(defaultDate, timeText),
+          estimatedMinutes: _guessEstimatedMinutes(content),
+        ),
+      );
+    }
+
+    return _dedupeTodos(todos);
+  }
+
+  List<GeneratedTodoItem> _mergeExplicitTimes(
+    List<GeneratedTodoItem> parsed,
+    List<GeneratedTodoItem> explicitTimedTodos, {
+    required int? desiredCount,
+  }) {
+    if (explicitTimedTodos.isEmpty) return parsed;
+    if (parsed.length != explicitTimedTodos.length) {
+      return explicitTimedTodos;
+    }
+
+    final merged = <GeneratedTodoItem>[];
+    for (var i = 0; i < parsed.length; i++) {
+      final parsedTodo = parsed[i];
+      final explicitTodo = explicitTimedTodos[i];
+      merged.add(
+        parsedTodo.copyWith(
+          content: parsedTodo.content.isEmpty
+              ? explicitTodo.content
+              : _removeTimeExpressions(parsedTodo.content),
+          scheduledDate: explicitTodo.scheduledDate,
+          estimatedMinutes: parsedTodo.estimatedMinutes,
+        ),
+      );
+    }
+
+    return _dedupeTodos(merged);
+  }
+
+  List<GeneratedTodoItem> _sanitizeGeneratedTodos(
+    List<GeneratedTodoItem> todos, {
+    required String sourceText,
+  }) {
+    final seen = <String>{};
+    final sanitized = <GeneratedTodoItem>[];
+
+    for (final todo in todos) {
+      final content = _normalizeTodoContent(_removeTimeExpressions(todo.content));
+      if (content.isEmpty) continue;
+      if (_isLowQualityGeneratedContent(content, sourceText)) continue;
+
+      final key = content.replaceAll(RegExp(r'\s+'), '').toLowerCase();
+      if (!seen.add(key)) continue;
+
+      sanitized.add(todo.copyWith(content: content));
+    }
+
+    return sanitized;
+  }
+
+  List<GeneratedTodoItem> _dedupeTodos(List<GeneratedTodoItem> todos) {
+    final seen = <String>{};
+    final result = <GeneratedTodoItem>[];
+    for (final todo in todos) {
+      final key = todo.content.replaceAll(RegExp(r'\s+'), '').toLowerCase();
+      if (seen.add(key)) result.add(todo);
+    }
+    return result;
   }
 
   List<GeneratedTodoItem> _limitTodos(
@@ -492,6 +613,67 @@ JSON 格式：
     return keywords.any(text.contains);
   }
 
+  bool _isSimpleSingleIntent(String text) {
+    final normalized = text.trim();
+    if (normalized.isEmpty) return true;
+    if (normalized.length <= 22) return true;
+
+    final hasComplexMarker = RegExp(
+      '(计划|项目|目标|学习|复习|整理|准备|完成|写|做|拆|多个|几件|今天.*明天|明天.*后天)',
+    ).hasMatch(normalized);
+    return !hasComplexMarker;
+  }
+
+  String _normalizeTodoContent(String content) {
+    var normalized = content.trim();
+    normalized = normalized.replaceFirst(
+      RegExp(r'^第?[一二三四五六七八九十\d]+[步项]?[、.．：:）)]*\s*'),
+      '',
+    );
+    normalized = normalized.replaceFirst(
+      RegExp(r'^(我选择|我决定|我将要|我要|我需要|我打算|我)\s*'),
+      '',
+    );
+    normalized = normalized.replaceAll(
+      RegExp('我的(?=(?:小学|初中|高中|大学)?(?:老师|同学|朋友|同事))'),
+      '',
+    );
+    return normalized.trim();
+  }
+
+  String _removeTimeExpressions(String content) {
+    var normalized = content;
+    for (final pattern in _timeExpressionPatterns) {
+      normalized = normalized.replaceAll(pattern, '');
+    }
+    normalized = normalized.replaceAll(RegExp(r'\s+'), ' ');
+    return normalized.trim();
+  }
+
+  int _guessEstimatedMinutes(String content) {
+    if (_containsAny(content, ['回家', '拿', '取', '买'])) return 20;
+    if (_containsAny(content, ['看', '见', '拜访', '老师', '朋友'])) return 60;
+    if (_containsAny(content, ['跑步', '运动', '健身'])) return 45;
+    return 30;
+  }
+
+  bool _isLowQualityGeneratedContent(String content, String sourceText) {
+    final compactContent = content.replaceAll(RegExp(r'\s+'), '');
+    final compactSource = sourceText.replaceAll(RegExp(r'\s+'), '');
+
+    if (RegExp(r'^第?[一二三四五六七八九十\d]+[步项]').hasMatch(content)) {
+      return true;
+    }
+    if (RegExp(r'^(我选择|我决定|我将要)$').hasMatch(content)) {
+      return true;
+    }
+    if (compactContent.length <= 2) return true;
+    if (compactSource.isNotEmpty && compactContent == compactSource) {
+      return false;
+    }
+    return false;
+  }
+
   void updateTodoContent(int index, String content) {
     if (index < 0 || index >= state.generatedTodos.length) return;
 
@@ -532,6 +714,7 @@ JSON 格式：
               oldDate.day,
               time.hour,
               time.minute,
+              time.second,
             ),
     );
     state = state.copyWith(generatedTodos: updatedTodos, errorMessage: null);
@@ -653,7 +836,14 @@ DateTime _dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
 DateTime _combineDateAndTime(DateTime date, String? timeText) {
   final time = _parseTimeText(timeText);
   if (time == null) return date;
-  return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  return DateTime(
+    date.year,
+    date.month,
+    date.day,
+    time.hour,
+    time.minute,
+    time.second,
+  );
 }
 
 TimeOfDayLike? _parseTimeText(String? raw) {
@@ -661,19 +851,24 @@ TimeOfDayLike? _parseTimeText(String? raw) {
   final text = raw.trim();
   if (text.isEmpty || text.toLowerCase() == 'null') return null;
 
-  final colonMatch = RegExp(r'(\d{1,2})[:：](\d{1,2})').firstMatch(text);
+  final colonMatch = RegExp(
+    r'(\d{1,2})[:：](\d{1,2})(?:[:：](\d{1,2}))?',
+  ).firstMatch(text);
   if (colonMatch != null) {
     final hour = int.tryParse(colonMatch.group(1)!);
     final minute = int.tryParse(colonMatch.group(2)!);
-    return _validTime(hour, minute);
+    final second = int.tryParse(colonMatch.group(3) ?? '0') ?? 0;
+    return _validTime(hour, minute, second);
   }
 
-  final cnMatch = RegExp(
-    r'(\d{1,2})\s*(?:点|時|时)(?:(\d{1,2})\s*分?)?',
-  ).firstMatch(text);
+  final cnMatch = _chineseTimePattern.firstMatch(text);
   if (cnMatch != null) {
     var hour = int.tryParse(cnMatch.group(1)!);
-    final minute = int.tryParse(cnMatch.group(2) ?? '0') ?? 0;
+    final hasHalf = cnMatch.group(2) == '半';
+    final minute = hasHalf
+        ? 30
+        : int.tryParse(cnMatch.group(3) ?? '0') ?? 0;
+    final second = int.tryParse(cnMatch.group(4) ?? '0') ?? 0;
     if ((text.contains('下午') || text.contains('晚上')) &&
         hour != null &&
         hour < 12) {
@@ -682,26 +877,35 @@ TimeOfDayLike? _parseTimeText(String? raw) {
     if (text.contains('中午') && hour != null && hour < 11) {
       hour += 12;
     }
-    return _validTime(hour, minute);
+    return _validTime(hour, minute, second);
   }
 
   return null;
 }
 
-TimeOfDayLike? _validTime(int? hour, int? minute) {
+TimeOfDayLike? _validTime(int? hour, int? minute, int second) {
   if (hour == null || minute == null) return null;
-  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
-  return TimeOfDayLike(hour, minute);
+  if (hour < 0 || hour > 23) return null;
+  if (minute < 0 || minute > 59) return null;
+  if (second < 0 || second > 59) return null;
+  return TimeOfDayLike(hour, minute, second: second);
 }
 
 String? _extractTimeFromText(String text) {
-  final colonMatch = RegExp(r'\d{1,2}[:：]\d{1,2}').firstMatch(text);
+  final colonMatch = RegExp(r'\d{1,2}[:：]\d{1,2}(?:[:：]\d{1,2})?').firstMatch(text);
   if (colonMatch != null) return colonMatch.group(0);
-  final cnMatch = RegExp(
-    r'(?:上午|中午|下午|晚上|早上)?\s*\d{1,2}\s*(?:点|時|时)(?:\d{1,2}\s*分?)?',
-  ).firstMatch(text);
+  final cnMatch = _chineseTimePattern.firstMatch(text);
   return cnMatch?.group(0);
 }
+
+final RegExp _chineseTimePattern = RegExp(
+  r'(?:凌晨|早上|上午|中午|下午|晚上)?\s*(\d{1,2})\s*(?:点钟|时钟|点|時|时)(半|(?:(\d{1,2})\s*分?)?)?(?:(\d{1,2})\s*秒)?',
+);
+
+final List<RegExp> _timeExpressionPatterns = [
+  RegExp(r'\d{1,2}[:：]\d{1,2}(?:[:：]\d{1,2})?'),
+  _chineseTimePattern,
+];
 
 String _formatIsoDate(DateTime date) {
   final normalized = _dateOnly(date);

@@ -1356,7 +1356,11 @@ class _GeneratedTodoCard extends StatelessWidget {
   }
 
   String get _formattedTime {
-    return '${todo.scheduledDate.hour.toString().padLeft(2, '0')}:${todo.scheduledDate.minute.toString().padLeft(2, '0')}';
+    final hour = todo.scheduledDate.hour.toString().padLeft(2, '0');
+    final minute = todo.scheduledDate.minute.toString().padLeft(2, '0');
+    if (todo.scheduledDate.second == 0) return '$hour:$minute';
+    final second = todo.scheduledDate.second.toString().padLeft(2, '0');
+    return '$hour:$minute:$second';
   }
 
   bool get _hasPreciseTime {
