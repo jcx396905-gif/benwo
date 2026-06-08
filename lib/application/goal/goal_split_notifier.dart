@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/di/injection.dart';
@@ -76,6 +79,16 @@ class GoalSplitState {
 }
 
 const Object _unchanged = Object();
+const Duration _aiSplitTimeout = Duration(seconds: 45);
+
+class AiSplitException implements Exception {
+  final String message;
+
+  const AiSplitException(this.message);
+
+  @override
+  String toString() => message;
+}
 
 class GoalSplitNotifier extends StateNotifier<GoalSplitState> {
   GoalSplitNotifier(
@@ -109,7 +122,10 @@ class GoalSplitNotifier extends StateNotifier<GoalSplitState> {
       state = state.copyWith(isLoading: false, generatedTodos: todos);
       return true;
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: '生成任务失败：$e');
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'AI generation failed: $e',
+      );
       return false;
     }
   }
@@ -122,40 +138,35 @@ class GoalSplitNotifier extends StateNotifier<GoalSplitState> {
   }) async {
     final trimmedInput = input.trim();
     if (trimmedInput.isEmpty) return const [];
-    final explicitTimedTodos = _extractExplicitTimedTodos(
-      trimmedInput,
-      defaultDate: defaultDate,
-    );
 
     try {
-      final response = await _apiClient.simplePrompt(
-        _buildFreeTextPrompt(
-          trimmedInput,
-          profile: await _loadProfile(userId),
-          desiredCount: desiredCount,
-          defaultDate: defaultDate,
-        ),
-        jsonMode: true,
-      );
+      final response = await _apiClient
+          .simplePrompt(
+            _buildFreeTextPrompt(
+              trimmedInput,
+              profile: await _loadProfile(userId),
+              desiredCount: desiredCount,
+              defaultDate: defaultDate,
+            ),
+            jsonMode: true,
+          )
+          .timeout(_aiSplitTimeout);
       final parsed = _sanitizeGeneratedTodos(
         _parseFreeTextResponse(response, defaultDate),
         sourceText: trimmedInput,
       );
-      final repaired = _mergeExplicitTimes(
-        parsed,
-        explicitTimedTodos,
-        desiredCount: desiredCount,
-      );
-      if (repaired.isNotEmpty) {
-        return _limitTodos(repaired, desiredCount);
-      }
       if (parsed.isNotEmpty) {
         return _limitTodos(parsed, desiredCount);
       }
-    } catch (_) {
-      // Keep the add flow usable when the network/API is unavailable.
+      throw const AiSplitException('AI did not return usable todos.');
+    } catch (error) {
+      if (!_isOfflineError(error)) rethrow;
     }
 
+    final explicitTimedTodos = _extractExplicitTimedTodos(
+      trimmedInput,
+      defaultDate: defaultDate,
+    );
     if (explicitTimedTodos.isNotEmpty) {
       return _limitTodos(explicitTimedTodos, desiredCount);
     }
@@ -173,24 +184,27 @@ class GoalSplitNotifier extends StateNotifier<GoalSplitState> {
     int? desiredCount,
   }) async {
     try {
-      final response = await _apiClient.simplePrompt(
-        _buildGoalPrompt(
-          goal,
-          profile: await _loadProfile(goal.userId),
-          desiredCount: desiredCount,
-          startDate: startDate,
-        ),
-        jsonMode: true,
-      );
+      final response = await _apiClient
+          .simplePrompt(
+            _buildGoalPrompt(
+              goal,
+              profile: await _loadProfile(goal.userId),
+              desiredCount: desiredCount,
+              startDate: startDate,
+            ),
+            jsonMode: true,
+          )
+          .timeout(_aiSplitTimeout);
       final parsed = _sanitizeGeneratedTodos(
         _parseGoalResponse(response, goal, startDate),
         sourceText: '${goal.title} ${goal.description ?? ''}',
       );
       if (parsed.isNotEmpty) {
-        return _limitTodos(parsed, desiredCount);
+        return _limitGoalTodos(parsed, goal, startDate);
       }
-    } catch (_) {
-      // Local fallback keeps basic goal splitting available.
+      throw const AiSplitException('AI did not return usable goal todos.');
+    } catch (error) {
+      if (!_isOfflineError(error)) rethrow;
     }
 
     return _generateLocalTodosForGoal(
@@ -212,43 +226,38 @@ class GoalSplitNotifier extends StateNotifier<GoalSplitState> {
     final maxDays = targetDate.difference(baseDate).inDays.clamp(1, 3650);
     final description = goal.description?.trim().isNotEmpty == true
         ? goal.description!.trim()
-        : '无';
+        : '\u65e0';
     final category = goal.category?.trim().isNotEmpty == true
         ? goal.category!.trim()
-        : '未分类';
+        : '\u672a\u5206\u7c7b';
 
     return '''
-你是一个严谨的目标拆分助手。请把用户的大目标拆成具体、可执行、适合放进日历的任务。
-目标标题：${goal.title}
-目标描述：$description
-目标分类：$category
-用户画像：${_formatProfile(profile)}
-今天日期：${_formatIsoDate(today)}
-拆分起始日期：${_formatIsoDate(baseDate)}
-目标完成日期：${_formatIsoDate(targetDate)}
-期望任务数量：${_describeDesiredCount(desiredCount)}
+You are a careful long-term goal planning assistant.
+Split the user's BIG GOAL into concrete calendar todos. Return task content in the same language as the user's goal.
 
-要求：
-1. 如果给定了期望数量，请生成接近该数量的任务；如果是 AI 自动选择，请根据目标复杂度生成 3 到 10 个任务。目标很简单时可以少于 3 个，不能为了凑数量重复同一件事。
-2. 每个任务必须具体、可执行，避免空泛口号。
-3. dayOffset 表示从“拆分起始日期”开始第几天执行，必须是整数，最小 0，最大 $maxDays。
-4. estimatedMinutes 必须是整数，建议 10 到 180。
-5. 如果任务适合安排到具体几点几分，请返回 time，格式为 HH:mm；如果用户给到秒，请返回 HH:mm:ss；不确定则返回 null。
-6. 拆分时请参考用户画像，让任务粒度、提醒时间和表达方式更贴合用户。
-7. content 必须是用户要执行的具体动作，不要写“第一步/第二步/我选择/我决定/我将要”这类元描述。
-8. 只返回 JSON，不要 Markdown，不要解释文字。
+Goal title: ${goal.title}
+Goal description: $description
+Goal category: $category
+鐢ㄦ埛鐢诲儚 / User profile: ${_formatProfile(profile)}
+Today: ${_formatIsoDate(today)}
+Start date: ${_formatIsoDate(baseDate)}
+Target date: ${_formatIsoDate(targetDate)}
+Plan days: ${maxDays + 1}
+Desired task count: ${_describeDesiredCount(desiredCount)}
 
-JSON 格式：
-{
-  "todos": [
-    {
-      "content": "任务内容",
-      "dayOffset": 0,
-      "time": "09:30",
-      "estimatedMinutes": 30
-    }
-  ]
-}
+Rules:
+1. This is BIG GOAL splitting, not one-day todo splitting. Every task must be directly related to the goal topic.
+2. First infer the concrete domain of the goal from title, description, category, dates, and user profile. Then generate tasks only for that domain. Do not output generic productivity filler.
+3. For weight-loss or fitness goals such as \u51cf\u80a5, \u51cf\u8102, \u4f53\u91cd, \u996e\u98df, \u8fd0\u52a8, generate tasks about meals, calorie control, exercise, weighing, water, sleep, body measurements, and review. Never output generic planning filler.
+4. If desired task count is AI auto, generate one todo for every calendar day from start date to target date, inclusive. If the user selected a count, generate exactly that many todos and distribute them across multiple dates, not all on one day.
+5. dayOffset is an integer from 0 to $maxDays.
+6. content must be a concrete action that can be done that day. Do not write generic text such as "split the goal into steps", "complete today's smallest action", "record progress and blockers", or "adjust the next plan".
+7. estimatedMinutes must be an integer, usually 10 to 180.
+8. If the user gave an exact time, return time as HH:mm or HH:mm:ss. Otherwise return null.
+9. Return JSON only, no Markdown, no explanation.
+
+JSON shape:
+{"todos":[{"content":"\u4efb\u52a1\u5185\u5bb9","dayOffset":0,"time":"09:30","estimatedMinutes":30}]}
 ''';
   }
 
@@ -262,36 +271,25 @@ JSON 格式：
     final baseDate = _dateOnly(defaultDate);
 
     return '''
-你是一个待办拆分助手。请把用户输入的一段话拆成当天或未来日期的待办任务，并尽量识别自然语言日期。
-今天日期：${_formatIsoDate(today)}
-默认安排日期：${_formatIsoDate(baseDate)}
-期望任务数量：${_describeDesiredCount(desiredCount)}
-用户画像：${_formatProfile(profile)}
-用户输入：$input
+You are a todo splitting assistant. Split the user's text into todos for the default date or the exact date mentioned by the user. Return task content in the same language as the user input.
 
-要求：
-1. 如果给定了期望数量，请生成接近该数量的待办；如果是 AI 自动选择，请根据输入复杂度生成 1 到 10 个待办。
-   - 如果用户只表达一个简单意图，例如“等一下要出门玩”“晚上8点跑步”，只生成 1 个待办。
-   - 只有当输入包含多个事项、明显步骤、长任务或多日期安排时才拆成多个待办。
-2. 如果用户提到“今天、明天、后天、周几、具体日期”，请把任务安排到对应日期；无法判断日期时使用默认安排日期。
-3. 每个任务给出 date，格式为 YYYY-MM-DD。
-4. 如果用户提到具体时间（例如 09:30、下午3点、10点半、18点20分30秒），请给出 time，格式 HH:mm 或 HH:mm:ss；没有明确时间则返回 null。
-5. 每个任务给出 estimatedMinutes，建议 10 到 180。
-6. 请参考用户画像做个性化拆分和时间安排。
-7. content 必须是自然的待办动作，不要写“第一步/第二步/我选择/我决定/我将要”这类元描述；不要把同一句话重复成多个待办。
-8. 只返回 JSON，不要 Markdown，不要解释文字。
+Today: ${_formatIsoDate(today)}
+Default date: ${_formatIsoDate(baseDate)}
+Desired task count: ${_describeDesiredCount(desiredCount)}
+鐢ㄦ埛鐢诲儚 / User profile: ${_formatProfile(profile)}
+User input: $input
 
-JSON 格式：
-{
-  "todos": [
-    {
-      "content": "待办内容",
-      "date": "${_formatIsoDate(baseDate)}",
-      "time": "09:30",
-      "estimatedMinutes": 30
-    }
-  ]
-}
+Rules:
+1. This is TODO splitting, not long-term goal splitting. Generate todos for today or the user-specified date only.
+2. If the input is one simple intent, create one todo. Split into multiple todos only when the input contains multiple items, clear steps, or multiple exact times.
+3. If the user mentions several exact times, create one todo for each time and preserve the exact time.
+4. Return date as YYYY-MM-DD.
+5. If the user mentions an exact time, return time as HH:mm or HH:mm:ss. Otherwise return null.
+6. content must be a natural action. Do not write \u7b2c\u4e00\u6b65, \u7b2c\u4e8c\u6b65, \u6211\u9009\u62e9, \u6211\u51b3\u5b9a, or \u6211\u5c06\u8981.
+7. Return JSON only, no Markdown, no explanation.
+
+JSON shape:
+{"todos":[{"content":"\u5f85\u529e\u5185\u5bb9","date":"${_formatIsoDate(baseDate)}","time":"09:30","estimatedMinutes":30}]}
 ''';
   }
 
@@ -338,7 +336,7 @@ JSON 格式：
         );
       }
 
-      return todos.take(20).toList();
+      return todos.take(_maxGoalPlanTodos).toList();
     } catch (_) {
       return const [];
     }
@@ -402,7 +400,8 @@ JSON 格式：
     final daysUntilTarget = _dateOnly(
       goal.targetDate,
     ).difference(baseDate).inDays.clamp(1, 3650);
-    final taskCount = _resolveDesiredCount(desiredCount, fallback: 6);
+    final dayCount = _goalPlanDayCount(goal, startDate);
+    final taskCount = desiredCount ?? dayCount.clamp(1, _maxGoalPlanTodos);
     final templates = _getTaskTemplatesForGoal(goal);
     final step = (daysUntilTarget / taskCount).ceil().clamp(1, 30);
     final fallbackTime = _extractTimeFromText(
@@ -411,9 +410,13 @@ JSON 格式：
 
     return List.generate(taskCount, (index) {
       final template = templates[index % templates.length];
-      final dayOffset = (index * step).clamp(0, daysUntilTarget);
+      final dayOffset = desiredCount == null
+          ? index.clamp(0, daysUntilTarget)
+          : (index * step).clamp(0, daysUntilTarget);
       return GeneratedTodoItem(
-        content: template.content,
+        content: desiredCount == null
+            ? '\u7b2c${index + 1}\u5929\uff1a${template.content}'
+            : template.content,
         scheduledDate: _combineDateAndTime(
           baseDate.add(Duration(days: dayOffset)),
           fallbackTime,
@@ -429,7 +432,7 @@ JSON 格式：
     int? desiredCount,
   }) {
     final parts = input
-        .split(RegExp(r'[\n，,。；;、]+|(?:然后|再去|再|以及|并且|还要)'))
+        .split(RegExp(r'[\n，。；;、]+|(?:然后|再去|以及|并且|还要)'))
         .map((part) => part.trim())
         .where((part) => part.isNotEmpty)
         .toList();
@@ -460,7 +463,7 @@ JSON 格式：
     required DateTime defaultDate,
   }) {
     final clauses = input
-        .split(RegExp(r'[\n，,。；;、]+|(?:然后|再去|以及|并且|还要)'))
+        .split(RegExp(r'[\n，。；;、]+|(?:然后|再去|以及|并且|还要)'))
         .map((part) => part.trim())
         .where((part) => part.isNotEmpty)
         .toList();
@@ -484,34 +487,6 @@ JSON 格式：
     return _dedupeTodos(todos);
   }
 
-  List<GeneratedTodoItem> _mergeExplicitTimes(
-    List<GeneratedTodoItem> parsed,
-    List<GeneratedTodoItem> explicitTimedTodos, {
-    required int? desiredCount,
-  }) {
-    if (explicitTimedTodos.isEmpty) return parsed;
-    if (parsed.length != explicitTimedTodos.length) {
-      return explicitTimedTodos;
-    }
-
-    final merged = <GeneratedTodoItem>[];
-    for (var i = 0; i < parsed.length; i++) {
-      final parsedTodo = parsed[i];
-      final explicitTodo = explicitTimedTodos[i];
-      merged.add(
-        parsedTodo.copyWith(
-          content: parsedTodo.content.isEmpty
-              ? explicitTodo.content
-              : _removeTimeExpressions(parsedTodo.content),
-          scheduledDate: explicitTodo.scheduledDate,
-          estimatedMinutes: parsedTodo.estimatedMinutes,
-        ),
-      );
-    }
-
-    return _dedupeTodos(merged);
-  }
-
   List<GeneratedTodoItem> _sanitizeGeneratedTodos(
     List<GeneratedTodoItem> todos, {
     required String sourceText,
@@ -520,7 +495,9 @@ JSON 格式：
     final sanitized = <GeneratedTodoItem>[];
 
     for (final todo in todos) {
-      final content = _normalizeTodoContent(_removeTimeExpressions(todo.content));
+      final content = _normalizeTodoContent(
+        _removeTimeExpressions(todo.content),
+      );
       if (content.isEmpty) continue;
       if (_isLowQualityGeneratedContent(content, sourceText)) continue;
 
@@ -551,6 +528,44 @@ JSON 格式：
     return limit == null ? todos.take(20).toList() : todos.take(limit).toList();
   }
 
+  List<GeneratedTodoItem> _limitGoalTodos(
+    List<GeneratedTodoItem> todos,
+    BigGoalModel goal,
+    DateTime startDate,
+  ) {
+    final maxCount = _goalPlanDayCount(
+      goal,
+      startDate,
+    ).clamp(1, _maxGoalPlanTodos);
+    return todos.take(maxCount).toList();
+  }
+
+  int _goalPlanDayCount(BigGoalModel goal, DateTime startDate) {
+    final baseDate = _dateOnly(startDate);
+    final targetDate = _dateOnly(goal.targetDate);
+    return targetDate.difference(baseDate).inDays.clamp(0, 3650) + 1;
+  }
+
+  bool _isWeightLossGoal(String text) {
+    return _containsAny(text, [
+      '\u51cf\u80a5',
+      '\u51cf\u8102',
+      '\u7626',
+      '\u4f53\u91cd',
+      '\u63a7\u5236\u996e\u98df',
+      '\u996e\u98df',
+      '\u70ed\u91cf',
+      '\u8fd0\u52a8',
+      '\u5065\u8eab',
+      '\u8dd1\u6b65',
+      '\u8102\u80aa',
+      '\u5341\u65a4',
+      '\u65a4',
+    ]);
+  }
+
+  static const int _maxGoalPlanTodos = 366;
+
   int _resolveDesiredCount(int? desiredCount, {required int fallback}) {
     return (desiredCount ?? fallback).clamp(1, 20);
   }
@@ -565,47 +580,229 @@ JSON 格式：
     final text =
         '${goal.title} ${goal.description ?? ''} ${goal.category ?? ''}';
 
-    if (_containsAny(text, ['学习', '考试', '课程', '读书', '英语', '数学'])) {
+    if (_isWeightLossGoal(text)) {
       return const [
-        _TodoTemplate('整理当前学习资料并列出重点', 30),
-        _TodoTemplate('完成一组练习题并记录错题', 60),
-        _TodoTemplate('复盘本周学习内容', 45),
-        _TodoTemplate('预习下一阶段内容', 30),
+        _TodoTemplate(
+          '\u8bb0\u5f55\u6668\u8d77\u4f53\u91cd\u548c\u8170\u56f4',
+          10,
+        ),
+        _TodoTemplate(
+          '\u89c4\u5212\u4eca\u5929\u4e09\u9910\u5e76\u51cf\u5c11\u9ad8\u7cd6\u9ad8\u6cb9\u98df\u7269',
+          20,
+        ),
+        _TodoTemplate(
+          '\u5b8c\u621030\u5206\u949f\u4e2d\u7b49\u5f3a\u5ea6\u6709\u6c27\u8fd0\u52a8',
+          40,
+        ),
+        _TodoTemplate(
+          '\u559d\u591f\u996e\u6c34\u5e76\u51cf\u5c11\u542b\u7cd6\u996e\u6599',
+          10,
+        ),
+        _TodoTemplate('\u665a\u9910\u540e\u6563\u6b6520\u5206\u949f', 25),
+        _TodoTemplate(
+          '\u590d\u76d8\u4eca\u5929\u70ed\u91cf\u6444\u5165\u548c\u8fd0\u52a8\u5b8c\u6210\u60c5\u51b5',
+          15,
+        ),
+        _TodoTemplate(
+          '\u63d0\u524d\u51c6\u5907\u4e00\u4efd\u4f4e\u70ed\u91cf\u9ad8\u86cb\u767d\u9910',
+          30,
+        ),
       ];
     }
 
-    if (_containsAny(text, ['健康', '运动', '减脂', '健身', '跑步'])) {
+    if (_containsAny(text, [
+      '\u5b66\u4e60',
+      '\u8003\u8bd5',
+      '\u82f1\u8bed',
+      '\u8bfe\u7a0b',
+      '\u590d\u4e60',
+      '\u9605\u8bfb',
+      '\u80cc\u5355\u8bcd',
+      '\u8003\u7814',
+    ])) {
       return const [
-        _TodoTemplate('完成 30 分钟有氧运动', 45),
-        _TodoTemplate('完成一组力量训练', 30),
-        _TodoTemplate('记录饮食和饮水情况', 10),
-        _TodoTemplate('提前准备一份健康餐', 40),
+        _TodoTemplate(
+          '\u5b8c\u6210\u4e00\u8f6e\u77e5\u8bc6\u70b9\u5b66\u4e60\u548c\u7b14\u8bb0\u6574\u7406',
+          25,
+        ),
+        _TodoTemplate(
+          '\u505a\u4e00\u7ec4\u7ec3\u4e60\u9898\u5e76\u6807\u8bb0\u9519\u9898',
+          45,
+        ),
+        _TodoTemplate(
+          '\u590d\u4e60\u6628\u5929\u7684\u91cd\u70b9\u5185\u5bb9',
+          25,
+        ),
+        _TodoTemplate(
+          '\u6574\u7406\u4eca\u65e5\u5b66\u4e60\u603b\u7ed3\u548c\u660e\u65e5\u8ba1\u5212',
+          30,
+        ),
+        _TodoTemplate(
+          '\u80cc\u8bf510\u4e2a\u6838\u5fc3\u77e5\u8bc6\u70b9\u6216\u5355\u8bcd',
+          10,
+        ),
       ];
     }
 
-    if (_containsAny(text, ['工作', '职业', '项目', '技能', '开发', '代码'])) {
+    if (_containsAny(text, [
+      '\u5065\u5eb7',
+      '\u7761\u7720',
+      '\u4f5c\u606f',
+      '\u65e9\u7761',
+      '\u8fd0\u52a8',
+      '\u8dd1\u6b65',
+      '\u5065\u8eab',
+    ])) {
       return const [
-        _TodoTemplate('明确本阶段最重要的交付物', 30),
-        _TodoTemplate('完成一个关键工作任务', 90),
-        _TodoTemplate('复盘流程并记录改进点', 30),
-        _TodoTemplate('学习一个相关行业知识点', 45),
+        _TodoTemplate(
+          '\u5b8c\u6210\u4eca\u5929\u7684\u5065\u5eb7\u884c\u52a8\u5e76\u8bb0\u5f55\u7ed3\u679c',
+          40,
+        ),
+        _TodoTemplate(
+          '\u8bb0\u5f55\u7761\u7720\u3001\u996e\u6c34\u548c\u8eab\u4f53\u72b6\u6001',
+          10,
+        ),
+        _TodoTemplate(
+          '\u505a\u4e00\u6b21\u8f7b\u91cf\u62c9\u4f38\u6216\u6709\u6c27\u8bad\u7ec3',
+          30,
+        ),
+        _TodoTemplate(
+          '\u590d\u76d8\u5f71\u54cd\u5065\u5eb7\u4e60\u60ef\u7684\u963b\u788d',
+          15,
+        ),
       ];
     }
 
-    if (_containsAny(text, ['财务', '存钱', '理财', '预算'])) {
+    if (_containsAny(text, [
+      '\u5de5\u4f5c',
+      '\u9879\u76ee',
+      '\u4ea7\u54c1',
+      '\u4ee3\u7801',
+      '\u5f00\u53d1',
+      '\u8bba\u6587',
+      '\u62a5\u544a',
+      '\u521b\u4e1a',
+    ])) {
       return const [
-        _TodoTemplate('记录今日收入和支出', 10),
-        _TodoTemplate('检查预算执行情况', 30),
-        _TodoTemplate('整理一个可削减的开支项', 20),
-        _TodoTemplate('学习一个理财知识点', 45),
+        _TodoTemplate(
+          '\u660e\u786e\u4eca\u5929\u8981\u4ea4\u4ed8\u7684\u4e00\u4e2a\u5c0f\u6210\u679c',
+          20,
+        ),
+        _TodoTemplate(
+          '\u5b8c\u6210\u4e00\u6bb5\u6838\u5fc3\u5de5\u4f5c\u5e76\u4fdd\u5b58\u8fdb\u5ea6',
+          90,
+        ),
+        _TodoTemplate(
+          '\u68c0\u67e5\u5e76\u6574\u7406\u9047\u5230\u7684\u95ee\u9898\u6e05\u5355',
+          15,
+        ),
+        _TodoTemplate(
+          '\u590d\u76d8\u4eca\u65e5\u4ea7\u51fa\u5e76\u5b89\u6392\u4e0b\u4e00\u6b65',
+          25,
+        ),
+      ];
+    }
+
+    if (_containsAny(text, [
+      '\u7701\u94b1',
+      '\u5b58\u94b1',
+      '\u7406\u8d22',
+      '\u9884\u7b97',
+      '\u8fd8\u6b3e',
+      '\u6536\u5165',
+      '\u5f00\u9500',
+    ])) {
+      return const [
+        _TodoTemplate(
+          '\u8bb0\u5f55\u4eca\u5929\u7684\u6536\u5165\u548c\u652f\u51fa',
+          10,
+        ),
+        _TodoTemplate(
+          '\u68c0\u67e5\u672c\u5468\u9884\u7b97\u4f7f\u7528\u60c5\u51b5',
+          20,
+        ),
+        _TodoTemplate(
+          '\u51cf\u5c11\u4e00\u9879\u975e\u5fc5\u8981\u6d88\u8d39',
+          15,
+        ),
+        _TodoTemplate(
+          '\u590d\u76d8\u672c\u9636\u6bb5\u5b58\u94b1\u8fdb\u5ea6',
+          30,
+        ),
+      ];
+    }
+
+    if (_containsAny(text, [
+      '\u6574\u7406',
+      '\u6536\u7eb3',
+      '\u623f\u95f4',
+      '\u642c\u5bb6',
+      '\u6e05\u7406',
+      '\u5bb6\u52a1',
+    ])) {
+      return const [
+        _TodoTemplate(
+          '\u6574\u7406\u4e00\u4e2a\u5c0f\u533a\u57df\u5e76\u62cd\u7167\u8bb0\u5f55',
+          30,
+        ),
+        _TodoTemplate(
+          '\u4e22\u5f03\u6216\u5f52\u4f4d\u4e00\u6279\u65e0\u7528\u7269\u54c1',
+          30,
+        ),
+        _TodoTemplate(
+          '\u6e05\u6d01\u4eca\u5929\u6307\u5b9a\u7684\u7a7a\u95f4',
+          25,
+        ),
+        _TodoTemplate(
+          '\u5217\u51fa\u4e0b\u4e00\u6b21\u6574\u7406\u6e05\u5355',
+          15,
+        ),
+      ];
+    }
+
+    if (_containsAny(text, [
+      '\u670b\u53cb',
+      '\u5bb6\u4eba',
+      '\u5173\u7cfb',
+      '\u6c9f\u901a',
+      '\u793e\u4ea4',
+      '\u8001\u5e08',
+      '\u540c\u5b66',
+    ])) {
+      return const [
+        _TodoTemplate(
+          '\u8054\u7cfb\u4e00\u4f4d\u76f8\u5173\u7684\u4eba\u5e76\u786e\u8ba4\u4e0b\u4e00\u6b65',
+          15,
+        ),
+        _TodoTemplate('\u51c6\u5907\u4e00\u6b21\u6c9f\u901a\u8981\u70b9', 20),
+        _TodoTemplate(
+          '\u8bb0\u5f55\u6c9f\u901a\u7ed3\u679c\u548c\u540e\u7eed\u4e8b\u9879',
+          15,
+        ),
+        _TodoTemplate(
+          '\u5b89\u6392\u4e00\u6b21\u8f7b\u91cf\u4e92\u52a8\u6216\u89c1\u9762',
+          10,
+        ),
       ];
     }
 
     return const [
-      _TodoTemplate('把目标拆成三个可执行的小步骤', 30),
-      _TodoTemplate('完成今天的最小可行动作', 30),
-      _TodoTemplate('记录进展和遇到的阻碍', 20),
-      _TodoTemplate('调整下一步计划', 20),
+      _TodoTemplate(
+        '\u5b8c\u6210\u4e00\u4e2a\u548c\u76ee\u6807\u76f4\u63a5\u76f8\u5173\u7684\u5c0f\u884c\u52a8',
+        20,
+      ),
+      _TodoTemplate(
+        '\u63a8\u8fdb\u76ee\u6807\u4e2d\u7684\u4e00\u4e2a\u5177\u4f53\u73af\u8282',
+        40,
+      ),
+      _TodoTemplate(
+        '\u8bb0\u5f55\u4eca\u5929\u5b8c\u6210\u60c5\u51b5\u548c\u95ee\u9898',
+        15,
+      ),
+      _TodoTemplate(
+        '\u6839\u636e\u8fdb\u5ea6\u8c03\u6574\u4e0b\u4e00\u6b65\u4efb\u52a1',
+        15,
+      ),
     ];
   }
 
@@ -619,7 +816,7 @@ JSON 格式：
     if (normalized.length <= 22) return true;
 
     final hasComplexMarker = RegExp(
-      '(计划|项目|目标|学习|复习|整理|准备|完成|写|做|拆|多个|几件|今天.*明天|明天.*后天)',
+      '(计划|项目|目标|学习|复习|整理|准备|完成|再|多个|几件|今天.*明天|明天.*后天)',
     ).hasMatch(normalized);
     return !hasComplexMarker;
   }
@@ -627,11 +824,11 @@ JSON 格式：
   String _normalizeTodoContent(String content) {
     var normalized = content.trim();
     normalized = normalized.replaceFirst(
-      RegExp(r'^第?[一二三四五六七八九十\d]+[步项]?[、.．：:）)]*\s*'),
+      RegExp(r'^第?[一二三四五六七八九十\d]+[步项]?[、.。:：)]*\s*'),
       '',
     );
     normalized = normalized.replaceFirst(
-      RegExp(r'^(我选择|我决定|我将要|我要|我需要|我打算|我)\s*'),
+      RegExp(r'^(我选择|我决定|我将要|我要|我需要|我打算)\s*'),
       '',
     );
     normalized = normalized.replaceAll(
@@ -661,10 +858,23 @@ JSON 格式：
     final compactContent = content.replaceAll(RegExp(r'\s+'), '');
     final compactSource = sourceText.replaceAll(RegExp(r'\s+'), '');
 
-    if (RegExp(r'^第?[一二三四五六七八九十\d]+[步项]').hasMatch(content)) {
+    if (RegExp(
+      r'^\u7b2c?[\u4e00\u4e8c\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341\d]+[\u6b65\u9879]',
+    ).hasMatch(content)) {
       return true;
     }
-    if (RegExp(r'^(我选择|我决定|我将要)$').hasMatch(content)) {
+    if (RegExp(
+      r'^(\u6211\u9009\u62e9|\u6211\u51b3\u5b9a|\u6211\u5c06\u8981)$',
+    ).hasMatch(content)) {
+      return true;
+    }
+    if (_containsAny(content, [
+      '\u628a\u76ee\u6807\u62c6\u6210\u4e09\u4e2a\u53ef\u6267\u884c\u7684\u5c0f\u6b65\u9aa4',
+      '\u5b8c\u6210\u4eca\u5929\u7684\u6700\u5c0f\u53ef\u884c\u52a8\u4f5c',
+      '\u8bb0\u5f55\u8fdb\u5c55\u548c\u9047\u5230\u7684\u963b\u788d',
+      '\u8c03\u6574\u4e0b\u4e00\u6b65\u8ba1\u5212',
+      '\u6211\u9009\u62e9\u51fa\u95e8\u73a9',
+    ])) {
       return true;
     }
     if (compactContent.length <= 2) return true;
@@ -753,7 +963,7 @@ JSON 格式：
 
   Future<bool> saveTodosToDatabase(BigGoalModel goal) async {
     if (state.generatedTodos.isEmpty) {
-      state = state.copyWith(errorMessage: '没有可保存的任务。');
+      state = state.copyWith(errorMessage: 'No tasks to save.');
       return false;
     }
 
@@ -761,7 +971,7 @@ JSON 格式：
       (todo) => !todo.isConfirmed,
     );
     if (hasUnconfirmedTodos) {
-      state = state.copyWith(errorMessage: '请先确认所有任务。');
+      state = state.copyWith(errorMessage: 'Please confirm all tasks first.');
       return false;
     }
 
@@ -784,7 +994,7 @@ JSON 格式：
       state = state.copyWith(isLoading: false, isCompleted: true);
       return true;
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: '保存失败：$e');
+      state = state.copyWith(isLoading: false, errorMessage: 'Save failed: $e');
       return false;
     }
   }
@@ -806,32 +1016,45 @@ JSON 格式：
   }
 
   String _formatProfile(UserProfileModel? profile) {
-    if (profile == null) return '暂无画像';
+    if (profile == null) return 'No profile';
     final parts = <String>[
-      '姓名:${profile.name}',
-      if (profile.age != null) '年龄:${profile.age}',
-      if (profile.occupation?.isNotEmpty == true) '职业:${profile.occupation}',
+      'name:${profile.name}',
+      if (profile.age != null) 'age:${profile.age}',
+      if (profile.occupation?.isNotEmpty == true)
+        'occupation:${profile.occupation}',
       if (profile.mbti?.isNotEmpty == true) 'MBTI:${profile.mbti}',
       if (profile.communicationStyle?.isNotEmpty == true)
-        '沟通偏好:${profile.communicationStyle}',
+        'communication:${profile.communicationStyle}',
       if (profile.motivationSensitivity?.isNotEmpty == true)
-        '激励敏感度:${profile.motivationSensitivity}',
+        'motivation:${profile.motivationSensitivity}',
       if (profile.bestWorkTime?.isNotEmpty == true)
-        '最佳工作时间:${profile.bestWorkTime}',
+        'bestWorkTime:${profile.bestWorkTime}',
       if (profile.stressResponse?.isNotEmpty == true)
-        '压力反应:${profile.stressResponse}',
+        'stressResponse:${profile.stressResponse}',
       if (profile.socialPreference?.isNotEmpty == true)
-        '协作偏好:${profile.socialPreference}',
-      if (profile.lifeStatus?.isNotEmpty == true) '生活状态:${profile.lifeStatus}',
-      if (profile.challenges?.isNotEmpty == true) '挑战:${profile.challenges}',
+        'socialPreference:${profile.socialPreference}',
+      if (profile.lifeStatus?.isNotEmpty == true)
+        'lifeStatus:${profile.lifeStatus}',
+      if (profile.challenges?.isNotEmpty == true)
+        'challenges:${profile.challenges}',
       if (profile.threeChanges?.isNotEmpty == true)
-        '想改变:${profile.threeChanges}',
+        'desiredChanges:${profile.threeChanges}',
     ];
-    return parts.join('；');
+    return parts.join('; ');
   }
 }
 
 DateTime _dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
+
+bool _isOfflineError(Object error) {
+  if (error is SocketException) return true;
+  if (error is TimeoutException) return false;
+  if (error is DioException) {
+    if (error.type == DioExceptionType.connectionError) return true;
+    return error.error is SocketException;
+  }
+  return false;
+}
 
 DateTime _combineDateAndTime(DateTime date, String? timeText) {
   final time = _parseTimeText(timeText);
@@ -865,9 +1088,7 @@ TimeOfDayLike? _parseTimeText(String? raw) {
   if (cnMatch != null) {
     var hour = int.tryParse(cnMatch.group(1)!);
     final hasHalf = cnMatch.group(2) == '半';
-    final minute = hasHalf
-        ? 30
-        : int.tryParse(cnMatch.group(3) ?? '0') ?? 0;
+    final minute = hasHalf ? 30 : int.tryParse(cnMatch.group(3) ?? '0') ?? 0;
     final second = int.tryParse(cnMatch.group(4) ?? '0') ?? 0;
     if ((text.contains('下午') || text.contains('晚上')) &&
         hour != null &&
@@ -892,14 +1113,16 @@ TimeOfDayLike? _validTime(int? hour, int? minute, int second) {
 }
 
 String? _extractTimeFromText(String text) {
-  final colonMatch = RegExp(r'\d{1,2}[:：]\d{1,2}(?:[:：]\d{1,2})?').firstMatch(text);
+  final colonMatch = RegExp(
+    r'\d{1,2}[:：]\d{1,2}(?:[:：]\d{1,2})?',
+  ).firstMatch(text);
   if (colonMatch != null) return colonMatch.group(0);
   final cnMatch = _chineseTimePattern.firstMatch(text);
   return cnMatch?.group(0);
 }
 
 final RegExp _chineseTimePattern = RegExp(
-  r'(?:凌晨|早上|上午|中午|下午|晚上)?\s*(\d{1,2})\s*(?:点钟|时钟|点|時|时)(半|(?:(\d{1,2})\s*分?)?)?(?:(\d{1,2})\s*秒)?',
+  r'(?:凌晨|早上|上午|中午|下午|晚上)?\s*(\d{1,2})\s*(?:点钟|时钟|点|时)(半|(?:(\d{1,2})\s*分?)?)?(?:(\d{1,2})\s*秒)?',
 );
 
 final List<RegExp> _timeExpressionPatterns = [

@@ -23,7 +23,9 @@ final _homeTodosProvider =
       params,
     ) {
       final todoRepo = ref.watch(todoItemRepositoryProvider);
-      return todoRepo.watchTodosByDate(params.userId, params.date);
+      return todoRepo
+          .watchTodosByDate(params.userId, params.date)
+          .map((todos) => todos.where((todo) => !todo.isCompleted).toList());
     });
 
 final _homeGoalsProvider = StreamProvider.family<List<BigGoalModel>, int>((
@@ -1015,6 +1017,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _confirmDeleteTodo(TodoItemModel todo) {
+    final sheetContext = context;
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -1027,12 +1030,14 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(context); // Close dialog
               final todoRepo = ref.read(todoItemRepositoryProvider);
               await todoRepo.deleteTodo(todo.id);
               await TodoReminderScheduler.cancelForTodo(todo.id);
               if (context.mounted) {
-                Navigator.pop(context); // Close bottom sheet
+                Navigator.of(context).pop(); // Close dialog
+              }
+              if (sheetContext.mounted) {
+                Navigator.of(sheetContext).pop(); // Close bottom sheet
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),

@@ -9,63 +9,102 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('free text fallback keeps a simple single intent as one todo', () async {
+  test('free text split uses AI result with precise times', () async {
     final notifier = GoalSplitNotifier(
-      _FakeDeepSeekApiClient(throwOnPrompt: true),
+      _FakeDeepSeekApiClient(
+        response: '''
+{
+  "todos": [
+    {"content": "visit my middle school teacher", "date": "2026-06-08", "time": "10:30", "estimatedMinutes": 60},
+    {"content": "go home", "date": "2026-06-08", "time": "11:00", "estimatedMinutes": 20},
+    {"content": "pick up cake at Intime", "date": "2026-06-08", "time": "12:00", "estimatedMinutes": 30}
+  ]
+}
+''',
+      ),
       _FakeTodoRepository(),
       _FakeProfileRepository(),
     );
 
     final todos = await notifier.generateTodosFromText(
-      input: '我等一下要去出门玩',
-      userId: 1,
-      defaultDate: DateTime(2026, 6, 8),
-    );
-
-    expect(todos, hasLength(1));
-    expect(todos.single.content, '等一下要去出门玩');
-  });
-
-  test('free text AI split extracts multiple precise timed todos', () async {
-    final notifier = GoalSplitNotifier(
-      _FakeDeepSeekApiClient(throwOnPrompt: true),
-      _FakeTodoRepository(),
-      _FakeProfileRepository(),
-    );
-
-    final todos = await notifier.generateTodosFromText(
-      input: '我 10 点半去看我的初中老师，然后 11 点钟回家，12 点钟去银泰拿蛋糕。',
+      input:
+          'I will visit my middle school teacher at 10:30, go home at 11:00, and pick up cake at 12:00.',
       userId: 1,
       defaultDate: DateTime(2026, 6, 8),
     );
 
     expect(todos, hasLength(3));
     expect(todos.map((todo) => todo.content), [
-      '去看初中老师',
-      '回家',
-      '去银泰拿蛋糕',
+      'visit my middle school teacher',
+      'go home',
+      'pick up cake at Intime',
     ]);
     expect(todos[0].scheduledDate, DateTime(2026, 6, 8, 10, 30));
     expect(todos[1].scheduledDate, DateTime(2026, 6, 8, 11));
     expect(todos[2].scheduledDate, DateTime(2026, 6, 8, 12));
   });
 
-  test('free text AI split preserves seconds in precise time', () async {
+  test('free text split preserves AI seconds in precise time', () async {
     final notifier = GoalSplitNotifier(
-      _FakeDeepSeekApiClient(throwOnPrompt: true),
+      _FakeDeepSeekApiClient(
+        response: '''
+{
+  "todos": [
+    {"content": "pick up package", "date": "2026-06-08", "time": "18:20:30", "estimatedMinutes": 20}
+  ]
+}
+''',
+      ),
       _FakeTodoRepository(),
       _FakeProfileRepository(),
     );
 
     final todos = await notifier.generateTodosFromText(
-      input: '18点20分30秒去拿快递',
+      input: 'Pick up package at 18:20:30.',
       userId: 1,
       defaultDate: DateTime(2026, 6, 8),
     );
 
     expect(todos, hasLength(1));
-    expect(todos.single.content, '去拿快递');
+    expect(todos.single.content, 'pick up package');
     expect(todos.single.scheduledDate, DateTime(2026, 6, 8, 18, 20, 30));
+  });
+
+  test(
+    'free text split only uses local fallback for offline network errors',
+    () async {
+      final notifier = GoalSplitNotifier(
+        _FakeDeepSeekApiClient(throwError: _networkUnavailableError()),
+        _FakeTodoRepository(),
+        _FakeProfileRepository(),
+      );
+
+      final todos = await notifier.generateTodosFromText(
+        input: 'go out for fun',
+        userId: 1,
+        defaultDate: DateTime(2026, 6, 8),
+      );
+
+      expect(todos, hasLength(1));
+      expect(todos.single.content, 'go out for fun');
+    },
+  );
+
+  test('free text split does not use local fallback for API errors', () async {
+    final notifier = GoalSplitNotifier(
+      _FakeDeepSeekApiClient(throwError: Exception('API returned bad output')),
+      _FakeTodoRepository(),
+      _FakeProfileRepository(),
+    );
+
+    expect(
+      () => notifier.generateTodosFromText(
+        input: 'go out for fun',
+        userId: 1,
+        defaultDate: DateTime(2026, 6, 8),
+      ),
+      throwsA(isA<Exception>()),
+    );
   });
 
   test('free text prompt includes user profile for personalization', () async {
@@ -77,35 +116,38 @@ void main() {
         profile: UserProfileModel()
           ..userId = 1
           ..name = 'JCX'
-          ..occupation = '学生'
+          ..occupation = 'student'
           ..mbti = 'INTJ'
-          ..bestWorkTime = '夜猫型'
+          ..bestWorkTime = 'night'
           ..hasCompletedOnboarding = true
           ..createdAt = DateTime(2026, 6, 8),
       ),
     );
 
-    await notifier.generateTodosFromText(
-      input: '晚上8点跑步',
-      userId: 1,
-      defaultDate: DateTime(2026, 6, 8),
+    await expectLater(
+      () => notifier.generateTodosFromText(
+        input: 'run at 20:00',
+        userId: 1,
+        defaultDate: DateTime(2026, 6, 8),
+      ),
+      throwsA(isA<AiSplitException>()),
     );
 
-    expect(apiClient.lastPrompt, contains('用户画像'));
-    expect(apiClient.lastPrompt, contains('姓名:JCX'));
-    expect(apiClient.lastPrompt, contains('职业:学生'));
-    expect(apiClient.lastPrompt, contains('MBTI:INTJ'));
-    expect(apiClient.lastPrompt, contains('最佳工作时间:夜猫型'));
+    expect(apiClient.lastPrompt, contains('User profile'));
+    expect(apiClient.lastPrompt, contains('JCX'));
+    expect(apiClient.lastPrompt, contains('student'));
+    expect(apiClient.lastPrompt, contains('INTJ'));
+    expect(apiClient.lastPrompt, contains('night'));
   });
 
-  test('AI duplicate step-like todos are normalized and deduplicated', () async {
+  test('goal split uses cloud result instead of local replacement', () async {
     final notifier = GoalSplitNotifier(
       _FakeDeepSeekApiClient(
         response: '''
 {
   "todos": [
-    {"content": "第一步：我选择出门玩", "date": "2026-06-08", "time": "15:20", "estimatedMinutes": 30},
-    {"content": "第二步：我选择出门玩", "date": "2026-06-08", "time": "15:20", "estimatedMinutes": 30}
+    {"content": "prepare a weight-loss breakfast under the calorie target", "dayOffset": 0, "time": "08:00", "estimatedMinutes": 25},
+    {"content": "complete a 30-minute cardio workout", "dayOffset": 1, "time": "19:00", "estimatedMinutes": 40}
   ]
 }
 ''',
@@ -113,66 +155,129 @@ void main() {
       _FakeTodoRepository(),
       _FakeProfileRepository(),
     );
-
-    final todos = await notifier.generateTodosFromText(
-      input: '下午3点20出门玩',
-      userId: 1,
-      defaultDate: DateTime(2026, 6, 8),
+    final goal = _goal(
+      title: 'lose ten pounds',
+      description: 'adjust diet and exercise',
+      targetDate: DateTime(2026, 6, 10),
     );
-
-    expect(todos, hasLength(1));
-    expect(todos.single.content, '出门玩');
-    expect(todos.single.scheduledDate.hour, 15);
-    expect(todos.single.scheduledDate.minute, 20);
-  });
-
-  test('goal fallback keeps precise time from goal text for reminders', () async {
-    final notifier = GoalSplitNotifier(
-      _FakeDeepSeekApiClient(throwOnPrompt: true),
-      _FakeTodoRepository(),
-      _FakeProfileRepository(),
-    );
-    final goal = BigGoalModel()
-      ..id = 1
-      ..userId = 1
-      ..title = '每天晚上8点复习英语'
-      ..description = '持续一个月'
-      ..targetDate = DateTime(2026, 7, 8)
-      ..createdAt = DateTime(2026, 6, 8);
 
     final success = await notifier.generateTodosForGoal(
       goal,
-      desiredCount: 3,
+      startDate: DateTime(2026, 6, 8),
+    );
+
+    expect(success, isTrue);
+    expect(notifier.state.generatedTodos, hasLength(2));
+    expect(
+      notifier.state.generatedTodos.map((todo) => todo.content),
+      contains('prepare a weight-loss breakfast under the calorie target'),
+    );
+    expect(notifier.state.generatedTodos[0].scheduledDate.hour, 8);
+    expect(notifier.state.generatedTodos[1].scheduledDate.day, 9);
+  });
+
+  test(
+    'goal split keeps sparse cloud output and does not local-replace it',
+    () async {
+      final notifier = GoalSplitNotifier(
+        _FakeDeepSeekApiClient(
+          response: '''
+{
+  "todos": [
+    {"content": "prepare plan", "dayOffset": 0, "time": null, "estimatedMinutes": 30}
+  ]
+}
+''',
+        ),
+        _FakeTodoRepository(),
+        _FakeProfileRepository(),
+      );
+
+      final success = await notifier.generateTodosForGoal(
+        _goal(targetDate: DateTime(2026, 6, 15)),
+        startDate: DateTime(2026, 6, 8),
+      );
+
+      expect(success, isTrue);
+      expect(notifier.state.generatedTodos, hasLength(1));
+      expect(notifier.state.generatedTodos.single.content, 'prepare plan');
+    },
+  );
+
+  test('goal split uses local fallback only when offline', () async {
+    final notifier = GoalSplitNotifier(
+      _FakeDeepSeekApiClient(throwError: _networkUnavailableError()),
+      _FakeTodoRepository(),
+      _FakeProfileRepository(),
+    );
+
+    final success = await notifier.generateTodosForGoal(
+      _goal(title: 'learn English', targetDate: DateTime(2026, 6, 10)),
       startDate: DateTime(2026, 6, 8),
     );
 
     expect(success, isTrue);
     expect(notifier.state.generatedTodos, hasLength(3));
-    expect(
-      notifier.state.generatedTodos.every(
-        (todo) => todo.scheduledDate.hour == 20 && todo.scheduledDate.minute == 0,
-      ),
-      isTrue,
-    );
   });
+
+  test(
+    'goal split reports AI failure instead of local fallback for API errors',
+    () async {
+      final notifier = GoalSplitNotifier(
+        _FakeDeepSeekApiClient(throwError: Exception('API failed')),
+        _FakeTodoRepository(),
+        _FakeProfileRepository(),
+      );
+
+      final success = await notifier.generateTodosForGoal(
+        _goal(targetDate: DateTime(2026, 6, 10)),
+        startDate: DateTime(2026, 6, 8),
+      );
+
+      expect(success, isFalse);
+      expect(notifier.state.generatedTodos, isEmpty);
+      expect(notifier.state.errorMessage, isNotNull);
+    },
+  );
+}
+
+BigGoalModel _goal({
+  String title = 'learn English',
+  String? description = 'one week plan',
+  DateTime? targetDate,
+}) {
+  return BigGoalModel()
+    ..id = 1
+    ..userId = 1
+    ..title = title
+    ..description = description
+    ..targetDate = targetDate ?? DateTime(2026, 6, 15)
+    ..createdAt = DateTime(2026, 6, 8);
 }
 
 class _FakeDeepSeekApiClient extends DeepSeekApiClient {
-  _FakeDeepSeekApiClient({this.response = '', this.throwOnPrompt = false})
-    : super(Dio());
+  _FakeDeepSeekApiClient({this.response = '', this.throwError}) : super(Dio());
 
   final String response;
-  final bool throwOnPrompt;
+  final Object? throwError;
   String? lastPrompt;
 
   @override
   Future<String> simplePrompt(String prompt, {bool jsonMode = false}) async {
     lastPrompt = prompt;
-    if (throwOnPrompt) {
-      throw Exception('API unavailable');
+    final error = throwError;
+    if (error != null) {
+      throw error;
     }
     return response;
   }
+}
+
+DioException _networkUnavailableError() {
+  return DioException.connectionError(
+    requestOptions: RequestOptions(path: '/chat/completions'),
+    reason: 'network unavailable',
+  );
 }
 
 class _FakeProfileRepository implements UserProfileRepository {
@@ -280,8 +385,7 @@ class _FakeTodoRepository implements TodoItemRepository {
     int userId,
     DateTime startDate,
     DateTime endDate,
-  ) async =>
-      const [];
+  ) async => const [];
 
   @override
   Future<List<TodoItemModel>> getTodosByGoalId(int goalId) async => const [];

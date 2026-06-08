@@ -1,5 +1,6 @@
-import 'dart:ui' show Color;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
@@ -11,8 +12,16 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
+  static const _todoReminderChannelId = 'todo_due_reminder_v2';
+  static const _todoReminderChannelName = 'BenWo todo reminders';
+  static const _todoReminderChannelDescription =
+      'Show a notification when a todo reaches its precise time.';
+
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
+  static const MethodChannel _notificationCacheChannel = MethodChannel(
+    'benwo/notification_cache',
+  );
   bool _isInitialized = false;
 
   /// Initialize the notification service
@@ -79,6 +88,15 @@ class NotificationService {
     return false;
   }
 
+  Future<bool> canScheduleExactNotifications() async {
+    final android = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (android == null) return true;
+    return await android.canScheduleExactNotifications() ?? true;
+  }
+
   /// Schedule a todo reminder notification
   Future<void> scheduleTodoReminder({
     required int id,
@@ -88,13 +106,15 @@ class NotificationService {
     String? payload,
   }) async {
     const androidDetails = AndroidNotificationDetails(
-      'todo_reminder',
-      '任务提醒',
-      channelDescription: '待办任务的提醒通知',
+      _todoReminderChannelId,
+      _todoReminderChannelName,
+      channelDescription: _todoReminderChannelDescription,
       importance: Importance.high,
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
       color: Color(0xFF7FA99B),
+      visibility: NotificationVisibility.public,
+      category: AndroidNotificationCategory.reminder,
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -108,15 +128,12 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    await _notifications.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledTime, tz.local),
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+    await _scheduleWithCacheRepair(
+      id: id,
+      title: title,
+      body: body,
+      scheduledTime: scheduledTime,
+      details: details,
       payload: payload,
     );
   }
@@ -131,8 +148,8 @@ class NotificationService {
   }) async {
     const androidDetails = AndroidNotificationDetails(
       'ai_encouragement',
-      'AI 激励',
-      channelDescription: 'AI 主动鼓励和提醒通知',
+      'AI encouragement',
+      channelDescription: 'AI encouragement and reminder notifications',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
       icon: '@mipmap/ic_launcher',
@@ -150,15 +167,12 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    await _notifications.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledTime, tz.local),
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+    await _scheduleWithCacheRepair(
+      id: id,
+      title: title,
+      body: body,
+      scheduledTime: scheduledTime,
+      details: details,
       payload: payload,
     );
   }
@@ -178,8 +192,8 @@ class NotificationService {
 
     await scheduleTodoReminder(
       id: id,
-      title: '早安！',
-      body: '新的一天开始了，今天有什么目标要完成吗？',
+      title: 'Good morning',
+      body: 'A new day has started. What goals do you want to finish today?',
       scheduledTime: scheduledDate,
       payload: 'home',
     );
@@ -200,8 +214,8 @@ class NotificationService {
 
     await scheduleTodoReminder(
       id: id,
-      title: '晚安提醒',
-      body: '今天的目标完成得怎么样？明天继续加油！',
+      title: '閺呮艾鐣ㄩ幓鎰板晪',
+      body: 'How did today go? Keep going tomorrow.',
       scheduledTime: scheduledDate,
       payload: 'calendar',
     );
@@ -209,17 +223,157 @@ class NotificationService {
 
   /// Cancel a specific notification
   Future<void> cancelNotification(int id) async {
-    await _notifications.cancel(id);
+    try {
+      await _notifications.cancel(id);
+    } on PlatformException catch (e) {
+      if (!_isBrokenScheduledNotificationCache(e)) rethrow;
+      await _clearScheduledNotificationsCache();
+    }
   }
 
   /// Cancel all notifications
   Future<void> cancelAllNotifications() async {
-    await _notifications.cancelAll();
+    try {
+      await _notifications.cancelAll();
+    } on PlatformException catch (e) {
+      if (!_isBrokenScheduledNotificationCache(e)) rethrow;
+      await _clearScheduledNotificationsCache();
+    }
   }
 
   /// Get pending notifications
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     return _notifications.pendingNotificationRequests();
+  }
+
+  Future<void> _scheduleWithCacheRepair({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledTime,
+    required NotificationDetails details,
+    String? payload,
+  }) async {
+    try {
+      await _notifications.zonedSchedule(
+        id,
+        title,
+        body,
+        tz.TZDateTime.from(scheduledTime, tz.local),
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: payload,
+      );
+    } on PlatformException catch (e) {
+      if (!_isBrokenScheduledNotificationCache(e)) rethrow;
+      await _clearScheduledNotificationsCache();
+      await _notifications.zonedSchedule(
+        id,
+        title,
+        body,
+        tz.TZDateTime.from(scheduledTime, tz.local),
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: payload,
+      );
+    }
+  }
+
+  Future<void> _scheduleInexactAllowWhileIdle({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledTime,
+    required NotificationDetails details,
+    String? payload,
+  }) async {
+    await _notifications.zonedSchedule(
+      id,
+      title,
+      body,
+      tz.TZDateTime.from(scheduledTime, tz.local),
+      details,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      payload: payload,
+    );
+  }
+
+  Future<void> scheduleTodoReminderSafely({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledTime,
+    String? payload,
+  }) async {
+    const androidDetails = AndroidNotificationDetails(
+      _todoReminderChannelId,
+      _todoReminderChannelName,
+      channelDescription: _todoReminderChannelDescription,
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      color: Color(0xFF7FA99B),
+      visibility: NotificationVisibility.public,
+      category: AndroidNotificationCategory.reminder,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    try {
+      await _scheduleWithCacheRepair(
+        id: id,
+        title: title,
+        body: body,
+        scheduledTime: scheduledTime,
+        details: details,
+        payload: payload,
+      );
+    } on PlatformException catch (e, stackTrace) {
+      final message = '${e.code} ${e.message} ${e.details}';
+      if (!message.contains('exact_alarms_not_permitted')) rethrow;
+      debugPrint(
+        'Exact todo reminder denied; falling back to inexact reminder: $message',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+      await _scheduleInexactAllowWhileIdle(
+        id: id,
+        title: title,
+        body: body,
+        scheduledTime: scheduledTime,
+        details: details,
+        payload: payload,
+      );
+    }
+  }
+
+  bool _isBrokenScheduledNotificationCache(PlatformException e) {
+    final message = '${e.message} ${e.details}';
+    return message.contains('Missing type parameter');
+  }
+
+  Future<void> _clearScheduledNotificationsCache() async {
+    try {
+      await _notificationCacheChannel.invokeMethod<bool>(
+        'clearScheduledNotificationsCache',
+      );
+    } catch (_) {
+      // The app can still save the todo even if old native cache cleanup fails.
+    }
   }
 
   /// Show immediate notification
