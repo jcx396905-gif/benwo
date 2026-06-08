@@ -203,6 +203,7 @@ build/app/outputs/flutter-apk/
 - `flutter analyze --no-fatal-infos`：无问题。
 - `flutter test`：通过。
 - `flutter build apk --debug`：通过。
+- `flutter build apk --release`：通过，生成版本 `1.0.1+2`。
 - Android 模拟器验证：首页、目标、日历、设置、添加待办、AI 拆分选项、精准时间选择、到点提醒开关、已完成历史、目标详情均可打开和交互。
 - Crash log：未发现崩溃记录。
 
@@ -218,5 +219,5 @@ build/app/outputs/flutter-apk/
 
 ## 版本历史
 
-- **v1.1.0** - 精准时间、到点提醒、AI 待办拆分与用户画像增强
+- **v1.0.1** - 精准时间、到点提醒、AI 待办拆分与用户画像增强
 - **v1.0.0** - 登录注册、Onboarding、目标管理、AI 目标拆分、今日待办、日历视图、用户画像、通知设置

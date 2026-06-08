@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../application/auth/auth_notifier.dart';
 import '../../../core/constants/api_constants.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/notification_service.dart';
 import '../../../core/utils/todo_reminder_scheduler.dart';
@@ -201,7 +202,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             leading: _benwoIconBox(),
             title: const Text('版本'),
             trailing: Text(
-              '1.0.0',
+              AppConstants.appVersion,
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
@@ -459,7 +460,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       body:
           'BenWo - 本我\n\n'
           '作者：JCX\n'
-          '版本：1.0.0\n'
+          '版本：${AppConstants.appVersion}\n'
           'AI：DeepSeek ${ApiConstants.deepseekModel}\n\n'
           'BenWo 用于管理长期目标、今日任务、日历计划和个人画像。数据默认存储在本机，仅在使用 AI 目标拆解时发送必要目标文本到 DeepSeek API。',
     );

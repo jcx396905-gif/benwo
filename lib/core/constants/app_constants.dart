@@ -4,7 +4,7 @@ class AppConstants {
 
   // App Info
   static const String appName = 'BenWo';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '1.0.1';
   static const String appDescription = 'AI驱动的自我探索与目标达成应用';
 
   // Database
