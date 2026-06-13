@@ -234,54 +234,48 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
 
     if (!context.mounted) return;
 
+    final sheetFuture = showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _AISplitConfirmationSheet(goal: goal),
+    );
+
     unawaited(
-      showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('AI 正在分析目标并生成任务...'),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    final success = await splitNotifier.generateTodosForGoal(
-      goal,
-      desiredCount: options.desiredCount,
-      startDate: options.startDate,
-    );
-
-    if (context.mounted) {
-      Navigator.of(context).pop();
-    }
-
-    if (!success) {
-      final errorMessage = ref.read(goalSplitNotifierProvider).errorMessage;
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage ?? '生成任务失败'),
-            backgroundColor: AppColors.error,
-          ),
+      Future<void>(() async {
+        final success = await splitNotifier.generateTodosForGoalStreaming(
+          goal,
+          desiredCount: options.desiredCount,
+          startDate: options.startDate,
         );
-      }
-      return;
-    }
+        if (!success && context.mounted) {
+          final errorMessage = ref.read(goalSplitNotifierProvider).errorMessage;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(_formatSplitError(errorMessage)),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }),
+    );
 
-    if (context.mounted) {
-      await showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => _AISplitConfirmationSheet(goal: goal),
-      );
+    await sheetFuture;
+  }
+
+  String _formatSplitError(String? errorMessage) {
+    if (errorMessage == null || errorMessage.isEmpty) return '生成任务失败，请稍后重试。';
+    if (errorMessage.contains('TimeoutException')) {
+      return 'AI 响应超时，请稍后重试或缩短目标拆分范围。';
     }
+    if (errorMessage.contains('SocketException') ||
+        errorMessage.contains('connection') ||
+        errorMessage.contains('Network')) {
+      return '网络不可用，已无法连接 AI 服务。';
+    }
+    return errorMessage
+        .replaceFirst('AI generation failed: ', '')
+        .replaceFirst('Exception: ', '');
   }
 }
 
@@ -345,24 +339,24 @@ class _GoalDetailContent extends ConsumerWidget {
     }
   }
 
-  String get _categoryEmoji {
+  IconData get _categoryIcon {
     switch (goal.category) {
       case '学业':
-        return '📚';
+        return Icons.school_rounded;
       case '职业':
-        return '💼';
+        return Icons.work_rounded;
       case '健康':
-        return '💪';
+        return Icons.favorite_rounded;
       case '关系':
-        return '💕';
+        return Icons.people_rounded;
       case '个人成长':
-        return '🌱';
+        return Icons.self_improvement_rounded;
       case '财务':
-        return '💰';
+        return Icons.savings_rounded;
       case '其他':
-        return '🎯';
+        return Icons.flag_rounded;
       default:
-        return '🎯';
+        return Icons.flag_rounded;
     }
   }
 
@@ -441,10 +435,7 @@ class _GoalDetailContent extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Text(
-                        _categoryEmoji,
-                        style: const TextStyle(fontSize: 24),
-                      ),
+                      Icon(_categoryIcon, size: 24, color: _goalColor),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -889,7 +880,7 @@ class _GoalCompletionCelebrationDialogState
           const SizedBox(height: 20),
           // Congratulations text
           Text(
-            '🎉 恭喜达成目标！',
+            '恭喜达成目标！',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: AppColors.sage,
@@ -1106,6 +1097,9 @@ class _AISplitConfirmationSheetState
   Widget build(BuildContext context) {
     final splitState = ref.watch(goalSplitNotifierProvider);
     final splitNotifier = ref.read(goalSplitNotifierProvider.notifier);
+    final hasLocalGeneratedTodos = splitState.generatedTodos.any(
+      (todo) => todo.isLocalGenerated,
+    );
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
@@ -1154,7 +1148,9 @@ class _AISplitConfirmationSheetState
                         ),
                       ),
                       Text(
-                        '共 ${splitState.generatedTodos.length} 个任务',
+                        hasLocalGeneratedTodos
+                            ? '共 ${splitState.generatedTodos.length} 个任务，本地生成'
+                            : '共 ${splitState.generatedTodos.length} 个任务',
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,
@@ -1203,7 +1199,22 @@ class _AISplitConfirmationSheetState
           // Todo list
           Expanded(
             child: splitState.generatedTodos.isEmpty
-                ? const Center(child: Text('暂无生成的任务'))
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (splitState.isLoading) ...[
+                          const CircularProgressIndicator(),
+                          const SizedBox(height: 16),
+                        ],
+                        Text(
+                          splitState.isLoading ? 'AI 正在生成，任务会逐条出现' : '暂无生成的任务',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  )
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: splitState.generatedTodos.length,
@@ -1404,6 +1415,13 @@ class _GeneratedTodoCard extends StatelessWidget {
                     color: goalColor,
                   ),
                 ),
+                if (todo.isLocalGenerated) ...[
+                  const SizedBox(width: 8),
+                  const Text(
+                    '本地生成',
+                    style: TextStyle(fontSize: 12, color: AppColors.textHint),
+                  ),
+                ],
                 const Spacer(),
                 IconButton(
                   onPressed: onRemove,

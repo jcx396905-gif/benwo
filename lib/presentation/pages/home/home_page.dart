@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -1287,6 +1289,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                                         desiredCount: desiredCount,
                                         defaultDate: selectedDate,
                                       );
+                                  if (generatedTodos.isEmpty) {
+                                    throw const AiSplitException(
+                                      'AI 没有生成可用待办，请把要拆分的事情写得更具体。',
+                                    );
+                                  }
 
                                   for (final todo in generatedTodos) {
                                     final scheduledDate = _applyFallbackTime(
@@ -1345,7 +1352,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('添加失败：$e'),
+                                      content: Text(
+                                        '添加失败：${_formatAddTodoError(e)}',
+                                      ),
                                       backgroundColor: AppColors.error,
                                     ),
                                   );
@@ -1374,6 +1383,22 @@ class _HomePageState extends ConsumerState<HomePage> {
     final month = date.month.toString().padLeft(2, '0');
     final day = date.day.toString().padLeft(2, '0');
     return '${date.year}-$month-$day';
+  }
+
+  String _formatAddTodoError(Object error) {
+    if (error is TimeoutException) {
+      return 'AI 响应超时，请稍后重试或减少一次输入的内容。';
+    }
+    if (error is AiSplitException) {
+      return error.message;
+    }
+    final text = error.toString();
+    if (text.contains('SocketException') ||
+        text.contains('connection') ||
+        text.contains('Network')) {
+      return '网络不可用，已无法连接 AI 服务。';
+    }
+    return text.replaceFirst('Exception: ', '');
   }
 
   String _formatTimeOfDay(TimeOfDay time) {
@@ -1472,22 +1497,22 @@ class _HomeGoalCompletionDialogState extends State<_HomeGoalCompletionDialog>
     super.dispose();
   }
 
-  String get _categoryEmoji {
+  IconData get _categoryIcon {
     switch (widget.completedGoal.category) {
       case '学业':
-        return '📚';
+        return Icons.school_rounded;
       case '职业':
-        return '💼';
+        return Icons.work_rounded;
       case '健康':
-        return '💪';
+        return Icons.favorite_rounded;
       case '关系':
-        return '💕';
+        return Icons.people_rounded;
       case '个人成长':
-        return '🌱';
+        return Icons.self_improvement_rounded;
       case '财务':
-        return '💰';
+        return Icons.savings_rounded;
       default:
-        return '🎯';
+        return Icons.flag_rounded;
     }
   }
 
@@ -1542,7 +1567,7 @@ class _HomeGoalCompletionDialogState extends State<_HomeGoalCompletionDialog>
 
               // Congratulations text
               Text(
-                '🎉 恭喜达成目标！',
+                '恭喜达成目标！',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: AppColors.sage,
@@ -1567,7 +1592,7 @@ class _HomeGoalCompletionDialogState extends State<_HomeGoalCompletionDialog>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(_categoryEmoji, style: const TextStyle(fontSize: 20)),
+                    Icon(_categoryIcon, size: 20, color: AppColors.sage),
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
@@ -1612,7 +1637,7 @@ class _HomeGoalCompletionDialogState extends State<_HomeGoalCompletionDialog>
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('太棒了！继续加油 💪'),
+                  child: const Text('太棒了！继续加油'),
                 ),
               ),
             ],

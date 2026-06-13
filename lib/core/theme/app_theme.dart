@@ -7,7 +7,7 @@ class AppTheme {
 
   static ThemeData get lightTheme {
     const colorScheme = ColorScheme(
-      brightness: Brightness.light,
+      brightness: Brightness.dark,
       primary: AppColors.primary,
       onPrimary: AppColors.onPrimary,
       primaryContainer: AppColors.primaryLight,
@@ -27,15 +27,16 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      brightness: Brightness.dark,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
 
       // AppBar Theme
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
-        scrolledUnderElevation: 1,
+        scrolledUnderElevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
           fontSize: 18,
@@ -49,8 +50,8 @@ class AppTheme {
         color: AppColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.border, width: 1),
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0x30FFFFFF), width: 1),
         ),
       ),
 
@@ -93,7 +94,7 @@ class AppTheme {
       // Input Decoration Theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: const Color(0xFF183126),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
@@ -120,6 +121,8 @@ class AppTheme {
         ),
         hintStyle: const TextStyle(color: AppColors.textHint),
         labelStyle: const TextStyle(color: AppColors.textSecondary),
+        prefixIconColor: AppColors.textSecondary,
+        suffixIconColor: AppColors.textSecondary,
       ),
 
       // Floating Action Button Theme
@@ -148,13 +151,13 @@ class AppTheme {
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textSecondary,
         type: BottomNavigationBarType.fixed,
-        elevation: 8,
+        elevation: 0,
       ),
 
       // Navigation Bar Theme (Material 3)
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.primaryLight.withValues(alpha: 0.3),
+        indicatorColor: AppColors.primary.withValues(alpha: 0.22),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return const TextStyle(

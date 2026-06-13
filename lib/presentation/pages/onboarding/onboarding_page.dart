@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../application/onboarding/onboarding_controller.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../widgets/liquid_glass.dart';
 
 /// Onboarding Page - Multi-step wizard (Tasks 9-12)
 class OnboardingPage extends ConsumerStatefulWidget {
@@ -50,14 +51,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     });
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [AppColors.primary, AppColors.secondary],
-          ),
-        ),
+      body: LiquidGlassBackground(
         child: SafeArea(
           child: Column(
             children: [
@@ -565,12 +559,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   }
 
   Widget _buildInputCard({required Widget child}) {
-    return Container(
+    return LiquidGlassPanel(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-      ),
+      borderRadius: BorderRadius.circular(16),
       child: child,
     );
   }

@@ -256,18 +256,19 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _titleController,
+                  style: const TextStyle(color: AppColors.textPrimary),
                   decoration: InputDecoration(
                     hintText: '例如：学会游泳、减肥10斤、升职加薪',
                     hintStyle: const TextStyle(color: AppColors.textHint),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: AppColors.surfaceVariant,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
+                      borderSide: const BorderSide(color: AppColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -309,18 +310,19 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                 TextFormField(
                   controller: _descriptionController,
                   maxLines: 3,
+                  style: const TextStyle(color: AppColors.textPrimary),
                   decoration: InputDecoration(
                     hintText: '详细描述你的目标，越具体越好...',
                     hintStyle: const TextStyle(color: AppColors.textHint),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: AppColors.surfaceVariant,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
+                      borderSide: const BorderSide(color: AppColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -384,12 +386,14 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                           vertical: 10,
                         ),
                         decoration: BoxDecoration(
-                          color: isSelected ? AppColors.primary : Colors.white,
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.surfaceVariant,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isSelected
                                 ? AppColors.primary
-                                : Colors.grey.shade300,
+                                : AppColors.border,
                           ),
                           boxShadow: isSelected
                               ? [
@@ -408,7 +412,7 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                           style: TextStyle(
                             color: isSelected
                                 ? Colors.white
-                                : AppColors.textPrimary,
+                                : AppColors.textSecondary,
                             fontWeight: isSelected
                                 ? FontWeight.w600
                                 : FontWeight.normal,
@@ -474,12 +478,12 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? AppColors.secondary
-                              : Colors.white,
+                              : AppColors.surfaceVariant,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isSelected
                                 ? AppColors.secondary
-                                : Colors.grey.shade300,
+                                : AppColors.border,
                           ),
                           boxShadow: isSelected
                               ? [
@@ -500,7 +504,7 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                           style: TextStyle(
                             color: isSelected
                                 ? Colors.white
-                                : AppColors.textPrimary,
+                                : AppColors.textSecondary,
                             fontWeight: isSelected
                                 ? FontWeight.w600
                                 : FontWeight.normal,

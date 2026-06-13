@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -145,7 +148,6 @@ class DeepSeekApiClient {
       data: {
         'model': model ?? ApiConstants.deepseekModel,
         'messages': messages,
-        'thinking': {'type': 'disabled'},
         if (jsonMode) 'response_format': {'type': 'json_object'},
       },
     );
@@ -175,6 +177,58 @@ class DeepSeekApiClient {
       }
     }
     return '';
+  }
+
+  /// Stream a chat completion and yield text deltas as they arrive.
+  Stream<String> streamPrompt(String prompt, {String? model}) async* {
+    final response = await _dio.post<ResponseBody>(
+      '/chat/completions',
+      data: {
+        'model': model ?? ApiConstants.deepseekModel,
+        'messages': [
+          {'role': 'user', 'content': prompt},
+        ],
+        'stream': true,
+      },
+      options: Options(responseType: ResponseType.stream),
+    );
+
+    final body = response.data;
+    if (body == null) return;
+
+    final buffer = StringBuffer();
+    await for (final chunk in body.stream) {
+      buffer.write(utf8.decode(chunk, allowMalformed: true));
+      var pending = buffer.toString();
+      buffer.clear();
+      while (true) {
+        final lineEnd = pending.indexOf('\n');
+        if (lineEnd < 0) break;
+        final line = pending.substring(0, lineEnd).trim();
+        pending = pending.substring(lineEnd + 1);
+        if (line.isEmpty || !line.startsWith('data:')) continue;
+        final data = line.substring(5).trim();
+        if (data == '[DONE]') return;
+        final dynamic decoded;
+        try {
+          decoded = jsonDecode(data);
+        } catch (_) {
+          continue;
+        }
+        if (decoded is! Map<String, dynamic>) continue;
+        final choices = decoded['choices'];
+        if (choices is! List || choices.isEmpty) continue;
+        final firstChoice = choices.first;
+        if (firstChoice is! Map<String, dynamic>) continue;
+        final delta = firstChoice['delta'];
+        if (delta is! Map<String, dynamic>) continue;
+        final content = delta['content']?.toString();
+        if (content != null && content.isNotEmpty) {
+          yield content;
+        }
+      }
+      buffer.write(pending);
+    }
   }
 }
 
