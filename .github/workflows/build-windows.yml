@@ -7,9 +7,6 @@ on:
         description: 'Release tag to upload to (e.g. v1.0.9)'
         required: true
         default: 'v1.0.9'
-  push:
-    tags:
-      - 'v*'
 
 jobs:
   build-windows:
@@ -20,6 +17,10 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+      
+      - name: Setup API constants
+        run: copy lib\core\constants\api_constants.example.dart lib\core\constants\api_constants.dart
+        shell: cmd
       
       - run: flutter pub get
       
@@ -32,5 +33,5 @@ jobs:
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.release_tag || github.ref_name }}
+          tag_name: ${{ inputs.release_tag }}
           files: BenWo-Windows-x64.zip
