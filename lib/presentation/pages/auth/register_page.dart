@@ -92,7 +92,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       alignment: Alignment.centerLeft,
                       child: LiquidGlassIconButton(
                         tooltip: '返回登录',
-                        onPressed: isLoading ? null : () => context.go('/login'),
+                        onPressed: isLoading
+                            ? null
+                            : () => context.go('/login'),
                         icon: Icons.arrow_back_rounded,
                       ),
                     ),
@@ -154,17 +156,17 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                 suffixIcon: Padding(
                                   padding: const EdgeInsets.only(right: 8),
                                   child: LiquidGlassIconButton(
-                                  tooltip: _obscurePassword ? '显示密码' : '隐藏密码',
+                                    tooltip: _obscurePassword ? '显示密码' : '隐藏密码',
                                     icon: _obscurePassword
-                                      ? Icons.visibility_rounded
-                                      : Icons.visibility_off_rounded,
-                                  onPressed: isLoading
-                                      ? null
-                                      : () => setState(
-                                          () => _obscurePassword =
-                                              !_obscurePassword,
-                                        ),
-                                ),
+                                        ? Icons.visibility_rounded
+                                        : Icons.visibility_off_rounded,
+                                    onPressed: isLoading
+                                        ? null
+                                        : () => setState(
+                                            () => _obscurePassword =
+                                                !_obscurePassword,
+                                          ),
+                                  ),
                                 ),
                               ),
                               validator: _validatePassword,
@@ -183,19 +185,19 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                 suffixIcon: Padding(
                                   padding: const EdgeInsets.only(right: 8),
                                   child: LiquidGlassIconButton(
-                                  tooltip: _obscureConfirmPassword
-                                      ? '显示密码'
-                                      : '隐藏密码',
+                                    tooltip: _obscureConfirmPassword
+                                        ? '显示密码'
+                                        : '隐藏密码',
                                     icon: _obscureConfirmPassword
-                                      ? Icons.visibility_rounded
-                                      : Icons.visibility_off_rounded,
-                                  onPressed: isLoading
-                                      ? null
-                                      : () => setState(
-                                          () => _obscureConfirmPassword =
-                                              !_obscureConfirmPassword,
-                                        ),
-                                ),
+                                        ? Icons.visibility_rounded
+                                        : Icons.visibility_off_rounded,
+                                    onPressed: isLoading
+                                        ? null
+                                        : () => setState(
+                                            () => _obscureConfirmPassword =
+                                                !_obscureConfirmPassword,
+                                          ),
+                                  ),
                                 ),
                               ),
                               validator: _validateConfirmPassword,

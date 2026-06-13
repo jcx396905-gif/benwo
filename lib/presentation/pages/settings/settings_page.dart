@@ -217,7 +217,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             title: const Text('作者'),
             subtitle: _showAuthorEgg
                 ? const Text(
-                    '金诚熙牛逼',
+                    '感谢使用 BenWo',
                     style: TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w700,
@@ -359,7 +359,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     if (_showAuthorEgg) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('金诚熙牛逼')));
+      ).showSnackBar(const SnackBar(content: Text('感谢使用 BenWo')));
     }
   }
 

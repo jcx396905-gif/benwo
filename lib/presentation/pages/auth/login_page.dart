@@ -78,8 +78,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     const SizedBox(height: 42),
                     Text(
                       'BenWo',
-                      style: Theme.of(context).textTheme.displayLarge
-                          ?.copyWith(color: Colors.white, fontSize: 40),
+                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                        color: Colors.white,
+                        fontSize: 40,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -197,7 +199,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                     const SizedBox(height: 18),
                     TextButton(
-                      onPressed: isLoading ? null : () => context.go('/register'),
+                      onPressed: isLoading
+                          ? null
+                          : () => context.go('/register'),
                       child: const Text('还没有账号？创建账号'),
                     ),
                   ],
