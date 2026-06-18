@@ -79,7 +79,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     Text(
                       'BenWo',
                       style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                         fontSize: 40,
                       ),
                     ),
@@ -87,7 +87,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     Text(
                       '让目标变成今天能做的事',
                       style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(color: Colors.white, height: 1.25),
+                          ?.copyWith(
+                            color: AppColors.textPrimary,
+                            height: 1.25,
+                          ),
                     ),
                     const SizedBox(height: 10),
                     Text(
@@ -186,7 +189,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                           strokeWidth: 2,
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                                Colors.white,
+                                                AppColors.onPrimary,
                                               ),
                                         ),
                                       )

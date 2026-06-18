@@ -18,8 +18,10 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _customCategoryController = TextEditingController();
 
   String? _selectedCategory;
+  bool _isCustomCategory = false;
   String? _selectedTimeframe;
   DateTime? _customTargetDate;
   bool _isLoading = false;
@@ -48,6 +50,7 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _customCategoryController.dispose();
     super.dispose();
   }
 
@@ -91,6 +94,16 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
       return;
     }
 
+    final category = _isCustomCategory
+        ? _customCategoryController.text.trim()
+        : _selectedCategory?.trim();
+    if (category == null || category.isEmpty) {
+      setState(() {
+        _errorMessage = '请输入自定义目标分类';
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -117,7 +130,7 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
             : _descriptionController.text.trim(),
         targetDate: targetDate,
         color: _selectedColor,
-        category: _selectedCategory,
+        category: category,
       );
 
       if (mounted) {
@@ -137,37 +150,6 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
         });
       }
     }
-  }
-
-  Future<String?> _showCustomCategoryDialog() async {
-    final controller = TextEditingController(text: _selectedCategory);
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('自定义目标类型'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(
-            labelText: '目标类型',
-            hintText: '例如：副业、家庭、作品集',
-          ),
-          maxLength: 12,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('确定'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    return result;
   }
 
   String _formatDate(DateTime date) {
@@ -354,28 +336,25 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                   children: [...AppConstants.goalCategories, '自定义'].map((
                     category,
                   ) {
-                    final isCustomCategory =
-                        category == '自定义' &&
-                        !AppConstants.goalCategories.contains(
-                          _selectedCategory,
-                        );
-                    final isSelected =
-                        _selectedCategory == category || isCustomCategory;
+                    final isCustomCategory = category == '自定义';
+                    final isSelected = isCustomCategory
+                        ? _isCustomCategory
+                        : !_isCustomCategory && _selectedCategory == category;
                     return GestureDetector(
-                      onTap: () async {
+                      onTap: () {
                         if (category == '自定义') {
-                          final customCategory =
-                              await _showCustomCategoryDialog();
-                          if (customCategory == null ||
-                              customCategory.isEmpty) {
-                            return;
-                          }
                           setState(() {
-                            _selectedCategory = customCategory;
+                            _isCustomCategory = true;
+                            if (_customCategoryController.text.isEmpty &&
+                                _selectedCategory != null) {
+                              _customCategoryController.text =
+                                  _selectedCategory!;
+                            }
                           });
                           return;
                         }
                         setState(() {
+                          _isCustomCategory = false;
                           _selectedCategory = category;
                         });
                       },
@@ -408,7 +387,12 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                               : null,
                         ),
                         child: Text(
-                          isCustomCategory ? _selectedCategory! : category,
+                          isCustomCategory &&
+                                  _customCategoryController.text
+                                      .trim()
+                                      .isNotEmpty
+                              ? _customCategoryController.text.trim()
+                              : category,
                           style: TextStyle(
                             color: isSelected
                                 ? Colors.white
@@ -422,6 +406,52 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                     );
                   }).toList(),
                 ),
+                if (_isCustomCategory) ...[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _customCategoryController,
+                    maxLength: 12,
+                    style: const TextStyle(color: AppColors.textPrimary),
+                    decoration: InputDecoration(
+                      labelText: '自定义目标分类',
+                      hintText: '例如：副业、家庭、作品集',
+                      filled: true,
+                      fillColor: AppColors.surfaceVariant,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: AppColors.primary,
+                          width: 2,
+                        ),
+                      ),
+                      suffixIcon: TextButton(
+                        onPressed: () {
+                          final value = _customCategoryController.text.trim();
+                          if (value.isEmpty) {
+                            setState(() {
+                              _errorMessage = '请输入自定义目标分类';
+                            });
+                            return;
+                          }
+                          setState(() {
+                            _selectedCategory = value;
+                            _errorMessage = null;
+                          });
+                        },
+                        child: const Text('确认'),
+                      ),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ],
 
                 const SizedBox(height: 20),
 

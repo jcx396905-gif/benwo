@@ -26,6 +26,34 @@ class UserSettingsModel {
 
   String? themePreference;
 
+  int pomodoroFocusMinutes = 25;
+
+  int pomodoroShortBreakMinutes = 5;
+
+  int pomodoroLongBreakMinutes = 20;
+
+  int pomodoroLongBreakInterval = 4;
+
+  bool pomodoroAutoStartBreak = false;
+
+  bool pomodoroAutoStartNextFocus = false;
+
+  bool pomodoroSoundEnabled = true;
+
+  bool pomodoroVibrationEnabled = true;
+
+  bool pomodoroNotificationsEnabled = true;
+
+  bool pomodoroKeepScreenOn = false;
+
+  bool pomodoroAutoCompleteTodo = false;
+
+  bool pomodoroAiEstimateEnabled = false;
+
+  String? pomodoroAiScheduleStrategy;
+
+  bool pomodoroWeeklyReviewEnabled = false;
+
   late DateTime createdAt;
 
   DateTime? updatedAt;

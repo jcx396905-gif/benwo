@@ -8,11 +8,13 @@ import 'package:intl/intl.dart';
 import '../../../application/auth/auth_notifier.dart';
 import '../../../application/goal/goal_completion_notifier.dart';
 import '../../../application/goal/goal_split_notifier.dart';
+import '../../../application/pomodoro/pomodoro_providers.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/todo_reminder_scheduler.dart';
 import '../../../data/models/big_goal_model.dart';
 import '../../../data/models/todo_item_model.dart';
+import '../../widgets/main_bottom_nav_bar.dart';
 
 typedef _HomeUserDateParams = ({int userId, DateTime date});
 
@@ -600,36 +602,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Widget _buildBottomNavBar(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: 0,
-      onTap: (index) {
-        switch (index) {
-          case 0:
-            break; // Already on home
-          case 1:
-            context.go('/goals');
-            break;
-          case 2:
-            context.go('/calendar');
-            break;
-          case 3:
-            context.go('/settings');
-            break;
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: '首页'),
-        BottomNavigationBarItem(icon: Icon(Icons.flag_rounded), label: '目标'),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.calendar_month_rounded),
-          label: '日历',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings_rounded),
-          label: '设置',
-        ),
-      ],
-    );
+    return const MainBottomNavBar(currentIndex: 0);
   }
 
   Future<void> _toggleTodoComplete(TodoItemModel todo) async {
@@ -940,6 +913,18 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
                 const SizedBox(height: 24),
 
+                if (!todo.isCompleted) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _addTodoToTodayFocus(todo),
+                      icon: const Icon(Icons.timer_rounded),
+                      label: const Text('加入今日专注'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
                 // Action buttons
                 Row(
                   children: [
@@ -1016,6 +1001,21 @@ class _HomePageState extends ConsumerState<HomePage> {
         ),
       ),
     );
+  }
+
+  Future<void> _addTodoToTodayFocus(TodoItemModel todo) async {
+    final today = _homeDateOnly(DateTime.now());
+    final planningService = ref.read(pomodoroPlanningServiceProvider);
+    final plan = await planningService.ensurePlanAndImportTodos(
+      userId: todo.userId,
+      date: today,
+    );
+    await planningService.addTodoToPlan(plan: plan, todo: todo);
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('已加入今日专注')));
   }
 
   void _confirmDeleteTodo(TodoItemModel todo) {

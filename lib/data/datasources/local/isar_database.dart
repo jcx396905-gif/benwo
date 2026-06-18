@@ -6,11 +6,16 @@ import '../../models/user_profile_model.dart';
 import '../../models/big_goal_model.dart';
 import '../../models/todo_item_model.dart';
 import '../../models/user_settings_model.dart';
+import '../../models/pomodoro_plan_model.dart';
+import '../../models/saved_pomodoro_list_model.dart';
+import '../../models/pomodoro_session_model.dart';
+import '../../models/pomodoro_task_model.dart';
 import '../../repositories/user_repository.dart';
 import '../../repositories/user_profile_repository.dart';
 import '../../repositories/big_goal_repository.dart';
 import '../../repositories/todo_item_repository.dart';
 import '../../repositories/user_settings_repository.dart';
+import '../../repositories/pomodoro_repository.dart';
 
 /// Isar Database Schema and Repository Implementations
 /// Contains all Isar collection schemas and CRUD implementations
@@ -27,6 +32,10 @@ class IsarDatabase {
         BigGoalModelSchema,
         TodoItemModelSchema,
         UserSettingsModelSchema,
+        PomodoroPlanModelSchema,
+        SavedPomodoroListModelSchema,
+        PomodoroTaskModelSchema,
+        PomodoroSessionModelSchema,
       ];
 
   /// Initialize Isar database
@@ -561,6 +570,10 @@ class UserSettingsRepositoryImpl implements UserSettingsRepository {
       ..morningPushTime = '09:00'
       ..afternoonPushTime = '14:00'
       ..eveningPushTime = '19:00'
+      ..pomodoroFocusMinutes = 25
+      ..pomodoroShortBreakMinutes = 5
+      ..pomodoroLongBreakMinutes = 20
+      ..pomodoroLongBreakInterval = 4
       ..createdAt = DateTime.now();
 
     await _isar.writeTxn(() async {
@@ -649,6 +662,74 @@ class UserSettingsRepositoryImpl implements UserSettingsRepository {
   }
 
   @override
+  Future<void> updatePomodoroSettings(
+    int userId, {
+    int? focusMinutes,
+    int? shortBreakMinutes,
+    int? longBreakMinutes,
+    int? longBreakInterval,
+    bool? autoStartBreak,
+    bool? autoStartNextFocus,
+    bool? soundEnabled,
+    bool? vibrationEnabled,
+    bool? notificationsEnabled,
+    bool? keepScreenOn,
+    bool? autoCompleteTodo,
+    bool? aiEstimateEnabled,
+    String? aiScheduleStrategy,
+    bool? weeklyReviewEnabled,
+  }) async {
+    await _isar.writeTxn(() async {
+      final settings = await _isar.userSettingsModels
+          .where()
+          .userIdEqualTo(userId)
+          .findFirst();
+      if (settings == null) return;
+
+      if (focusMinutes != null) settings.pomodoroFocusMinutes = focusMinutes;
+      if (shortBreakMinutes != null) {
+        settings.pomodoroShortBreakMinutes = shortBreakMinutes;
+      }
+      if (longBreakMinutes != null) {
+        settings.pomodoroLongBreakMinutes = longBreakMinutes;
+      }
+      if (longBreakInterval != null) {
+        settings.pomodoroLongBreakInterval = longBreakInterval;
+      }
+      if (autoStartBreak != null) {
+        settings.pomodoroAutoStartBreak = autoStartBreak;
+      }
+      if (autoStartNextFocus != null) {
+        settings.pomodoroAutoStartNextFocus = autoStartNextFocus;
+      }
+      if (soundEnabled != null) {
+        settings.pomodoroSoundEnabled = soundEnabled;
+      }
+      if (vibrationEnabled != null) {
+        settings.pomodoroVibrationEnabled = vibrationEnabled;
+      }
+      if (notificationsEnabled != null) {
+        settings.pomodoroNotificationsEnabled = notificationsEnabled;
+      }
+      if (keepScreenOn != null) settings.pomodoroKeepScreenOn = keepScreenOn;
+      if (autoCompleteTodo != null) {
+        settings.pomodoroAutoCompleteTodo = autoCompleteTodo;
+      }
+      if (aiEstimateEnabled != null) {
+        settings.pomodoroAiEstimateEnabled = aiEstimateEnabled;
+      }
+      if (aiScheduleStrategy != null) {
+        settings.pomodoroAiScheduleStrategy = aiScheduleStrategy;
+      }
+      if (weeklyReviewEnabled != null) {
+        settings.pomodoroWeeklyReviewEnabled = weeklyReviewEnabled;
+      }
+      settings.updatedAt = DateTime.now();
+      await _isar.userSettingsModels.put(settings);
+    });
+  }
+
+  @override
   Future<void> deleteSettings(int userId) async {
     await _isar.writeTxn(() async {
       final settings = await _isar.userSettingsModels
@@ -668,5 +749,261 @@ class UserSettingsRepositoryImpl implements UserSettingsRepository {
         .userIdEqualTo(userId)
         .watch(fireImmediately: true)
         .map((settings) => settings.isNotEmpty ? settings.first : null);
+  }
+}
+
+// ============================================================================
+// Pomodoro Repository Implementation
+// ============================================================================
+
+class PomodoroRepositoryImpl implements PomodoroRepository {
+  final Isar _isar;
+
+  PomodoroRepositoryImpl(this._isar);
+
+  DateTime _startOfDay(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
+
+  DateTime _endOfDay(DateTime date) =>
+      DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+
+  @override
+  Future<PomodoroPlanModel?> getPlanByDate(int userId, DateTime date) {
+    final start = _startOfDay(date);
+    final end = _endOfDay(date);
+    return _isar.pomodoroPlanModels
+        .where()
+        .userIdEqualTo(userId)
+        .filter()
+        .dateBetween(start, end)
+        .findFirst();
+  }
+
+  @override
+  Future<PomodoroPlanModel> getOrCreatePlan({
+    required int userId,
+    required DateTime date,
+    required int defaultFocusMinutes,
+    required int defaultBreakMinutes,
+    required int longBreakMinutes,
+    required int longBreakInterval,
+    required bool autoStartBreak,
+    required bool autoStartNextFocus,
+  }) async {
+    final existing = await getPlanByDate(userId, date);
+    if (existing != null) return existing;
+
+    final now = DateTime.now();
+    final plan = PomodoroPlanModel()
+      ..userId = userId
+      ..date = _startOfDay(date)
+      ..title = '今日番茄计划'
+      ..defaultFocusMinutes = defaultFocusMinutes
+      ..defaultBreakMinutes = defaultBreakMinutes
+      ..longBreakMinutes = longBreakMinutes
+      ..longBreakInterval = longBreakInterval
+      ..autoStartBreak = autoStartBreak
+      ..autoStartNextFocus = autoStartNextFocus
+      ..createdAt = now
+      ..updatedAt = now;
+
+    await _isar.writeTxn(() async {
+      await _isar.pomodoroPlanModels.put(plan);
+    });
+    return plan;
+  }
+
+  @override
+  Future<List<PomodoroTaskModel>> getTasksByPlanId(int planId) {
+    return _isar.pomodoroTaskModels
+        .where()
+        .planIdEqualTo(planId)
+        .sortByOrderIndex()
+        .findAll();
+  }
+
+  @override
+  Stream<List<PomodoroTaskModel>> watchTasksByPlanId(int planId) {
+    return _isar.pomodoroTaskModels
+        .where()
+        .planIdEqualTo(planId)
+        .sortByOrderIndex()
+        .watch(fireImmediately: true);
+  }
+
+  @override
+  Future<PomodoroTaskModel?> getTaskByTodo({
+    required int planId,
+    required int todoId,
+  }) {
+    return _isar.pomodoroTaskModels
+        .where()
+        .planIdEqualTo(planId)
+        .filter()
+        .todoIdEqualTo(todoId)
+        .findFirst();
+  }
+
+  @override
+  Future<PomodoroTaskModel?> getTaskById(int taskId) {
+    return _isar.pomodoroTaskModels.get(taskId);
+  }
+
+  @override
+  Future<PomodoroTaskModel> saveTask(PomodoroTaskModel task) async {
+    task.updatedAt = DateTime.now();
+    await _isar.writeTxn(() async {
+      await _isar.pomodoroTaskModels.put(task);
+    });
+    return task;
+  }
+
+  @override
+  Future<void> deleteTask(int taskId) async {
+    await _isar.writeTxn(() async {
+      await _isar.pomodoroTaskModels.delete(taskId);
+    });
+  }
+
+  @override
+  Future<void> reorderTasks(List<PomodoroTaskModel> tasks) async {
+    await _isar.writeTxn(() async {
+      for (var i = 0; i < tasks.length; i++) {
+        tasks[i].orderIndex = i;
+        tasks[i].orderEditedByUser = true;
+        tasks[i].updatedAt = DateTime.now();
+      }
+      await _isar.pomodoroTaskModels.putAll(tasks);
+    });
+  }
+
+  @override
+  Future<List<PomodoroSessionModel>> getSessionsByPlanId(int planId) {
+    return _isar.pomodoroSessionModels
+        .where()
+        .planIdEqualTo(planId)
+        .sortByCreatedAt()
+        .findAll();
+  }
+
+  @override
+  Future<List<PomodoroSessionModel>> getSessionsByTaskId(int taskId) {
+    return _isar.pomodoroSessionModels
+        .where()
+        .taskIdEqualTo(taskId)
+        .sortBySessionIndex()
+        .findAll();
+  }
+
+  @override
+  Stream<List<PomodoroSessionModel>> watchSessionsByPlanId(int planId) {
+    return _isar.pomodoroSessionModels
+        .where()
+        .planIdEqualTo(planId)
+        .sortByCreatedAt()
+        .watch(fireImmediately: true);
+  }
+
+  @override
+  Future<PomodoroSessionModel?> getRunningSession(int userId) {
+    return _isar.pomodoroSessionModels
+        .where()
+        .userIdEqualTo(userId)
+        .filter()
+        .group(
+          (q) => q
+              .statusEqualTo(PomodoroSessionStatus.focusing)
+              .or()
+              .statusEqualTo(PomodoroSessionStatus.focusPaused)
+              .or()
+              .statusEqualTo(PomodoroSessionStatus.resting)
+              .or()
+              .statusEqualTo(PomodoroSessionStatus.restPaused),
+        )
+        .findFirst();
+  }
+
+  @override
+  Future<PomodoroSessionModel> saveSession(PomodoroSessionModel session) async {
+    session.updatedAt = DateTime.now();
+    await _isar.writeTxn(() async {
+      await _isar.pomodoroSessionModels.put(session);
+    });
+    return session;
+  }
+
+  @override
+  Future<void> abandonOtherRunningSessions({
+    required int userId,
+    int? exceptSessionId,
+  }) async {
+    final running = await _isar.pomodoroSessionModels
+        .where()
+        .userIdEqualTo(userId)
+        .filter()
+        .group(
+          (q) => q
+              .statusEqualTo(PomodoroSessionStatus.focusing)
+              .or()
+              .statusEqualTo(PomodoroSessionStatus.focusPaused)
+              .or()
+              .statusEqualTo(PomodoroSessionStatus.resting)
+              .or()
+              .statusEqualTo(PomodoroSessionStatus.restPaused),
+        )
+        .findAll();
+
+    await _isar.writeTxn(() async {
+      for (final session in running) {
+        if (session.id == exceptSessionId) continue;
+        session.status = PomodoroSessionStatus.abandoned;
+        session.updatedAt = DateTime.now();
+        await _isar.pomodoroSessionModels.put(session);
+      }
+    });
+  }
+
+  @override
+  Future<SavedPomodoroListModel> savePomodoroList(
+    SavedPomodoroListModel list,
+  ) async {
+    list.updatedAt = DateTime.now();
+    await _isar.writeTxn(() async {
+      await _isar.savedPomodoroListModels.put(list);
+    });
+    return list;
+  }
+
+  @override
+  Stream<List<SavedPomodoroListModel>> watchSavedPomodoroLists(int userId) {
+    return _isar.savedPomodoroListModels
+        .where()
+        .userIdEqualTo(userId)
+        .sortByUpdatedAtDesc()
+        .watch(fireImmediately: true);
+  }
+
+  @override
+  Future<List<SavedPomodoroListModel>> getSavedPomodoroLists(int userId) {
+    return _isar.savedPomodoroListModels
+        .where()
+        .userIdEqualTo(userId)
+        .sortByUpdatedAtDesc()
+        .findAll();
+  }
+
+  @override
+  Future<void> deleteSavedPomodoroList(int listId) async {
+    await _isar.writeTxn(() async {
+      await _isar.savedPomodoroListModels.delete(listId);
+    });
+  }
+
+  @override
+  Future<void> deleteTasksByIds(List<int> taskIds) async {
+    if (taskIds.isEmpty) return;
+    await _isar.writeTxn(() async {
+      await _isar.pomodoroTaskModels.deleteAll(taskIds);
+    });
   }
 }

@@ -1,31 +1,31 @@
 import 'package:flutter/material.dart';
 
-/// BenWo App Color Palette - Solid Material + liquid glass surfaces.
+/// BenWo App Color Palette - warm paper + readable liquid glass surfaces.
 class AppColors {
   AppColors._();
 
-  // Primary: calm teal on a solid MD-style base.
+  // Primary: calm sage teal.
   static const Color primary = Color(0xFF8FBFB0);
   static const Color primaryLight = Color(0xFFCFE4DD);
   static const Color primaryDark = Color(0xFF4F7F72);
-  static const Color onPrimary = Color(0xFFFFFFFF);
+  static const Color onPrimary = Color(0xFF20352F);
 
   // Secondary: warm amber accent.
-  static const Color secondary = Color(0xFFE8B57B);
-  static const Color secondaryLight = Color(0xFFF3D6B2);
-  static const Color secondaryDark = Color(0xFFB87E43);
+  static const Color secondary = Color(0xFFD8A85F);
+  static const Color secondaryLight = Color(0xFFF4DDB5);
+  static const Color secondaryDark = Color(0xFF9A6C2E);
   static const Color onSecondary = Color(0xFF21170D);
 
-  // Background & Surface
-  static const Color background = Color(0xFF101714);
-  static const Color surface = Color(0xFF1B2420);
-  static const Color surfaceVariant = Color(0xFF24312C);
-  static const Color onBackground = Color(0xFFF4F7F5);
-  static const Color onSurface = Color(0xFFF4F7F5);
-  static const Color onSurfaceVariant = Color(0xFFC4CDC8);
+  // Background & Surface.
+  static const Color background = Color(0xFFF6EFE4);
+  static const Color surface = Color(0xFFFFFAF0);
+  static const Color surfaceVariant = Color(0xFFF0E5D5);
+  static const Color onBackground = Color(0xFF3D352C);
+  static const Color onSurface = Color(0xFF3D352C);
+  static const Color onSurfaceVariant = Color(0xFF766A5D);
 
   // Error
-  static const Color error = Color(0xFFFF8A80);
+  static const Color error = Color(0xFFB7604B);
   static const Color onError = Color(0xFFFFFFFF);
 
   // Additional Morandi Colors
@@ -37,13 +37,13 @@ class AppColors {
   static const Color cream = Color(0xFFF6EFE4);
 
   // Text Colors
-  static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFFE0E8E4);
-  static const Color textHint = Color(0xFFB4C0BA);
+  static const Color textPrimary = Color(0xFF3D352C);
+  static const Color textSecondary = Color(0xFF766A5D);
+  static const Color textHint = Color(0xFF9C9082);
 
   // Border & Divider
-  static const Color border = Color(0xFF405049);
-  static const Color divider = Color(0xFF2D3A35);
+  static const Color border = Color(0xFFE5D8C6);
+  static const Color divider = Color(0xFFE8DCCB);
 
   // Goal Colors (for different goals)
   static const List<Color> goalColors = [
@@ -57,7 +57,7 @@ class AppColors {
     Color(0xFF8FB1C4), // Soft blue
   ];
 
-  // Kept for compatibility. UI should use solid backgrounds, not gradients.
+  // Kept for compatibility. UI should use glass/paper backgrounds, not strong gradients.
   static const Color gradientStart = background;
   static const Color gradientEnd = background;
 }

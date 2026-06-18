@@ -27,6 +27,25 @@ abstract class UserSettingsRepository {
   /// Update theme preference
   Future<void> updateThemePreference(int userId, String themeMode);
 
+  /// Update pomodoro settings.
+  Future<void> updatePomodoroSettings(
+    int userId, {
+    int? focusMinutes,
+    int? shortBreakMinutes,
+    int? longBreakMinutes,
+    int? longBreakInterval,
+    bool? autoStartBreak,
+    bool? autoStartNextFocus,
+    bool? soundEnabled,
+    bool? vibrationEnabled,
+    bool? notificationsEnabled,
+    bool? keepScreenOn,
+    bool? autoCompleteTodo,
+    bool? aiEstimateEnabled,
+    String? aiScheduleStrategy,
+    bool? weeklyReviewEnabled,
+  });
+
   /// Delete settings
   Future<void> deleteSettings(int userId);
 

@@ -43,7 +43,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(next.errorMessage!),
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.error,
             ),
           );
         }
@@ -63,14 +63,17 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     // Close/Exit button
                     IconButton(
                       onPressed: () => _showExitDialog(context),
-                      icon: const Icon(Icons.close, color: Colors.white),
+                      icon: const Icon(
+                        Icons.close,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                     const Spacer(),
                     // Step indicator
                     Text(
                       '${onboardingState.currentStep}/${onboardingState.totalSteps}',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
@@ -130,8 +133,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
             margin: const EdgeInsets.symmetric(horizontal: 2),
             decoration: BoxDecoration(
               color: isCompleted || isCurrent
-                  ? Colors.white
-                  : Colors.white.withValues(alpha: 0.3),
+                  ? AppColors.primary
+                  : AppColors.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -150,18 +153,15 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           const Text(
             '第一步：我是谁',
             style: TextStyle(
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             '告诉我们一些关于您的基础信息',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.9),
-              fontSize: 16,
-            ),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
           ),
           const SizedBox(height: 32),
 
@@ -354,18 +354,15 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           const Text(
             '第二步：我的现状',
             style: TextStyle(
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             '您目前面临哪些挑战？（可多选）',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.9),
-              fontSize: 16,
-            ),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
           ),
           const SizedBox(height: 24),
 
@@ -405,7 +402,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   child: Text(
                     challenge,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : AppColors.textPrimary,
+                      color: isSelected
+                          ? AppColors.onSecondary
+                          : AppColors.textPrimary,
                       fontSize: 14,
                       fontWeight: isSelected
                           ? FontWeight.w600
@@ -422,7 +421,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           const Text(
             '您目前的生活状态是？',
             style: TextStyle(
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
@@ -461,7 +460,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     Icon(
                       _getLifeStatusIcon(status),
                       color: isSelected
-                          ? Colors.white
+                          ? AppColors.onSecondary
                           : AppColors.textSecondary,
                       size: 24,
                     ),
@@ -470,7 +469,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                       status,
                       style: TextStyle(
                         color: isSelected
-                            ? Colors.white
+                            ? AppColors.onSecondary
                             : AppColors.textPrimary,
                         fontSize: 16,
                         fontWeight: isSelected
@@ -482,7 +481,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     if (isSelected)
                       const Icon(
                         Icons.check_circle,
-                        color: Colors.white,
+                        color: AppColors.onSecondary,
                         size: 20,
                       ),
                   ],
@@ -501,8 +500,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 child: OutlinedButton(
                   onPressed: () => _goToPreviousStep(state.currentStep),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Colors.white, width: 1.5),
+                    foregroundColor: AppColors.primaryDark,
+                    side: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -576,18 +578,15 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           const Text(
             '第三步：我想要什么',
             style: TextStyle(
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             '您最想改变的三个方面是什么？',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.9),
-              fontSize: 16,
-            ),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
           ),
           const SizedBox(height: 24),
 
@@ -642,7 +641,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           const Text(
             '您希望在多长时间内实现这些改变？',
             style: TextStyle(
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
@@ -684,7 +683,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   child: Text(
                     timeframe,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : AppColors.textPrimary,
+                      color: isSelected
+                          ? AppColors.onSecondary
+                          : AppColors.textPrimary,
                       fontSize: 14,
                       fontWeight: isSelected
                           ? FontWeight.w600
@@ -706,8 +707,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 child: OutlinedButton(
                   onPressed: () => _goToPreviousStep(state.currentStep),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Colors.white, width: 1.5),
+                    foregroundColor: AppColors.primaryDark,
+                    side: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -767,18 +771,15 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           const Text(
             '第四步：AI 分析确认',
             style: TextStyle(
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             'AI 已经理解了您的目标和期望',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.9),
-              fontSize: 16,
-            ),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
           ),
           const SizedBox(height: 24),
 
@@ -944,19 +945,19 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 color: AppColors.primary.withValues(alpha: 0.3),
               ),
             ),
-            child: Row(
+            child: const Row(
               children: [
                 Icon(
                   Icons.info_outline_rounded,
-                  color: AppColors.primary.withValues(alpha: 0.8),
+                  color: AppColors.primaryDark,
                   size: 18,
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'MBTI 等性格维度可以在设置中后续完善，AI 会根据您的使用习惯持续优化建议',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: AppColors.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -976,8 +977,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                       ? null
                       : () => _goToPreviousStep(state.currentStep),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Colors.white, width: 1.5),
+                    foregroundColor: AppColors.primaryDark,
+                    side: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -1004,7 +1008,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
+                                AppColors.onSecondary,
                               ),
                             ),
                           ),
@@ -1047,7 +1051,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                             child: Text(
                               '确认并完成',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: AppColors.onSecondary,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -1065,18 +1069,27 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.1),
+                color: AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.error.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.error_outline, color: Colors.red, size: 18),
+                  const Icon(
+                    Icons.error_outline,
+                    color: AppColors.error,
+                    size: 18,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       state.errorMessage!,
-                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                      style: const TextStyle(
+                        color: AppColors.error,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -1234,7 +1247,7 @@ class _AnimatedElevatedButtonState extends State<AnimatedElevatedButton> {
         child: Center(
           child: DefaultTextStyle(
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.onPrimary,
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),

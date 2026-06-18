@@ -104,13 +104,19 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     Text(
                       '创建账号',
                       style: Theme.of(context).textTheme.displayMedium
-                          ?.copyWith(color: Colors.white, fontSize: 36),
+                          ?.copyWith(
+                            color: AppColors.textPrimary,
+                            fontSize: 36,
+                          ),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       '先了解你，再帮你拆目标',
                       style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(color: Colors.white, height: 1.25),
+                          ?.copyWith(
+                            color: AppColors.textPrimary,
+                            height: 1.25,
+                          ),
                     ),
                     const SizedBox(height: 10),
                     Text(
@@ -220,7 +226,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                           strokeWidth: 2,
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                                Colors.white,
+                                                AppColors.onPrimary,
                                               ),
                                         ),
                                       )

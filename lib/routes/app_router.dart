@@ -9,6 +9,8 @@ import '../presentation/pages/goals/goals_list_page.dart';
 import '../presentation/pages/goals/goal_detail_page.dart';
 import '../presentation/pages/goals/create_goal_page.dart';
 import '../presentation/pages/calendar/calendar_page.dart';
+import '../presentation/pages/focus/focus_page.dart';
+import '../presentation/pages/focus/pomodoro_running_page.dart';
 import '../presentation/pages/settings/settings_page.dart';
 import '../presentation/pages/profile/profile_page.dart';
 import '../presentation/pages/not_found_page.dart';
@@ -90,13 +92,33 @@ class AppRouter {
           path: AppRoutes.calendar,
           name: 'calendar',
           pageBuilder: (context, state) =>
-              _mainTabPage(state: state, index: 2, child: const CalendarPage()),
+              _mainTabPage(state: state, index: 3, child: const CalendarPage()),
+        ),
+        GoRoute(
+          path: AppRoutes.focus,
+          name: 'focus',
+          pageBuilder: (context, state) =>
+              _mainTabPage(state: state, index: 2, child: const FocusPage()),
+        ),
+        GoRoute(
+          path: '/focus/session/:planId/:sessionId',
+          name: 'pomodoro-running',
+          builder: (context, state) {
+            final planId = int.tryParse(state.pathParameters['planId'] ?? '');
+            final sessionId = int.tryParse(
+              state.pathParameters['sessionId'] ?? '',
+            );
+            if (planId == null || sessionId == null) {
+              return const NotFoundPage();
+            }
+            return PomodoroRunningPage(planId: planId, sessionId: sessionId);
+          },
         ),
         GoRoute(
           path: AppRoutes.settings,
           name: 'settings',
           pageBuilder: (context, state) =>
-              _mainTabPage(state: state, index: 3, child: const SettingsPage()),
+              _mainTabPage(state: state, index: 4, child: const SettingsPage()),
         ),
         GoRoute(
           path: AppRoutes.profile,

@@ -2,11 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:isar/isar.dart';
 import 'app.dart';
 import 'core/di/injection.dart';
+import 'core/theme/app_colors.dart';
 import 'core/utils/notification_service.dart';
 import 'core/utils/todo_reminder_scheduler.dart';
 import 'data/datasources/local/isar_database.dart';
@@ -21,6 +23,15 @@ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+      systemNavigationBarColor: AppColors.surface,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
 
   // Initialize SharedPreferences
   final sharedPreferences = await SharedPreferences.getInstance();

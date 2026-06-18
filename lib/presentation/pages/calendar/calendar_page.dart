@@ -9,6 +9,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/todo_reminder_scheduler.dart';
 import '../../../data/models/big_goal_model.dart';
 import '../../../data/models/todo_item_model.dart';
+import '../../widgets/main_bottom_nav_bar.dart';
 import '_completed_history_sheet.dart';
 
 typedef _CalendarUserDateParams = ({int userId, DateTime date});
@@ -146,36 +147,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
           _buildMonthView(),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 2,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go('/home');
-              break;
-            case 1:
-              context.go('/goals');
-              break;
-            case 2:
-              break; // Already on calendar
-            case 3:
-              context.go('/settings');
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: '首页'),
-          BottomNavigationBarItem(icon: Icon(Icons.flag_rounded), label: '目标'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month_rounded),
-            label: '日历',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_rounded),
-            label: '设置',
-          ),
-        ],
-      ),
+      bottomNavigationBar: const MainBottomNavBar(currentIndex: 3),
     );
   }
 

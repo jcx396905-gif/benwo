@@ -6,6 +6,7 @@ import '../../../application/auth/auth_notifier.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/big_goal_model.dart';
+import '../../widgets/main_bottom_nav_bar.dart';
 
 class GoalsListPage extends ConsumerWidget {
   const GoalsListPage({super.key});
@@ -53,36 +54,7 @@ class GoalsListPage extends ConsumerWidget {
   }
 
   Widget _buildBottomNavBar(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: 1,
-      onTap: (index) {
-        switch (index) {
-          case 0:
-            context.go('/home');
-            break;
-          case 1:
-            break;
-          case 2:
-            context.go('/calendar');
-            break;
-          case 3:
-            context.go('/settings');
-            break;
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: '首页'),
-        BottomNavigationBarItem(icon: Icon(Icons.flag_rounded), label: '目标'),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.calendar_month_rounded),
-          label: '日历',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings_rounded),
-          label: '设置',
-        ),
-      ],
-    );
+    return const MainBottomNavBar(currentIndex: 1);
   }
 }
 

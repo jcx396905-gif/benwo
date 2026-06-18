@@ -13,6 +13,7 @@ import '../../data/repositories/user_profile_repository.dart';
 import '../../data/repositories/big_goal_repository.dart';
 import '../../data/repositories/todo_item_repository.dart';
 import '../../data/repositories/user_settings_repository.dart';
+import '../../data/repositories/pomodoro_repository.dart';
 import '../constants/api_constants.dart';
 
 /// Dependency Injection Container for BenWo App
@@ -291,4 +292,10 @@ final todoItemRepositoryProvider = Provider<TodoItemRepository>((ref) {
 final userSettingsRepositoryProvider = Provider<UserSettingsRepository>((ref) {
   final isar = ref.watch(isarDatabaseProvider);
   return UserSettingsRepositoryImpl(isar);
+});
+
+/// Pomodoro Repository Provider
+final pomodoroRepositoryProvider = Provider<PomodoroRepository>((ref) {
+  final isar = ref.watch(isarDatabaseProvider);
+  return PomodoroRepositoryImpl(isar);
 });

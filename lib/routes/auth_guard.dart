@@ -38,6 +38,7 @@ class AppRoutes {
   static const String goals = '/goals';
   static const String goalDetail = '/goals/:id';
   static const String createGoal = '/goals/create';
+  static const String focus = '/focus';
   static const String calendar = '/calendar';
   static const String settings = '/settings';
   static const String profile = '/profile';

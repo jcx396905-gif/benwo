@@ -37,38 +37,108 @@ const UserSettingsModelSchema = CollectionSchema(
       name: r'morningPushTime',
       type: IsarType.string,
     ),
-    r'pushEnabled': PropertySchema(
+    r'pomodoroAiEstimateEnabled': PropertySchema(
       id: 4,
+      name: r'pomodoroAiEstimateEnabled',
+      type: IsarType.bool,
+    ),
+    r'pomodoroAiScheduleStrategy': PropertySchema(
+      id: 5,
+      name: r'pomodoroAiScheduleStrategy',
+      type: IsarType.string,
+    ),
+    r'pomodoroAutoCompleteTodo': PropertySchema(
+      id: 6,
+      name: r'pomodoroAutoCompleteTodo',
+      type: IsarType.bool,
+    ),
+    r'pomodoroAutoStartBreak': PropertySchema(
+      id: 7,
+      name: r'pomodoroAutoStartBreak',
+      type: IsarType.bool,
+    ),
+    r'pomodoroAutoStartNextFocus': PropertySchema(
+      id: 8,
+      name: r'pomodoroAutoStartNextFocus',
+      type: IsarType.bool,
+    ),
+    r'pomodoroFocusMinutes': PropertySchema(
+      id: 9,
+      name: r'pomodoroFocusMinutes',
+      type: IsarType.long,
+    ),
+    r'pomodoroKeepScreenOn': PropertySchema(
+      id: 10,
+      name: r'pomodoroKeepScreenOn',
+      type: IsarType.bool,
+    ),
+    r'pomodoroLongBreakInterval': PropertySchema(
+      id: 11,
+      name: r'pomodoroLongBreakInterval',
+      type: IsarType.long,
+    ),
+    r'pomodoroLongBreakMinutes': PropertySchema(
+      id: 12,
+      name: r'pomodoroLongBreakMinutes',
+      type: IsarType.long,
+    ),
+    r'pomodoroNotificationsEnabled': PropertySchema(
+      id: 13,
+      name: r'pomodoroNotificationsEnabled',
+      type: IsarType.bool,
+    ),
+    r'pomodoroShortBreakMinutes': PropertySchema(
+      id: 14,
+      name: r'pomodoroShortBreakMinutes',
+      type: IsarType.long,
+    ),
+    r'pomodoroSoundEnabled': PropertySchema(
+      id: 15,
+      name: r'pomodoroSoundEnabled',
+      type: IsarType.bool,
+    ),
+    r'pomodoroVibrationEnabled': PropertySchema(
+      id: 16,
+      name: r'pomodoroVibrationEnabled',
+      type: IsarType.bool,
+    ),
+    r'pomodoroWeeklyReviewEnabled': PropertySchema(
+      id: 17,
+      name: r'pomodoroWeeklyReviewEnabled',
+      type: IsarType.bool,
+    ),
+    r'pushEnabled': PropertySchema(
+      id: 18,
       name: r'pushEnabled',
       type: IsarType.bool,
     ),
     r'pushFrequency': PropertySchema(
-      id: 5,
+      id: 19,
       name: r'pushFrequency',
       type: IsarType.byte,
       enumMap: _UserSettingsModelpushFrequencyEnumValueMap,
     ),
     r'quietHoursEnd': PropertySchema(
-      id: 6,
+      id: 20,
       name: r'quietHoursEnd',
       type: IsarType.string,
     ),
     r'quietHoursStart': PropertySchema(
-      id: 7,
+      id: 21,
       name: r'quietHoursStart',
       type: IsarType.string,
     ),
     r'themePreference': PropertySchema(
-      id: 8,
+      id: 22,
       name: r'themePreference',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 9,
+      id: 23,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
-    r'userId': PropertySchema(id: 10, name: r'userId', type: IsarType.long),
+    r'userId': PropertySchema(id: 24, name: r'userId', type: IsarType.long),
   },
   estimateSize: _userSettingsModelEstimateSize,
   serialize: _userSettingsModelSerialize,
@@ -123,6 +193,12 @@ int _userSettingsModelEstimateSize(
     }
   }
   {
+    final value = object.pomodoroAiScheduleStrategy;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.quietHoursEnd;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -153,13 +229,27 @@ void _userSettingsModelSerialize(
   writer.writeDateTime(offsets[1], object.createdAt);
   writer.writeString(offsets[2], object.eveningPushTime);
   writer.writeString(offsets[3], object.morningPushTime);
-  writer.writeBool(offsets[4], object.pushEnabled);
-  writer.writeByte(offsets[5], object.pushFrequency.index);
-  writer.writeString(offsets[6], object.quietHoursEnd);
-  writer.writeString(offsets[7], object.quietHoursStart);
-  writer.writeString(offsets[8], object.themePreference);
-  writer.writeDateTime(offsets[9], object.updatedAt);
-  writer.writeLong(offsets[10], object.userId);
+  writer.writeBool(offsets[4], object.pomodoroAiEstimateEnabled);
+  writer.writeString(offsets[5], object.pomodoroAiScheduleStrategy);
+  writer.writeBool(offsets[6], object.pomodoroAutoCompleteTodo);
+  writer.writeBool(offsets[7], object.pomodoroAutoStartBreak);
+  writer.writeBool(offsets[8], object.pomodoroAutoStartNextFocus);
+  writer.writeLong(offsets[9], object.pomodoroFocusMinutes);
+  writer.writeBool(offsets[10], object.pomodoroKeepScreenOn);
+  writer.writeLong(offsets[11], object.pomodoroLongBreakInterval);
+  writer.writeLong(offsets[12], object.pomodoroLongBreakMinutes);
+  writer.writeBool(offsets[13], object.pomodoroNotificationsEnabled);
+  writer.writeLong(offsets[14], object.pomodoroShortBreakMinutes);
+  writer.writeBool(offsets[15], object.pomodoroSoundEnabled);
+  writer.writeBool(offsets[16], object.pomodoroVibrationEnabled);
+  writer.writeBool(offsets[17], object.pomodoroWeeklyReviewEnabled);
+  writer.writeBool(offsets[18], object.pushEnabled);
+  writer.writeByte(offsets[19], object.pushFrequency.index);
+  writer.writeString(offsets[20], object.quietHoursEnd);
+  writer.writeString(offsets[21], object.quietHoursStart);
+  writer.writeString(offsets[22], object.themePreference);
+  writer.writeDateTime(offsets[23], object.updatedAt);
+  writer.writeLong(offsets[24], object.userId);
 }
 
 UserSettingsModel _userSettingsModelDeserialize(
@@ -174,17 +264,31 @@ UserSettingsModel _userSettingsModelDeserialize(
   object.eveningPushTime = reader.readStringOrNull(offsets[2]);
   object.id = id;
   object.morningPushTime = reader.readStringOrNull(offsets[3]);
-  object.pushEnabled = reader.readBool(offsets[4]);
+  object.pomodoroAiEstimateEnabled = reader.readBool(offsets[4]);
+  object.pomodoroAiScheduleStrategy = reader.readStringOrNull(offsets[5]);
+  object.pomodoroAutoCompleteTodo = reader.readBool(offsets[6]);
+  object.pomodoroAutoStartBreak = reader.readBool(offsets[7]);
+  object.pomodoroAutoStartNextFocus = reader.readBool(offsets[8]);
+  object.pomodoroFocusMinutes = reader.readLong(offsets[9]);
+  object.pomodoroKeepScreenOn = reader.readBool(offsets[10]);
+  object.pomodoroLongBreakInterval = reader.readLong(offsets[11]);
+  object.pomodoroLongBreakMinutes = reader.readLong(offsets[12]);
+  object.pomodoroNotificationsEnabled = reader.readBool(offsets[13]);
+  object.pomodoroShortBreakMinutes = reader.readLong(offsets[14]);
+  object.pomodoroSoundEnabled = reader.readBool(offsets[15]);
+  object.pomodoroVibrationEnabled = reader.readBool(offsets[16]);
+  object.pomodoroWeeklyReviewEnabled = reader.readBool(offsets[17]);
+  object.pushEnabled = reader.readBool(offsets[18]);
   object.pushFrequency =
       _UserSettingsModelpushFrequencyValueEnumMap[reader.readByteOrNull(
-        offsets[5],
+        offsets[19],
       )] ??
       PushFrequency.daily;
-  object.quietHoursEnd = reader.readStringOrNull(offsets[6]);
-  object.quietHoursStart = reader.readStringOrNull(offsets[7]);
-  object.themePreference = reader.readStringOrNull(offsets[8]);
-  object.updatedAt = reader.readDateTimeOrNull(offsets[9]);
-  object.userId = reader.readLong(offsets[10]);
+  object.quietHoursEnd = reader.readStringOrNull(offsets[20]);
+  object.quietHoursStart = reader.readStringOrNull(offsets[21]);
+  object.themePreference = reader.readStringOrNull(offsets[22]);
+  object.updatedAt = reader.readDateTimeOrNull(offsets[23]);
+  object.userId = reader.readLong(offsets[24]);
   return object;
 }
 
@@ -206,20 +310,48 @@ P _userSettingsModelDeserializeProp<P>(
     case 4:
       return (reader.readBool(offset)) as P;
     case 5:
+      return (reader.readStringOrNull(offset)) as P;
+    case 6:
+      return (reader.readBool(offset)) as P;
+    case 7:
+      return (reader.readBool(offset)) as P;
+    case 8:
+      return (reader.readBool(offset)) as P;
+    case 9:
+      return (reader.readLong(offset)) as P;
+    case 10:
+      return (reader.readBool(offset)) as P;
+    case 11:
+      return (reader.readLong(offset)) as P;
+    case 12:
+      return (reader.readLong(offset)) as P;
+    case 13:
+      return (reader.readBool(offset)) as P;
+    case 14:
+      return (reader.readLong(offset)) as P;
+    case 15:
+      return (reader.readBool(offset)) as P;
+    case 16:
+      return (reader.readBool(offset)) as P;
+    case 17:
+      return (reader.readBool(offset)) as P;
+    case 18:
+      return (reader.readBool(offset)) as P;
+    case 19:
       return (_UserSettingsModelpushFrequencyValueEnumMap[reader.readByteOrNull(
                 offset,
               )] ??
               PushFrequency.daily)
           as P;
-    case 6:
+    case 20:
       return (reader.readStringOrNull(offset)) as P;
-    case 7:
+    case 21:
       return (reader.readStringOrNull(offset)) as P;
-    case 8:
+    case 22:
       return (reader.readStringOrNull(offset)) as P;
-    case 9:
+    case 23:
       return (reader.readDateTimeOrNull(offset)) as P;
-    case 10:
+    case 24:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1084,6 +1216,528 @@ extension UserSettingsModelQueryFilter
   }
 
   QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroAiEstimateEnabledEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroAiEstimateEnabled',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroAiScheduleStrategyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'pomodoroAiScheduleStrategy'),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroAiScheduleStrategyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(
+          property: r'pomodoroAiScheduleStrategy',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroAiScheduleStrategyEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroAiScheduleStrategy',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroAiScheduleStrategyGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'pomodoroAiScheduleStrategy',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroAiScheduleStrategyLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'pomodoroAiScheduleStrategy',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroAiScheduleStrategyBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'pomodoroAiScheduleStrategy',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroAiScheduleStrategyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'pomodoroAiScheduleStrategy',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroAiScheduleStrategyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'pomodoroAiScheduleStrategy',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroAiScheduleStrategyContains(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'pomodoroAiScheduleStrategy',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroAiScheduleStrategyMatches(
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'pomodoroAiScheduleStrategy',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroAiScheduleStrategyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroAiScheduleStrategy',
+          value: '',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroAiScheduleStrategyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          property: r'pomodoroAiScheduleStrategy',
+          value: '',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroAutoCompleteTodoEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroAutoCompleteTodo',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroAutoStartBreakEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroAutoStartBreak',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroAutoStartNextFocusEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroAutoStartNextFocus',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroFocusMinutesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroFocusMinutes',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroFocusMinutesGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'pomodoroFocusMinutes',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroFocusMinutesLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'pomodoroFocusMinutes',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroFocusMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'pomodoroFocusMinutes',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroKeepScreenOnEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroKeepScreenOn',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroLongBreakIntervalEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroLongBreakInterval',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroLongBreakIntervalGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'pomodoroLongBreakInterval',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroLongBreakIntervalLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'pomodoroLongBreakInterval',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroLongBreakIntervalBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'pomodoroLongBreakInterval',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroLongBreakMinutesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroLongBreakMinutes',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroLongBreakMinutesGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'pomodoroLongBreakMinutes',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroLongBreakMinutesLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'pomodoroLongBreakMinutes',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroLongBreakMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'pomodoroLongBreakMinutes',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroNotificationsEnabledEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroNotificationsEnabled',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroShortBreakMinutesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroShortBreakMinutes',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroShortBreakMinutesGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'pomodoroShortBreakMinutes',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroShortBreakMinutesLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'pomodoroShortBreakMinutes',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroShortBreakMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'pomodoroShortBreakMinutes',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroSoundEnabledEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroSoundEnabled',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroVibrationEnabledEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroVibrationEnabled',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
+  pomodoroWeeklyReviewEnabledEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'pomodoroWeeklyReviewEnabled',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterFilterCondition>
   pushEnabledEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -1818,6 +2472,202 @@ extension UserSettingsModelQuerySortBy
   }
 
   QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroAiEstimateEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAiEstimateEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroAiEstimateEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAiEstimateEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroAiScheduleStrategy() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAiScheduleStrategy', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroAiScheduleStrategyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAiScheduleStrategy', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroAutoCompleteTodo() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAutoCompleteTodo', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroAutoCompleteTodoDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAutoCompleteTodo', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroAutoStartBreak() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAutoStartBreak', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroAutoStartBreakDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAutoStartBreak', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroAutoStartNextFocus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAutoStartNextFocus', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroAutoStartNextFocusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAutoStartNextFocus', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroFocusMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroFocusMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroFocusMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroFocusMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroKeepScreenOn() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroKeepScreenOn', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroKeepScreenOnDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroKeepScreenOn', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroLongBreakInterval() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroLongBreakInterval', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroLongBreakIntervalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroLongBreakInterval', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroLongBreakMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroLongBreakMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroLongBreakMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroLongBreakMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroNotificationsEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroNotificationsEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroNotificationsEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroNotificationsEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroShortBreakMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroShortBreakMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroShortBreakMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroShortBreakMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroSoundEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroSoundEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroSoundEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroSoundEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroVibrationEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroVibrationEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroVibrationEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroVibrationEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroWeeklyReviewEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroWeeklyReviewEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  sortByPomodoroWeeklyReviewEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroWeeklyReviewEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
   sortByPushEnabled() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'pushEnabled', Sort.asc);
@@ -1988,6 +2838,202 @@ extension UserSettingsModelQuerySortThenBy
   }
 
   QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroAiEstimateEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAiEstimateEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroAiEstimateEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAiEstimateEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroAiScheduleStrategy() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAiScheduleStrategy', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroAiScheduleStrategyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAiScheduleStrategy', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroAutoCompleteTodo() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAutoCompleteTodo', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroAutoCompleteTodoDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAutoCompleteTodo', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroAutoStartBreak() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAutoStartBreak', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroAutoStartBreakDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAutoStartBreak', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroAutoStartNextFocus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAutoStartNextFocus', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroAutoStartNextFocusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroAutoStartNextFocus', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroFocusMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroFocusMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroFocusMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroFocusMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroKeepScreenOn() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroKeepScreenOn', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroKeepScreenOnDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroKeepScreenOn', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroLongBreakInterval() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroLongBreakInterval', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroLongBreakIntervalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroLongBreakInterval', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroLongBreakMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroLongBreakMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroLongBreakMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroLongBreakMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroNotificationsEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroNotificationsEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroNotificationsEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroNotificationsEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroShortBreakMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroShortBreakMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroShortBreakMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroShortBreakMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroSoundEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroSoundEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroSoundEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroSoundEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroVibrationEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroVibrationEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroVibrationEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroVibrationEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroWeeklyReviewEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroWeeklyReviewEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
+  thenByPomodoroWeeklyReviewEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'pomodoroWeeklyReviewEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QAfterSortBy>
   thenByPushEnabled() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'pushEnabled', Sort.asc);
@@ -2126,6 +3172,107 @@ extension UserSettingsModelQueryWhereDistinct
   }
 
   QueryBuilder<UserSettingsModel, UserSettingsModel, QDistinct>
+  distinctByPomodoroAiEstimateEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pomodoroAiEstimateEnabled');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QDistinct>
+  distinctByPomodoroAiScheduleStrategy({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(
+        r'pomodoroAiScheduleStrategy',
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QDistinct>
+  distinctByPomodoroAutoCompleteTodo() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pomodoroAutoCompleteTodo');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QDistinct>
+  distinctByPomodoroAutoStartBreak() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pomodoroAutoStartBreak');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QDistinct>
+  distinctByPomodoroAutoStartNextFocus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pomodoroAutoStartNextFocus');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QDistinct>
+  distinctByPomodoroFocusMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pomodoroFocusMinutes');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QDistinct>
+  distinctByPomodoroKeepScreenOn() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pomodoroKeepScreenOn');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QDistinct>
+  distinctByPomodoroLongBreakInterval() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pomodoroLongBreakInterval');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QDistinct>
+  distinctByPomodoroLongBreakMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pomodoroLongBreakMinutes');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QDistinct>
+  distinctByPomodoroNotificationsEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pomodoroNotificationsEnabled');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QDistinct>
+  distinctByPomodoroShortBreakMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pomodoroShortBreakMinutes');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QDistinct>
+  distinctByPomodoroSoundEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pomodoroSoundEnabled');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QDistinct>
+  distinctByPomodoroVibrationEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pomodoroVibrationEnabled');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QDistinct>
+  distinctByPomodoroWeeklyReviewEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'pomodoroWeeklyReviewEnabled');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, UserSettingsModel, QDistinct>
   distinctByPushEnabled() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'pushEnabled');
@@ -2217,6 +3364,104 @@ extension UserSettingsModelQueryProperty
   morningPushTimeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'morningPushTime');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, bool, QQueryOperations>
+  pomodoroAiEstimateEnabledProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroAiEstimateEnabled');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, String?, QQueryOperations>
+  pomodoroAiScheduleStrategyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroAiScheduleStrategy');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, bool, QQueryOperations>
+  pomodoroAutoCompleteTodoProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroAutoCompleteTodo');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, bool, QQueryOperations>
+  pomodoroAutoStartBreakProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroAutoStartBreak');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, bool, QQueryOperations>
+  pomodoroAutoStartNextFocusProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroAutoStartNextFocus');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, int, QQueryOperations>
+  pomodoroFocusMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroFocusMinutes');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, bool, QQueryOperations>
+  pomodoroKeepScreenOnProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroKeepScreenOn');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, int, QQueryOperations>
+  pomodoroLongBreakIntervalProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroLongBreakInterval');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, int, QQueryOperations>
+  pomodoroLongBreakMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroLongBreakMinutes');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, bool, QQueryOperations>
+  pomodoroNotificationsEnabledProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroNotificationsEnabled');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, int, QQueryOperations>
+  pomodoroShortBreakMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroShortBreakMinutes');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, bool, QQueryOperations>
+  pomodoroSoundEnabledProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroSoundEnabled');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, bool, QQueryOperations>
+  pomodoroVibrationEnabledProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroVibrationEnabled');
+    });
+  }
+
+  QueryBuilder<UserSettingsModel, bool, QQueryOperations>
+  pomodoroWeeklyReviewEnabledProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'pomodoroWeeklyReviewEnabled');
     });
   }
 
