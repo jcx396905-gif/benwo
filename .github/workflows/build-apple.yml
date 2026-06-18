@@ -1,0 +1,122 @@
+name: Build Apple Releases
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to upload to (for example v1.1.0)'
+        required: true
+        default: 'v1.1.0'
+      build_name:
+        description: 'Flutter build name'
+        required: true
+        default: '1.1.0'
+      build_number:
+        description: 'Flutter build number'
+        required: true
+        default: '2022'
+
+permissions:
+  contents: write
+
+jobs:
+  build-ios-unsigned-ipa:
+    name: Build iOS unsigned IPA
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Setup API constants
+        run: cp lib/core/constants/api_constants.example.dart lib/core/constants/api_constants.dart
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS app without signing
+        run: >
+          flutter build ios --release --no-codesign
+          --build-name=${{ inputs.build_name }}
+          --build-number=${{ inputs.build_number }}
+
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/Runner.app
+          zip -qry "benwo-${{ inputs.build_name }}-ios-unsigned.ipa" Payload
+
+      - name: Upload IPA to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          files: benwo-${{ inputs.build_name }}-ios-unsigned.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: benwo-${{ inputs.build_name }}-ios-unsigned-ipa
+          path: benwo-${{ inputs.build_name }}-ios-unsigned.ipa
+
+  build-macos:
+    name: Build macOS ${{ matrix.arch }} DMG
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-26
+          - arch: x64
+            runner: macos-26-intel
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Setup API constants
+        run: cp lib/core/constants/api_constants.example.dart lib/core/constants/api_constants.dart
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Enable macOS desktop
+        run: flutter config --enable-macos-desktop
+
+      - name: Build macOS release
+        run: >
+          flutter build macos --release
+          --build-name=${{ inputs.build_name }}
+          --build-number=${{ inputs.build_number }}
+
+      - name: Package DMG
+        run: |
+          APP_PATH="$(find build/macos/Build/Products/Release -maxdepth 1 -name '*.app' -print -quit)"
+          if [ -z "$APP_PATH" ]; then
+            echo "No .app bundle found"
+            exit 1
+          fi
+          hdiutil create \
+            -volname "BenWo ${{ inputs.build_name }}" \
+            -srcfolder "$APP_PATH" \
+            -ov \
+            -format UDZO \
+            "benwo-${{ inputs.build_name }}-macos-${{ matrix.arch }}.dmg"
+
+      - name: Upload DMG to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          files: benwo-${{ inputs.build_name }}-macos-${{ matrix.arch }}.dmg
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: benwo-${{ inputs.build_name }}-macos-${{ matrix.arch }}-dmg
+          path: benwo-${{ inputs.build_name }}-macos-${{ matrix.arch }}.dmg
