@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../application/auth/auth_notifier.dart';
 import '../../../application/goal/goal_completion_notifier.dart';
 import '../../../application/goal/goal_split_notifier.dart';
 import '../../../core/di/injection.dart';
@@ -13,29 +12,23 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/todo_reminder_scheduler.dart';
 import '../../../data/models/big_goal_model.dart';
 import '../../../data/models/todo_item_model.dart';
-
-typedef _HomeUserDateParams = ({int userId, DateTime date});
+import '../../widgets/smartisan_components.dart';
 
 DateTime _homeDateOnly(DateTime date) =>
     DateTime(date.year, date.month, date.day);
 
-final _homeTodosProvider =
-    StreamProvider.family<List<TodoItemModel>, _HomeUserDateParams>((
-      ref,
-      params,
-    ) {
-      final todoRepo = ref.watch(todoItemRepositoryProvider);
-      return todoRepo
-          .watchTodosByDate(params.userId, params.date)
-          .map((todos) => todos.where((todo) => !todo.isCompleted).toList());
-    });
+final _homeTodosProvider = StreamProvider.family<List<TodoItemModel>, DateTime>(
+  (ref, date) {
+    final todoRepo = ref.watch(todoItemRepositoryProvider);
+    return todoRepo
+        .watchTodosByDate(date)
+        .map((todos) => todos.where((todo) => !todo.isCompleted).toList());
+  },
+);
 
-final _homeGoalsProvider = StreamProvider.family<List<BigGoalModel>, int>((
-  ref,
-  userId,
-) {
+final _homeGoalsProvider = StreamProvider<List<BigGoalModel>>((ref) {
   final goalRepo = ref.watch(bigGoalRepositoryProvider);
-  return goalRepo.watchGoalsByUserId(userId);
+  return goalRepo.watchGoals();
 });
 
 /// Home Page - Today's To-Do List (Task 13)
@@ -49,9 +42,6 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authNotifierProvider);
-    final userId = authState.userId;
-
     // Get today's date
     final today = _homeDateOnly(DateTime.now());
     final dateStr = DateFormat('yyyy年MM月dd日').format(today);
@@ -72,7 +62,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.palette.canvas,
       appBar: AppBar(
         title: Column(
           children: [
@@ -81,7 +71,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               '$weekdayStr $dateStr',
               style: Theme.of(
                 context,
-              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+              ).textTheme.bodySmall?.copyWith(color: context.palette.mutedInk),
             ),
           ],
         ),
@@ -96,48 +86,23 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ],
       ),
-      body: _buildAuthenticatedBody(authState, userId, today),
+      body: _buildBody(today),
       floatingActionButton: FloatingActionButton(
-        onPressed: userId != null
-            ? () => _showAddTodoDialog(context, userId)
-            : null,
-        backgroundColor: AppColors.primary,
+        onPressed: () => _showAddTodoDialog(context),
+        backgroundColor: context.palette.gold,
         child: const Icon(Icons.add_rounded, color: Colors.white),
       ),
       bottomNavigationBar: _buildBottomNavBar(context),
     );
   }
 
-  Widget _buildAuthenticatedBody(
-    AuthState authState,
-    int? userId,
-    DateTime today,
-  ) {
-    if (authState.isUnknown || authState.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (userId == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          context.go('/login');
-        }
-      });
-      return _buildError('登录状态已失效，请重新登录。');
-    }
-
-    return _buildBody(userId, today);
-  }
-
-  Widget _buildBody(int userId, DateTime today) {
-    final todosAsync = ref.watch(
-      _homeTodosProvider((userId: userId, date: today)),
-    );
-    final goalsAsync = ref.watch(_homeGoalsProvider(userId));
+  Widget _buildBody(DateTime today) {
+    final todosAsync = ref.watch(_homeTodosProvider(today));
+    final goalsAsync = ref.watch(_homeGoalsProvider);
 
     return todosAsync.when(
       data: (todos) => goalsAsync.when(
-        data: (goals) => _buildTodoList(todos, goals, userId, today),
+        data: (goals) => _buildTodoList(todos, goals, today),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _buildError('加载目标失败: $e'),
       ),
@@ -149,7 +114,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget _buildTodoList(
     List<TodoItemModel> todos,
     List<BigGoalModel> goals,
-    int userId,
     DateTime today,
   ) {
     // Create a map of goalId to goal for quick lookup
@@ -205,13 +169,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
+                      color: context.palette.gold.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '${sortedTodos.length}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.primary,
+                        color: context.palette.gold,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -226,7 +190,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             delegate: SliverChildBuilderDelegate((context, index) {
               final todo = sortedTodos[index];
               final goal = todo.goalId != null ? goalMap[todo.goalId] : null;
-              return _buildTodoItem(todo, goal, userId);
+              return _buildTodoItem(todo, goal);
             }, childCount: sortedTodos.length),
           ),
 
@@ -244,31 +208,27 @@ class _HomePageState extends ConsumerState<HomePage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primary.withValues(alpha: 0.1),
-            AppColors.secondary.withValues(alpha: 0.05),
+            context.palette.gold.withValues(alpha: 0.1),
+            context.palette.terracotta.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        border: Border.all(color: context.palette.gold.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.flag_rounded,
-                color: AppColors.primary,
-                size: 20,
-              ),
+              Icon(Icons.flag_rounded, color: context.palette.gold, size: 20),
               const SizedBox(width: 8),
               Text(
                 '进行中的目标',
                 style: Theme.of(
                   context,
-                ).textTheme.titleSmall?.copyWith(color: AppColors.primary),
+                ).textTheme.titleSmall?.copyWith(color: context.palette.gold),
               ),
             ],
           ),
@@ -277,7 +237,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             spacing: 8,
             runSpacing: 8,
             children: goals.take(3).map((goal) {
-              final color = _parseColor(goal.color) ?? AppColors.primary;
+              final color = _parseColor(goal.color) ?? context.palette.gold;
               return Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -303,7 +263,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     Text(
                       goal.title,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textPrimary,
+                        color: context.palette.ink,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -317,9 +277,9 @@ class _HomePageState extends ConsumerState<HomePage> {
               padding: const EdgeInsets.only(top: 8),
               child: Text(
                 '+${goals.length - 3} 更多目标',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.palette.mutedInk,
+                ),
               ),
             ),
         ],
@@ -327,30 +287,30 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildTodoItem(TodoItemModel todo, BigGoalModel? goal, int userId) {
+  Widget _buildTodoItem(TodoItemModel todo, BigGoalModel? goal) {
     final goalColor = goal != null
-        ? (_parseColor(goal.color) ?? AppColors.primary)
-        : AppColors.textSecondary;
+        ? (_parseColor(goal.color) ?? context.palette.gold)
+        : context.palette.mutedInk;
     final isUserCreated = todo.goalId == null;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: todo.isCompleted
-            ? AppColors.surfaceVariant.withValues(alpha: 0.5)
-            : AppColors.surface,
+            ? context.palette.ceramicRaised.withValues(alpha: 0.5)
+            : context.palette.ceramic,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: todo.isCompleted
-              ? AppColors.border.withValues(alpha: 0.5)
-              : AppColors.border,
+              ? context.palette.hairline.withValues(alpha: 0.5)
+              : context.palette.hairline,
         ),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () => _showTodoDetailSheet(todo, goal, userId),
+          onTap: () => _showTodoDetailSheet(todo, goal),
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
@@ -371,7 +331,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     width: 4,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: AppColors.textHint.withValues(alpha: 0.5),
+                      color: context.palette.hintInk.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   )
@@ -381,7 +341,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 const SizedBox(width: 12),
 
                 // Checkbox
-                _buildCheckbox(todo, userId),
+                _buildCheckbox(todo),
 
                 const SizedBox(width: 12),
 
@@ -395,8 +355,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                         todo.content,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: todo.isCompleted
-                              ? AppColors.textHint
-                              : AppColors.textPrimary,
+                              ? context.palette.hintInk
+                              : context.palette.ink,
                           decoration: todo.isCompleted
                               ? TextDecoration.lineThrough
                               : null,
@@ -433,7 +393,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             _buildMetaChip(
                               icon: Icons.person_rounded,
                               text: '自建',
-                              color: AppColors.textHint,
+                              color: context.palette.hintInk,
                             ),
                         ],
                       ),
@@ -443,12 +403,12 @@ class _HomePageState extends ConsumerState<HomePage> {
 
                 // More button for all todos (edit/delete)
                 IconButton(
-                  onPressed: () => _showTodoDetailSheet(todo, goal, userId),
+                  onPressed: () => _showTodoDetailSheet(todo, goal),
                   icon: Icon(
                     Icons.more_vert_rounded,
                     color: todo.isCompleted
-                        ? AppColors.textHint
-                        : AppColors.textSecondary,
+                        ? context.palette.hintInk
+                        : context.palette.mutedInk,
                   ),
                   visualDensity: VisualDensity.compact,
                 ),
@@ -460,7 +420,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildCheckbox(TodoItemModel todo, int userId) {
+  Widget _buildCheckbox(TodoItemModel todo) {
     return GestureDetector(
       onTap: todo.isCompleted
           ? null
@@ -471,10 +431,12 @@ class _HomePageState extends ConsumerState<HomePage> {
         width: 24,
         height: 24,
         decoration: BoxDecoration(
-          color: todo.isCompleted ? AppColors.primary : Colors.transparent,
+          color: todo.isCompleted ? context.palette.gold : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: todo.isCompleted ? AppColors.primary : AppColors.border,
+            color: todo.isCompleted
+                ? context.palette.gold
+                : context.palette.hairline,
             width: 2,
           ),
         ),
@@ -490,7 +452,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     required String text,
     Color? color,
   }) {
-    final chipColor = color ?? AppColors.textSecondary;
+    final chipColor = color ?? context.palette.mutedInk;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -526,7 +488,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             '~${goal.title}',
             style: Theme.of(
               context,
-            ).textTheme.labelSmall?.copyWith(color: AppColors.textPrimary),
+            ).textTheme.labelSmall?.copyWith(color: context.palette.ink),
           ),
         ],
       ),
@@ -541,21 +503,21 @@ class _HomePageState extends ConsumerState<HomePage> {
           Icon(
             Icons.check_circle_outline_rounded,
             size: 80,
-            color: AppColors.textHint.withValues(alpha: 0.5),
+            color: context.palette.hintInk.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
             '今日暂无任务',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(color: AppColors.textSecondary),
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: context.palette.mutedInk,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             '点击下方 + 按钮添加新的待办事项',
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.textHint),
+            ).textTheme.bodyMedium?.copyWith(color: context.palette.hintInk),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -576,14 +538,14 @@ class _HomePageState extends ConsumerState<HomePage> {
           Icon(
             Icons.error_outline_rounded,
             size: 64,
-            color: AppColors.error.withValues(alpha: 0.7),
+            color: Theme.of(context).colorScheme.error.withValues(alpha: 0.7),
           ),
           const SizedBox(height: 16),
           Text(
             message,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.error),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -600,7 +562,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Widget _buildBottomNavBar(BuildContext context) {
-    return BottomNavigationBar(
+    return SmartisanGlassBottomNavigationBar(
       currentIndex: 0,
       onTap: (index) {
         switch (index) {
@@ -610,25 +572,16 @@ class _HomePageState extends ConsumerState<HomePage> {
             context.go('/goals');
             break;
           case 2:
-            context.go('/calendar');
+            context.go('/focus');
             break;
           case 3:
+            context.go('/calendar');
+            break;
+          case 4:
             context.go('/settings');
             break;
         }
       },
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: '首页'),
-        BottomNavigationBarItem(icon: Icon(Icons.flag_rounded), label: '目标'),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.calendar_month_rounded),
-          label: '日历',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings_rounded),
-          label: '设置',
-        ),
-      ],
     );
   }
 
@@ -642,12 +595,11 @@ class _HomePageState extends ConsumerState<HomePage> {
       await TodoReminderScheduler.cancelForTodo(todo.id);
       // Check if goal should be auto-completed after marking todo complete
       if (todo.goalId != null) {
-        final userId = todo.userId;
         // Delay slightly to allow the todo state to update first
         Future.delayed(const Duration(milliseconds: 100), () {
           ref
               .read(goalCompletionNotifierProvider.notifier)
-              .checkAndCompleteGoal(todo.goalId!, userId);
+              .checkAndCompleteGoal(todo.goalId!);
         });
       }
     }
@@ -668,7 +620,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 todo.isAIGenerated
                     ? Icons.psychology_rounded
                     : Icons.check_rounded,
-                color: AppColors.secondary,
+                color: context.palette.terracotta,
               ),
               const SizedBox(width: 8),
               const Text('确认完成'),
@@ -689,7 +641,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 Text(
                   '完成前请思考以下问题：',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.palette.mutedInk,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -706,8 +658,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                               : Icons.radio_button_unchecked_rounded,
                           size: 20,
                           color: idx <= confirmedIndex
-                              ? AppColors.primary
-                              : AppColors.textHint,
+                              ? context.palette.gold
+                              : context.palette.hintInk,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -715,8 +667,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                             q,
                             style: TextStyle(
                               color: idx <= confirmedIndex
-                                  ? AppColors.textPrimary
-                                  : AppColors.textHint,
+                                  ? context.palette.ink
+                                  : context.palette.hintInk,
                             ),
                           ),
                         ),
@@ -729,7 +681,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             },
                             icon: const Icon(Icons.arrow_forward_rounded),
                             iconSize: 18,
-                            color: AppColors.primary,
+                            color: context.palette.gold,
                           ),
                       ],
                     ),
@@ -741,7 +693,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     child: Text(
                       '请依次确认以上问题',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textHint,
+                        color: context.palette.hintInk,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -779,11 +731,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  void _showTodoDetailSheet(
-    TodoItemModel todo,
-    BigGoalModel? currentGoal,
-    int userId,
-  ) {
+  void _showTodoDetailSheet(TodoItemModel todo, BigGoalModel? currentGoal) {
     final contentController = TextEditingController(text: todo.content);
     final timeController = TextEditingController(
       text: todo.estimatedMinutes?.toString() ?? '',
@@ -791,7 +739,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     int? selectedGoalId = todo.goalId;
 
     // Get user's goals for dropdown
-    final goals = ref.read(_homeGoalsProvider(userId)).valueOrNull ?? [];
+    final goals = ref.read(_homeGoalsProvider).valueOrNull ?? [];
 
     showModalBottomSheet<void>(
       context: context,
@@ -802,9 +750,9 @@ class _HomePageState extends ConsumerState<HomePage> {
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          decoration: BoxDecoration(
+            color: context.palette.ceramic,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -820,8 +768,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                           ? Icons.psychology_rounded
                           : Icons.edit_rounded,
                       color: todo.isAIGenerated
-                          ? AppColors.secondary
-                          : AppColors.primary,
+                          ? context.palette.terracotta
+                          : context.palette.gold,
                     ),
                     const SizedBox(width: 8),
                     Text('待办详情', style: Theme.of(context).textTheme.titleLarge),
@@ -842,22 +790,22 @@ class _HomePageState extends ConsumerState<HomePage> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.secondary.withValues(alpha: 0.1),
+                      color: context.palette.terracotta.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.auto_awesome_rounded,
                           size: 16,
-                          color: AppColors.secondary,
+                          color: context.palette.terracotta,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           'AI 生成',
                           style: Theme.of(context).textTheme.labelMedium
-                              ?.copyWith(color: AppColors.secondary),
+                              ?.copyWith(color: context.palette.terracotta),
                         ),
                       ],
                     ),
@@ -905,7 +853,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   decoration: BoxDecoration(
                                     color:
                                         _parseColor(g.color) ??
-                                        AppColors.primary,
+                                        context.palette.gold,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
@@ -950,7 +898,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                         icon: const Icon(Icons.delete_outline_rounded),
                         label: const Text('删除'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.error,
+                          foregroundColor: Theme.of(context).colorScheme.error,
                         ),
                       ),
                     const Spacer(),
@@ -969,7 +917,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                         icon: const Icon(Icons.check_rounded),
                         label: const Text('已完成'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.textHint,
+                          backgroundColor: context.palette.hintInk,
                         ),
                       )
                     else
@@ -985,7 +933,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                           // Create updated todo model
                           final updatedTodo = TodoItemModel()
                             ..id = todo.id
-                            ..userId = todo.userId
                             ..content = content
                             ..goalId = selectedGoalId
                             ..isAIGenerated = todo.isAIGenerated
@@ -1042,7 +989,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                 Navigator.of(sheetContext).pop(); // Close bottom sheet
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('删除'),
           ),
         ],
@@ -1050,7 +999,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  void _showAddTodoDialog(BuildContext context, int userId) {
+  void _showAddTodoDialog(BuildContext context) {
     final contentController = TextEditingController();
     final timeController = TextEditingController();
     int? selectedGoalId;
@@ -1060,7 +1009,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     TimeOfDay? selectedExactTime;
     bool isSaving = false;
 
-    final goals = ref.read(_homeGoalsProvider(userId)).valueOrNull ?? [];
+    final goals = ref.read(_homeGoalsProvider).valueOrNull ?? [];
 
     showModalBottomSheet<void>(
       context: context,
@@ -1071,9 +1020,9 @@ class _HomePageState extends ConsumerState<HomePage> {
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          decoration: BoxDecoration(
+            color: context.palette.ceramic,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: SingleChildScrollView(
             child: Padding(
@@ -1285,7 +1234,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                                       .read(goalSplitNotifierProvider.notifier)
                                       .generateTodosFromText(
                                         input: content,
-                                        userId: userId,
                                         desiredCount: desiredCount,
                                         defaultDate: selectedDate,
                                       );
@@ -1301,7 +1249,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                                       selectedExactTime,
                                     );
                                     final savedTodo = await todoRepo.createTodo(
-                                      userId: userId,
                                       content: todo.content,
                                       goalId: selectedGoalId,
                                       isAIGenerated: true,
@@ -1330,7 +1277,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                                     selectedExactTime,
                                   );
                                   final savedTodo = await todoRepo.createTodo(
-                                    userId: userId,
                                     content: content,
                                     goalId: selectedGoalId,
                                     isAIGenerated: false,
@@ -1355,7 +1301,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                                       content: Text(
                                         '添加失败：${_formatAddTodoError(e)}',
                                       ),
-                                      backgroundColor: AppColors.error,
+                                      backgroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
                                     ),
                                   );
                                 }
@@ -1525,11 +1473,11 @@ class _HomeGoalCompletionDialogState extends State<_HomeGoalCompletionDialog>
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.palette.ceramic,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: AppColors.sage.withValues(alpha: 0.3),
+                color: context.palette.goldPressed.withValues(alpha: 0.3),
                 blurRadius: 20,
                 spreadRadius: 5,
               ),
@@ -1545,11 +1493,13 @@ class _HomeGoalCompletionDialogState extends State<_HomeGoalCompletionDialog>
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: AppColors.sage,
+                    color: context.palette.goldPressed,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.sage.withValues(alpha: 0.4),
+                        color: context.palette.goldPressed.withValues(
+                          alpha: 0.4,
+                        ),
                         blurRadius: 20,
                         spreadRadius: 5,
                       ),
@@ -1570,7 +1520,7 @@ class _HomeGoalCompletionDialogState extends State<_HomeGoalCompletionDialog>
                 '恭喜达成目标！',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.sage,
+                  color: context.palette.goldPressed,
                 ),
               ),
 
@@ -1583,16 +1533,20 @@ class _HomeGoalCompletionDialogState extends State<_HomeGoalCompletionDialog>
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.sage.withValues(alpha: 0.1),
+                  color: context.palette.goldPressed.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: AppColors.sage.withValues(alpha: 0.3),
+                    color: context.palette.goldPressed.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(_categoryIcon, size: 20, color: AppColors.sage),
+                    Icon(
+                      _categoryIcon,
+                      size: 20,
+                      color: context.palette.goldPressed,
+                    ),
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
@@ -1600,7 +1554,7 @@ class _HomeGoalCompletionDialogState extends State<_HomeGoalCompletionDialog>
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                              color: context.palette.ink,
                             ),
                         textAlign: TextAlign.center,
                       ),
@@ -1618,7 +1572,7 @@ class _HomeGoalCompletionDialogState extends State<_HomeGoalCompletionDialog>
                   '${widget.completedGoal.completedAt!.month}月'
                   '${widget.completedGoal.completedAt!.day}日',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.palette.mutedInk,
                   ),
                 ),
 
@@ -1630,7 +1584,7 @@ class _HomeGoalCompletionDialogState extends State<_HomeGoalCompletionDialog>
                 child: ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.sage,
+                    backgroundColor: context.palette.goldPressed,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(

@@ -60,28 +60,13 @@ const BigGoalModelSchema = CollectionSchema(
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
-    r'userId': PropertySchema(id: 10, name: r'userId', type: IsarType.long),
   },
   estimateSize: _bigGoalModelEstimateSize,
   serialize: _bigGoalModelSerialize,
   deserialize: _bigGoalModelDeserialize,
   deserializeProp: _bigGoalModelDeserializeProp,
   idName: r'id',
-  indexes: {
-    r'userId': IndexSchema(
-      id: -2005826577402374815,
-      name: r'userId',
-      unique: false,
-      replace: false,
-      properties: [
-        IndexPropertySchema(
-          name: r'userId',
-          type: IndexType.value,
-          caseSensitive: false,
-        ),
-      ],
-    ),
-  },
+  indexes: {},
   links: {},
   embeddedSchemas: {},
   getId: _bigGoalModelGetId,
@@ -140,7 +125,6 @@ void _bigGoalModelSerialize(
   writer.writeDateTime(offsets[7], object.targetDate);
   writer.writeString(offsets[8], object.title);
   writer.writeDateTime(offsets[9], object.updatedAt);
-  writer.writeLong(offsets[10], object.userId);
 }
 
 BigGoalModel _bigGoalModelDeserialize(
@@ -163,7 +147,6 @@ BigGoalModel _bigGoalModelDeserialize(
   object.targetDate = reader.readDateTime(offsets[7]);
   object.title = reader.readString(offsets[8]);
   object.updatedAt = reader.readDateTimeOrNull(offsets[9]);
-  object.userId = reader.readLong(offsets[10]);
   return object;
 }
 
@@ -196,8 +179,6 @@ P _bigGoalModelDeserializeProp<P>(
       return (reader.readString(offset)) as P;
     case 9:
       return (reader.readDateTimeOrNull(offset)) as P;
-    case 10:
-      return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -235,14 +216,6 @@ extension BigGoalModelQueryWhereSort
   QueryBuilder<BigGoalModel, BigGoalModel, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
-    });
-  }
-
-  QueryBuilder<BigGoalModel, BigGoalModel, QAfterWhere> anyUserId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'userId'),
-      );
     });
   }
 }
@@ -313,111 +286,6 @@ extension BigGoalModelQueryWhere
           lower: lowerId,
           includeLower: includeLower,
           upper: upperId,
-          includeUpper: includeUpper,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<BigGoalModel, BigGoalModel, QAfterWhereClause> userIdEqualTo(
-    int userId,
-  ) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'userId', value: [userId]),
-      );
-    });
-  }
-
-  QueryBuilder<BigGoalModel, BigGoalModel, QAfterWhereClause> userIdNotEqualTo(
-    int userId,
-  ) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'userId',
-                lower: [],
-                upper: [userId],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'userId',
-                lower: [userId],
-                includeLower: false,
-                upper: [],
-              ),
-            );
-      } else {
-        return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'userId',
-                lower: [userId],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'userId',
-                lower: [],
-                upper: [userId],
-                includeUpper: false,
-              ),
-            );
-      }
-    });
-  }
-
-  QueryBuilder<BigGoalModel, BigGoalModel, QAfterWhereClause> userIdGreaterThan(
-    int userId, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'userId',
-          lower: [userId],
-          includeLower: include,
-          upper: [],
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<BigGoalModel, BigGoalModel, QAfterWhereClause> userIdLessThan(
-    int userId, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'userId',
-          lower: [],
-          upper: [userId],
-          includeUpper: include,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<BigGoalModel, BigGoalModel, QAfterWhereClause> userIdBetween(
-    int lowerUserId,
-    int upperUserId, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'userId',
-          lower: [lowerUserId],
-          includeLower: includeLower,
-          upper: [upperUserId],
           includeUpper: includeUpper,
         ),
       );
@@ -1585,61 +1453,6 @@ extension BigGoalModelQueryFilter
       );
     });
   }
-
-  QueryBuilder<BigGoalModel, BigGoalModel, QAfterFilterCondition> userIdEqualTo(
-    int value,
-  ) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'userId', value: value),
-      );
-    });
-  }
-
-  QueryBuilder<BigGoalModel, BigGoalModel, QAfterFilterCondition>
-  userIdGreaterThan(int value, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'userId',
-          value: value,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<BigGoalModel, BigGoalModel, QAfterFilterCondition>
-  userIdLessThan(int value, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'userId',
-          value: value,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<BigGoalModel, BigGoalModel, QAfterFilterCondition> userIdBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'userId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
-    });
-  }
 }
 
 extension BigGoalModelQueryObject
@@ -1770,18 +1583,6 @@ extension BigGoalModelQuerySortBy
   QueryBuilder<BigGoalModel, BigGoalModel, QAfterSortBy> sortByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
-    });
-  }
-
-  QueryBuilder<BigGoalModel, BigGoalModel, QAfterSortBy> sortByUserId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'userId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<BigGoalModel, BigGoalModel, QAfterSortBy> sortByUserIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'userId', Sort.desc);
     });
   }
 }
@@ -1922,18 +1723,6 @@ extension BigGoalModelQuerySortThenBy
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
   }
-
-  QueryBuilder<BigGoalModel, BigGoalModel, QAfterSortBy> thenByUserId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'userId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<BigGoalModel, BigGoalModel, QAfterSortBy> thenByUserIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'userId', Sort.desc);
-    });
-  }
 }
 
 extension BigGoalModelQueryWhereDistinct
@@ -2007,12 +1796,6 @@ extension BigGoalModelQueryWhereDistinct
       return query.addDistinctBy(r'updatedAt');
     });
   }
-
-  QueryBuilder<BigGoalModel, BigGoalModel, QDistinct> distinctByUserId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'userId');
-    });
-  }
 }
 
 extension BigGoalModelQueryProperty
@@ -2081,12 +1864,6 @@ extension BigGoalModelQueryProperty
   QueryBuilder<BigGoalModel, DateTime?, QQueryOperations> updatedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'updatedAt');
-    });
-  }
-
-  QueryBuilder<BigGoalModel, int, QQueryOperations> userIdProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'userId');
     });
   }
 }

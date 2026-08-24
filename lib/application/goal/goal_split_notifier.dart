@@ -151,7 +151,7 @@ class GoalSplitNotifier extends StateNotifier<GoalSplitState> {
     try {
       final todos = <GeneratedTodoItem>[];
       var buffer = StringBuffer();
-      final profile = await _loadProfile(goal.userId);
+      final profile = await _loadProfile();
       await for (final chunk
           in _apiClient
               .streamPrompt(
@@ -224,7 +224,6 @@ class GoalSplitNotifier extends StateNotifier<GoalSplitState> {
 
   Future<List<GeneratedTodoItem>> generateTodosFromText({
     required String input,
-    required int userId,
     required DateTime defaultDate,
     int? desiredCount,
   }) async {
@@ -233,7 +232,6 @@ class GoalSplitNotifier extends StateNotifier<GoalSplitState> {
 
     return _generateCloudTodosFromText(
       trimmedInput,
-      userId: userId,
       desiredCount: desiredCount,
       defaultDate: defaultDate,
     ).timeout(_todoSplitTimeout);
@@ -241,11 +239,10 @@ class GoalSplitNotifier extends StateNotifier<GoalSplitState> {
 
   Future<List<GeneratedTodoItem>> _generateCloudTodosFromText(
     String trimmedInput, {
-    required int userId,
     required DateTime defaultDate,
     int? desiredCount,
   }) async {
-    final profile = await _loadProfile(userId);
+    final profile = await _loadProfile();
     final prompts = [
       _buildFreeTextPrompt(
         trimmedInput,
@@ -284,7 +281,7 @@ class GoalSplitNotifier extends StateNotifier<GoalSplitState> {
           .simplePrompt(
             _buildGoalPrompt(
               goal,
-              profile: await _loadProfile(goal.userId),
+              profile: await _loadProfile(),
               desiredCount: desiredCount,
               startDate: startDate,
             ),
@@ -334,8 +331,7 @@ Split the user's BIG GOAL into concrete calendar todos. Return task content in t
 Goal title: ${goal.title}
 Goal description: $description
 Goal category: $category
-用户画像:
-${_formatProfile(profile)}
+${_profilePromptSection(profile)}
 Today: ${_formatIsoDate(today)}
 Start date: ${_formatIsoDate(baseDate)}
 Target date: ${_formatIsoDate(targetDate)}
@@ -383,8 +379,7 @@ Stream the user's BIG GOAL into concrete calendar todos. Return task content in 
 Goal title: ${goal.title}
 Goal description: $description
 Goal category: $category
-用户画像:
-${_formatProfile(profile)}
+${_profilePromptSection(profile)}
 Today: ${_formatIsoDate(today)}
 Start date: ${_formatIsoDate(baseDate)}
 Target date: ${_formatIsoDate(targetDate)}
@@ -417,8 +412,7 @@ You are fixing a failed todo split. Return valid JSON only.
 Today: ${_formatIsoDate(today)}
 Default date: ${_formatIsoDate(baseDate)}
 Desired task count: ${_describeDesiredCount(desiredCount)}
-用户画像:
-${_formatProfile(profile)}
+${_profilePromptSection(profile)}
 User input: $input
 
 Critical rules:
@@ -448,8 +442,7 @@ You are a todo splitting assistant. Split the user's text into todos for the def
 Today: ${_formatIsoDate(today)}
 Default date: ${_formatIsoDate(baseDate)}
 Desired task count: ${_describeDesiredCount(desiredCount)}
-用户画像:
-${_formatProfile(profile)}
+${_profilePromptSection(profile)}
 User input: $input
 
 Required JSON format:
@@ -897,7 +890,6 @@ Output: {"todos":[{"content":"写作业","date":"${_formatIsoDate(baseDate)}","t
     try {
       for (final todo in state.generatedTodos) {
         final savedTodo = await _todoRepository.createTodo(
-          userId: goal.userId,
           content: todo.content,
           goalId: goal.id,
           isAIGenerated: true,
@@ -924,44 +916,25 @@ Output: {"todos":[{"content":"写作业","date":"${_formatIsoDate(baseDate)}","t
     state = state.copyWith(errorMessage: null);
   }
 
-  Future<UserProfileModel?> _loadProfile(int userId) async {
+  Future<UserProfileModel?> _loadProfile() async {
     try {
-      return _profileRepository.getProfileByUserId(userId);
+      return _profileRepository.getProfile();
     } catch (_) {
       return null;
     }
   }
 
-  String _formatProfile(UserProfileModel? profile) {
-    if (profile == null) return '- 未读取到用户画像';
+  String _profilePromptSection(UserProfileModel? profile) {
+    if (profile == null) return '';
     final parts = <String>[
-      '- 姓名：${profile.name}',
-      if (profile.age != null) '- 年龄：${profile.age}',
-      if (profile.occupation?.isNotEmpty == true)
-        '- 职业/身份：${profile.occupation}',
-      if (profile.region?.isNotEmpty == true) '- 所在地区：${profile.region}',
-      if (profile.mbti?.isNotEmpty == true) '- MBTI：${profile.mbti}',
       if (profile.communicationStyle?.isNotEmpty == true)
         '- 沟通风格：${profile.communicationStyle}',
-      if (profile.motivationSensitivity?.isNotEmpty == true)
-        '- 激励敏感度：${profile.motivationSensitivity}',
       if (profile.bestWorkTime?.isNotEmpty == true)
         '- 最适合的工作时间：${profile.bestWorkTime}',
-      if (profile.stressResponse?.isNotEmpty == true)
-        '- 压力下的应对偏好：${profile.stressResponse}',
-      if (profile.socialPreference?.isNotEmpty == true)
-        '- 协作偏好：${profile.socialPreference}',
-      if (profile.lifeStatus?.isNotEmpty == true)
-        '- 当前生活状态：${profile.lifeStatus}',
-      if (profile.challenges?.isNotEmpty == true)
-        '- 当前主要挑战：${profile.challenges}',
-      if (profile.changeTimeframeMonths != null)
-        '- 期望改变周期：${profile.changeTimeframeMonths}个月',
-      if (profile.threeChanges?.isNotEmpty == true)
-        '- 最想改变的三件事：${profile.threeChanges}',
+      if (profile.taskPace?.isNotEmpty == true) '- 任务节奏：${profile.taskPace}',
     ];
-    if (parts.isEmpty) return '- 用户画像为空';
-    return parts.join('\n');
+    if (parts.isEmpty) return '';
+    return '用户画像：\n${parts.join('\n')}';
   }
 }
 

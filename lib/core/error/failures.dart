@@ -12,27 +12,6 @@ abstract class Failure extends Equatable {
   List<Object?> get props => [message, code];
 }
 
-/// Authentication related failures
-class AuthFailure extends Failure {
-  const AuthFailure({required super.message, super.code});
-}
-
-class LoginFailure extends AuthFailure {
-  const LoginFailure({super.message = '登录失败，请检查邮箱和密码', super.code});
-}
-
-class RegisterFailure extends AuthFailure {
-  const RegisterFailure({super.message = '注册失败，请稍后重试', super.code});
-}
-
-class LogoutFailure extends AuthFailure {
-  const LogoutFailure({super.message = '退出登录失败', super.code});
-}
-
-class SessionExpiredFailure extends AuthFailure {
-  const SessionExpiredFailure({super.message = '会话已过期，请重新登录', super.code});
-}
-
 /// Database related failures
 class DatabaseFailure extends Failure {
   const DatabaseFailure({required super.message, super.code});
@@ -92,14 +71,6 @@ class AiParseFailure extends AiFailure {
 /// Validation related failures
 class ValidationFailure extends Failure {
   const ValidationFailure({required super.message, super.code});
-}
-
-class EmailValidationFailure extends ValidationFailure {
-  const EmailValidationFailure({super.message = '请输入有效的邮箱地址', super.code});
-}
-
-class PasswordValidationFailure extends ValidationFailure {
-  const PasswordValidationFailure({super.message = '密码至少需要 6 个字符', super.code});
 }
 
 class RequiredFieldFailure extends ValidationFailure {

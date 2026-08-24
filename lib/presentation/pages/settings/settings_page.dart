@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../application/auth/auth_notifier.dart';
+import '../../../application/theme/theme_controller.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/notification_service.dart';
 import '../../../core/utils/todo_reminder_scheduler.dart';
+import '../../widgets/smartisan_components.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -21,478 +22,297 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   static const _pushEnabledKey = 'push_enabled';
   static const _pushFrequencyKey = 'push_frequency';
 
-  final NotificationService _notificationService = NotificationService();
+  final NotificationService _notifications = NotificationService();
   bool _pushEnabled = true;
   bool _dueRemindersEnabled = true;
   String _pushFrequency = 'daily';
-  bool _notificationsInitialized = false;
-  int _authorTapCount = 0;
-  bool _showAuthorEgg = false;
+  bool _notificationsAvailable = false;
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
-    _initNotifications();
+    _initializeNotifications();
   }
 
-  Future<void> _initNotifications() async {
+  Future<void> _initializeNotifications() async {
     try {
-      await _notificationService.initialize();
-      final hasPermission = await _notificationService.requestPermissions();
-      if (!mounted) return;
-      setState(() => _notificationsInitialized = hasPermission);
+      await _notifications.initialize();
+      final available = await _notifications.requestPermissions();
+      if (mounted) setState(() => _notificationsAvailable = available);
     } catch (_) {
-      if (!mounted) return;
-      setState(() => _notificationsInitialized = false);
+      if (mounted) setState(() => _notificationsAvailable = false);
     }
   }
 
   Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
+    final preferences = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
-      _pushEnabled = prefs.getBool(_pushEnabledKey) ?? true;
+      _pushEnabled = preferences.getBool(_pushEnabledKey) ?? true;
       _dueRemindersEnabled =
-          prefs.getBool(TodoReminderScheduler.reminderEnabledKey) ?? true;
-      _pushFrequency = prefs.getString(_pushFrequencyKey) ?? 'daily';
+          preferences.getBool(TodoReminderScheduler.reminderEnabledKey) ?? true;
+      _pushFrequency = preferences.getString(_pushFrequencyKey) ?? 'daily';
     });
   }
 
-  Future<void> _savePushEnabled(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_pushEnabledKey, value);
-    if (!mounted) return;
-    setState(() => _pushEnabled = value);
-
-    if (!value) {
-      await _notificationService.cancelAllNotifications();
-    }
+  Future<void> _setPushEnabled(bool value) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool(_pushEnabledKey, value);
+    if (!value) await _notifications.cancelAllNotifications();
+    if (mounted) setState(() => _pushEnabled = value);
   }
 
-  Future<void> _saveDueRemindersEnabled(bool value) async {
+  Future<void> _setDueReminders(bool value) async {
     await TodoReminderScheduler.setEnabled(value);
-    if (!mounted) return;
-    setState(() => _dueRemindersEnabled = value);
+    if (mounted) setState(() => _dueRemindersEnabled = value);
   }
 
-  Future<void> _savePushFrequency(String value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_pushFrequencyKey, value);
-    if (!mounted) return;
-    setState(() => _pushFrequency = value);
+  Future<void> _setFrequency(String value) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(_pushFrequencyKey, value);
+    if (mounted) setState(() => _pushFrequency = value);
   }
 
   @override
   Widget build(BuildContext context) {
+    final themeMode = ref.watch(themeControllerProvider);
+    final palette = context.palette;
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('设置'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.go('/home'),
-        ),
-      ),
+      appBar: AppBar(title: const Text('设置')),
       body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          const SizedBox(height: 16),
-          _buildNotificationsSection(context),
-          _buildProfileSection(context),
-          _buildAccountSection(context),
-          _buildAboutSection(context),
-          const SizedBox(height: 32),
-        ],
-      ),
-      bottomNavigationBar: _buildBottomNavBar(context),
-    );
-  }
-
-  Widget _buildNotificationsSection(BuildContext context) {
-    return _buildSection(
-      context,
-      title: '通知设置',
-      child: Column(
-        children: [
-          SwitchListTile(
-            title: const Text('推送通知'),
-            subtitle: Text(
-              _notificationsInitialized ? '接收任务提醒和激励推送' : '通知权限未开启或初始化失败',
-            ),
-            value: _pushEnabled,
-            onChanged: _notificationsInitialized ? _savePushEnabled : null,
-            activeThumbColor: AppColors.primary,
+          SmartisanGroup(
+            title: '外观',
+            footer: '默认跟随系统，切换后立即生效。',
+            children: [
+              SmartisanRow(
+                title: '主题',
+                subtitle: _themeModeLabel(themeMode),
+                leading: Icon(Icons.contrast_rounded, color: palette.gold),
+                trailing: Icon(
+                  Icons.chevron_right_rounded,
+                  color: palette.hintInk,
+                ),
+                onTap: _showThemePicker,
+              ),
+            ],
           ),
-          const Divider(height: 1),
-          SwitchListTile(
-            title: const Text('到点提醒'),
-            subtitle: const Text('待办设置精准时间后，到点自动提醒'),
-            value: _dueRemindersEnabled,
-            onChanged: _saveDueRemindersEnabled,
-            activeThumbColor: AppColors.primary,
+          const SizedBox(height: 22),
+          SmartisanGroup(
+            title: 'AI 个性化',
+            footer: '三项偏好仅随 AI 目标拆解发送；番茄 AI 只发送当次计划描述。',
+            children: [
+              SmartisanRow(
+                title: '沟通、时间与任务节奏',
+                subtitle: '随时编辑或全部清空',
+                leading: Icon(Icons.auto_awesome_rounded, color: palette.gold),
+                trailing: Icon(
+                  Icons.chevron_right_rounded,
+                  color: palette.hintInk,
+                ),
+                onTap: () => context.push('/profile'),
+              ),
+            ],
           ),
-          if (_pushEnabled) ...[
-            const Divider(height: 1),
-            ListTile(
-              title: const Text('推送频率'),
-              subtitle: Text(_getFrequencyText(_pushFrequency)),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: _showFrequencyPicker,
-            ),
-            const Divider(height: 1),
-            ListTile(
-              title: const Text('免打扰时段'),
-              subtitle: const Text('当前版本请在系统设置中管理通知'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: _showQuietHoursDialog,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProfileSection(BuildContext context) {
-    return _buildSection(
-      context,
-      title: '用户画像',
-      child: ListTile(
-        leading: _iconBox(Icons.person_rounded, AppColors.primary),
-        title: const Text('查看和编辑画像'),
-        subtitle: const Text('MBTI、沟通偏好、最佳工作时间等'),
-        trailing: const Icon(Icons.chevron_right_rounded),
-        onTap: () => context.push('/profile'),
-      ),
-    );
-  }
-
-  Widget _buildAccountSection(BuildContext context) {
-    return _buildSection(
-      context,
-      title: '账号',
-      child: Column(
-        children: [
-          ListTile(
-            leading: _iconBox(
-              Icons.lock_outline_rounded,
-              AppColors.textSecondary,
-            ),
-            title: const Text('修改密码'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: _showChangePasswordDialog,
+          const SizedBox(height: 22),
+          SmartisanGroup(
+            title: '通知',
+            children: [
+              SmartisanRow(
+                title: '推送通知',
+                subtitle: _notificationsAvailable ? '接收任务提醒' : '系统通知权限尚未开启',
+                leading: Icon(
+                  Icons.notifications_none_rounded,
+                  color: palette.terracotta,
+                ),
+                trailing: SmartisanMechanicalSwitch(
+                  value: _pushEnabled,
+                  onChanged: _notificationsAvailable ? _setPushEnabled : null,
+                ),
+              ),
+              SmartisanRow(
+                title: '到点提醒',
+                subtitle: '为设有精确时间的待办安排提醒',
+                leading: Icon(Icons.alarm_rounded, color: palette.terracotta),
+                trailing: SmartisanMechanicalSwitch(
+                  value: _dueRemindersEnabled,
+                  onChanged: _setDueReminders,
+                ),
+              ),
+              SmartisanRow(
+                title: '推送频率',
+                subtitle: _frequencyLabel(_pushFrequency),
+                leading: Icon(
+                  Icons.schedule_send_rounded,
+                  color: palette.terracotta,
+                ),
+                trailing: Icon(
+                  Icons.chevron_right_rounded,
+                  color: palette.hintInk,
+                ),
+                onTap: _showFrequencyPicker,
+              ),
+            ],
           ),
-          const Divider(height: 1),
-          ListTile(
-            leading: _iconBox(Icons.logout_rounded, AppColors.error),
-            title: const Text('退出登录', style: TextStyle(color: AppColors.error)),
-            onTap: () => _showLogoutDialog(context),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAboutSection(BuildContext context) {
-    return _buildSection(
-      context,
-      title: '关于',
-      child: Column(
-        children: [
-          ListTile(
-            leading: _benwoIconBox(),
-            title: const Text('版本'),
-            trailing: Text(
-              AppConstants.appVersion,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-            ),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: _iconBox(
-              Icons.person_pin_rounded,
-              AppColors.textSecondary,
-            ),
-            title: const Text('作者'),
-            subtitle: _showAuthorEgg
-                ? const Text(
-                    '感谢使用 BenWo',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  )
-                : null,
-            trailing: Text(
-              'JCX',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-            ),
-            onTap: _handleAuthorTap,
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: _iconBox(Icons.auto_awesome_rounded, AppColors.primary),
-            title: const Text('AI 服务'),
-            subtitle: const Text('DeepSeek API'),
-            trailing: Text(
-              ApiConstants.deepseekModel,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
-            ),
-            onTap: _showApiInfoDialog,
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: _iconBox(
-              Icons.info_outline_rounded,
-              AppColors.textSecondary,
-            ),
-            title: const Text('关于 BenWo'),
-            subtitle: const Text('应用信息、作者与 AI 配置'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: _showAboutDialog,
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: _iconBox(
-              Icons.description_outlined,
-              AppColors.textSecondary,
-            ),
-            title: const Text('用户协议'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: _showUserAgreement,
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: _iconBox(
-              Icons.privacy_tip_outlined,
-              AppColors.textSecondary,
-            ),
-            title: const Text('隐私政策'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: _showPrivacyPolicy,
+          const SizedBox(height: 22),
+          SmartisanGroup(
+            title: '关于',
+            children: [
+              SmartisanRow(
+                title: '本我',
+                subtitle: '版本 ${AppConstants.appVersion} · 单用户本地模式',
+                leading: Icon(
+                  Icons.psychology_alt_rounded,
+                  color: palette.gold,
+                ),
+                onTap: _showAbout,
+              ),
+              SmartisanRow(
+                title: 'AI 服务说明',
+                subtitle: 'DeepSeek ${ApiConstants.deepseekModel}',
+                leading: Icon(Icons.hub_outlined, color: palette.mutedInk),
+                trailing: Icon(
+                  Icons.chevron_right_rounded,
+                  color: palette.hintInk,
+                ),
+                onTap: _showAiService,
+              ),
+              SmartisanRow(
+                title: '用户协议',
+                leading: Icon(
+                  Icons.description_outlined,
+                  color: palette.mutedInk,
+                ),
+                trailing: Icon(
+                  Icons.chevron_right_rounded,
+                  color: palette.hintInk,
+                ),
+                onTap: _showAgreement,
+              ),
+              SmartisanRow(
+                title: '隐私政策',
+                leading: Icon(
+                  Icons.privacy_tip_outlined,
+                  color: palette.mutedInk,
+                ),
+                trailing: Icon(
+                  Icons.chevron_right_rounded,
+                  color: palette.hintInk,
+                ),
+                onTap: _showPrivacy,
+              ),
+            ],
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSection(
-    BuildContext context, {
-    required String title,
-    required Widget child,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text(
-            title,
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(color: AppColors.textSecondary),
-          ),
-        ),
-        Card(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: child,
-        ),
-      ],
-    );
-  }
-
-  Widget _iconBox(IconData icon, Color color) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Icon(icon, color: color),
-    );
-  }
-
-  Widget _benwoIconBox() {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF00796B), Color(0xFF4285F4)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: const Stack(
-        alignment: Alignment.center,
-        children: [
-          Icon(Icons.psychology_alt_rounded, color: Colors.white, size: 24),
-          Positioned(
-            right: 7,
-            bottom: 7,
-            child: Icon(
-              Icons.check_circle_rounded,
-              color: Color(0xFFFFD54F),
-              size: 13,
-            ),
-          ),
-        ],
+      bottomNavigationBar: SmartisanGlassBottomNavigationBar(
+        currentIndex: 4,
+        onTap: (index) {
+          const routes = [
+            '/home',
+            '/goals',
+            '/focus',
+            '/calendar',
+            '/settings',
+          ];
+          if (index != 4) context.go(routes[index]);
+        },
       ),
     );
   }
 
-  void _handleAuthorTap() {
-    if (_showAuthorEgg) return;
+  String _themeModeLabel(ThemeMode mode) => switch (mode) {
+    ThemeMode.system => '跟随系统',
+    ThemeMode.light => '亮色',
+    ThemeMode.dark => '暗色',
+  };
 
-    setState(() {
-      _authorTapCount += 1;
-      _showAuthorEgg = _authorTapCount >= 5;
-    });
+  String _frequencyLabel(String value) => switch (value) {
+    'twice' => '每天两次',
+    'morning' => '仅早上',
+    'evening' => '仅晚上',
+    _ => '每天一次',
+  };
 
-    if (_showAuthorEgg) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('感谢使用 BenWo')));
-    }
-  }
-
-  String _getFrequencyText(String frequency) {
-    switch (frequency) {
-      case 'twice':
-        return '每天两次';
-      case 'morning':
-        return '仅早上';
-      case 'evening':
-        return '仅晚上';
-      case 'daily':
-      default:
-        return '每天一次';
-    }
-  }
-
-  void _showFrequencyPicker() {
+  void _showThemePicker() {
     showModalBottomSheet<void>(
       context: context,
       builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 12),
-            Text('推送频率', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            ...['daily', 'twice', 'morning', 'evening'].map(
-              (freq) => ListTile(
-                title: Text(_getFrequencyText(freq)),
-                trailing: freq == _pushFrequency
-                    ? const Icon(Icons.check_rounded, color: AppColors.primary)
-                    : null,
-                onTap: () {
-                  _savePushFrequency(freq);
-                  Navigator.pop(context);
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: SmartisanGroup(
+            title: '选择主题',
+            children: ThemeMode.values.map((mode) {
+              final selected = ref.read(themeControllerProvider) == mode;
+              return SmartisanRow(
+                title: _themeModeLabel(mode),
+                trailing: selected ? const Icon(Icons.check_rounded) : null,
+                onTap: () async {
+                  await ref
+                      .read(themeControllerProvider.notifier)
+                      .setThemeMode(mode);
+                  if (context.mounted) Navigator.pop(context);
                 },
-              ),
-            ),
-          ],
+              );
+            }).toList(),
+          ),
         ),
       ),
     );
   }
 
-  void _showQuietHoursDialog() {
-    _showTextDialog(
-      title: '免打扰时段',
-      body: '当前版本暂不支持在应用内设置免打扰时段，请在 Android 系统设置中管理通知。',
-    );
-  }
-
-  void _showChangePasswordDialog() {
-    _showTextDialog(title: '修改密码', body: '当前版本暂不支持直接修改密码。后续可以在账号模块补充密码修改流程。');
-  }
-
-  void _showLogoutDialog(BuildContext pageContext) {
-    showDialog<void>(
-      context: pageContext,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('退出登录'),
-        content: const Text('确定要退出当前账号吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('取消'),
+  void _showFrequencyPicker() {
+    const values = ['daily', 'twice', 'morning', 'evening'];
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: SmartisanGroup(
+            title: '推送频率',
+            children: values
+                .map(
+                  (value) => SmartisanRow(
+                    title: _frequencyLabel(value),
+                    trailing: value == _pushFrequency
+                        ? const Icon(Icons.check_rounded)
+                        : null,
+                    onTap: () async {
+                      await _setFrequency(value);
+                      if (context.mounted) Navigator.pop(context);
+                    },
+                  ),
+                )
+                .toList(),
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              await ref.read(authNotifierProvider.notifier).logout();
-              if (pageContext.mounted) {
-                pageContext.go('/login');
-              }
-            },
-            child: const Text('退出', style: TextStyle(color: AppColors.error)),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  void _showApiInfoDialog() {
-    _showTextDialog(
-      title: 'AI 服务',
-      body:
-          '当前 AI 服务：DeepSeek API\n'
-          '接口格式：OpenAI Chat Completions\n'
-          'Base URL：https://api.deepseek.com\n'
-          '模型：${ApiConstants.deepseekModel}\n\n'
-          'AI 目标拆解会请求 JSON 输出。如果网络、额度或密钥异常，应用会自动回退到本地任务模板，避免页面卡死。',
-    );
-  }
+  void _showAbout() => _showText(
+    '关于本我',
+    '本我是一款无账户、单用户的本地目标与任务工具。目标、待办、画像和设置都存储在当前设备。卸载或清除应用数据会使记录丢失。',
+  );
 
-  void _showAboutDialog() {
-    _showTextDialog(
-      title: '关于 BenWo',
-      body:
-          'BenWo - 本我\n\n'
-          '作者：JCX\n'
-          '版本：${AppConstants.appVersion}\n'
-          'AI：DeepSeek ${ApiConstants.deepseekModel}\n\n'
-          'BenWo 用于管理长期目标、今日任务、日历计划和个人画像。数据默认存储在本机，仅在使用 AI 目标拆解时发送必要目标文本到 DeepSeek API。',
-    );
-  }
+  void _showAiService() => _showText(
+    'AI 服务说明',
+    '目标拆解使用 DeepSeek ${ApiConstants.deepseekModel}。请求会包含目标文本，以及你已填写的沟通风格、最佳工作时间、任务节奏；未填写的偏好不会发送。番茄 AI 规划只发送当次输入的计划描述。请求失败时会回退到本地任务模板。',
+  );
 
-  void _showUserAgreement() {
-    _showTextDialog(
-      title: '用户协议',
-      body:
-          'BenWo 用户协议\n\n'
-          '欢迎使用 BenWo。本应用用于目标管理、每日任务安排、日历计划和个人画像整理。\n\n'
-          '1. 请妥善保管账号和本机数据。\n'
-          '2. AI 目标拆解仅作为辅助建议，最终计划请以你的真实情况为准。\n'
-          '3. 应用优先使用本地存储，卸载应用或清除数据可能导致本地记录丢失。\n'
-          '4. 作者：JCX。',
-    );
-  }
+  void _showAgreement() => _showText(
+    '用户协议',
+    '本应用用于目标管理、任务安排与个人效率辅助。AI 拆解结果仅供参考，请根据真实情况决定是否采用。应用不提供账户或云端同步，请自行妥善管理本机数据。',
+  );
 
-  void _showPrivacyPolicy() {
-    _showTextDialog(
-      title: '隐私政策',
-      body:
-          'BenWo 隐私政策\n\n'
-          '我们重视你的隐私和数据安全。\n\n'
-          '1. 账号、目标、任务、画像和设置数据默认存储在本地设备。\n'
-          '2. 仅在使用 AI 目标拆解时，目标标题、描述和日期等必要文本会发送至 DeepSeek API。\n'
-          '3. 应用不会主动收集你的数据用于商业用途。\n'
-          '4. 如果 DeepSeek API 请求失败，应用会使用本地模板生成任务，避免影响主流程。',
-    );
-  }
+  void _showPrivacy() => _showText(
+    '隐私政策',
+    '本应用不创建账户。目标、待办、画像、番茄记录和设置默认仅存储在本机。主动使用 AI 目标拆解时，目标文本与已填写的三项画像偏好会发送至 DeepSeek API；画像为空时不会附加画像内容。主动使用番茄 AI 规划时，只发送当次输入的计划描述。',
+  );
 
-  void _showTextDialog({required String title, required String body}) {
+  void _showText(String title, String body) {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -505,39 +325,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildBottomNavBar(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: 3,
-      onTap: (index) {
-        switch (index) {
-          case 0:
-            context.go('/home');
-            break;
-          case 1:
-            context.go('/goals');
-            break;
-          case 2:
-            context.go('/calendar');
-            break;
-          case 3:
-            break;
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: '首页'),
-        BottomNavigationBarItem(icon: Icon(Icons.flag_rounded), label: '目标'),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.calendar_month_rounded),
-          label: '日历',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings_rounded),
-          label: '设置',
-        ),
-      ],
     );
   }
 }

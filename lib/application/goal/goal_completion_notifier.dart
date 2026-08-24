@@ -49,7 +49,7 @@ class GoalCompletionNotifier extends StateNotifier<GoalCompletionState> {
     : super(const GoalCompletionState());
 
   /// Check if all todos for a goal are completed and auto-complete the goal
-  Future<bool> checkAndCompleteGoal(int goalId, int userId) async {
+  Future<bool> checkAndCompleteGoal(int goalId) async {
     try {
       // Get the goal
       final goal = await _goalRepo.getGoalById(goalId);
@@ -121,13 +121,12 @@ final goalCompletionNotifierProvider =
     });
 
 /// Provider to check if all todos for a goal are completed
-final allTodosCompletedProvider =
-    FutureProvider.family<bool, ({int goalId, int userId})>((
-      ref,
-      params,
-    ) async {
-      final todoRepo = ref.watch(todoItemRepositoryProvider);
-      final todos = await todoRepo.getTodosByGoalId(params.goalId);
-      if (todos.isEmpty) return false;
-      return todos.every((todo) => todo.isCompleted);
-    });
+final allTodosCompletedProvider = FutureProvider.family<bool, int>((
+  ref,
+  goalId,
+) async {
+  final todoRepo = ref.watch(todoItemRepositoryProvider);
+  final todos = await todoRepo.getTodosByGoalId(goalId);
+  if (todos.isEmpty) return false;
+  return todos.every((todo) => todo.isCompleted);
+});

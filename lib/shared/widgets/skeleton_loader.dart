@@ -49,8 +49,9 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
 
   @override
   Widget build(BuildContext context) {
-    final baseColor = widget.baseColor ?? AppColors.border;
-    final highlightColor = widget.highlightColor ?? AppColors.surfaceVariant;
+    final baseColor = widget.baseColor ?? context.palette.hairline;
+    final highlightColor =
+        widget.highlightColor ?? context.palette.ceramicRaised;
 
     return AnimatedBuilder(
       animation: _animation,
@@ -132,9 +133,9 @@ class SkeletonCard extends StatelessWidget {
       margin: margin ?? const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.palette.ceramic,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.hairline),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,9 +214,9 @@ class SkeletonGoalCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.palette.ceramic,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.hairline),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,

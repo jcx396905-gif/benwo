@@ -55,7 +55,6 @@ const TodoItemModelSchema = CollectionSchema(
       name: r'scheduledDate',
       type: IsarType.dateTime,
     ),
-    r'userId': PropertySchema(id: 10, name: r'userId', type: IsarType.long),
   },
   estimateSize: _todoItemModelEstimateSize,
   serialize: _todoItemModelSerialize,
@@ -71,19 +70,6 @@ const TodoItemModelSchema = CollectionSchema(
       properties: [
         IndexPropertySchema(
           name: r'goalId',
-          type: IndexType.value,
-          caseSensitive: false,
-        ),
-      ],
-    ),
-    r'userId': IndexSchema(
-      id: -2005826577402374815,
-      name: r'userId',
-      unique: false,
-      replace: false,
-      properties: [
-        IndexPropertySchema(
-          name: r'userId',
           type: IndexType.value,
           caseSensitive: false,
         ),
@@ -162,7 +148,6 @@ void _todoItemModelSerialize(
   writer.writeBool(offsets[7], object.isAIGenerated);
   writer.writeBool(offsets[8], object.isCompleted);
   writer.writeDateTime(offsets[9], object.scheduledDate);
-  writer.writeLong(offsets[10], object.userId);
 }
 
 TodoItemModel _todoItemModelDeserialize(
@@ -183,7 +168,6 @@ TodoItemModel _todoItemModelDeserialize(
   object.isAIGenerated = reader.readBool(offsets[7]);
   object.isCompleted = reader.readBool(offsets[8]);
   object.scheduledDate = reader.readDateTime(offsets[9]);
-  object.userId = reader.readLong(offsets[10]);
   return object;
 }
 
@@ -214,8 +198,6 @@ P _todoItemModelDeserializeProp<P>(
       return (reader.readBool(offset)) as P;
     case 9:
       return (reader.readDateTime(offset)) as P;
-    case 10:
-      return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -249,14 +231,6 @@ extension TodoItemModelQueryWhereSort
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         const IndexWhereClause.any(indexName: r'goalId'),
-      );
-    });
-  }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhere> anyUserId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'userId'),
       );
     });
   }
@@ -470,108 +444,6 @@ extension TodoItemModelQueryWhere
           lower: [lowerGoalId],
           includeLower: includeLower,
           upper: [upperGoalId],
-          includeUpper: includeUpper,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause> userIdEqualTo(
-    int userId,
-  ) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'userId', value: [userId]),
-      );
-    });
-  }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause>
-  userIdNotEqualTo(int userId) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'userId',
-                lower: [],
-                upper: [userId],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'userId',
-                lower: [userId],
-                includeLower: false,
-                upper: [],
-              ),
-            );
-      } else {
-        return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'userId',
-                lower: [userId],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'userId',
-                lower: [],
-                upper: [userId],
-                includeUpper: false,
-              ),
-            );
-      }
-    });
-  }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause>
-  userIdGreaterThan(int userId, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'userId',
-          lower: [userId],
-          includeLower: include,
-          upper: [],
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause> userIdLessThan(
-    int userId, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'userId',
-          lower: [],
-          upper: [userId],
-          includeUpper: include,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterWhereClause> userIdBetween(
-    int lowerUserId,
-    int upperUserId, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'userId',
-          lower: [lowerUserId],
-          includeLower: includeLower,
-          upper: [upperUserId],
           includeUpper: includeUpper,
         ),
       );
@@ -1607,61 +1479,6 @@ extension TodoItemModelQueryFilter
       );
     });
   }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-  userIdEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'userId', value: value),
-      );
-    });
-  }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-  userIdGreaterThan(int value, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'userId',
-          value: value,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-  userIdLessThan(int value, {bool include = false}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'userId',
-          value: value,
-        ),
-      );
-    });
-  }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterFilterCondition>
-  userIdBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'userId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
-    });
-  }
 }
 
 extension TodoItemModelQueryObject
@@ -1800,18 +1617,6 @@ extension TodoItemModelQuerySortBy
   sortByScheduledDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'scheduledDate', Sort.desc);
-    });
-  }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy> sortByUserId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'userId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy> sortByUserIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'userId', Sort.desc);
     });
   }
 }
@@ -1960,18 +1765,6 @@ extension TodoItemModelQuerySortThenBy
       return query.addSortBy(r'scheduledDate', Sort.desc);
     });
   }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy> thenByUserId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'userId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QAfterSortBy> thenByUserIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'userId', Sort.desc);
-    });
-  }
 }
 
 extension TodoItemModelQueryWhereDistinct
@@ -2048,12 +1841,6 @@ extension TodoItemModelQueryWhereDistinct
       return query.addDistinctBy(r'scheduledDate');
     });
   }
-
-  QueryBuilder<TodoItemModel, TodoItemModel, QDistinct> distinctByUserId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'userId');
-    });
-  }
 }
 
 extension TodoItemModelQueryProperty
@@ -2125,12 +1912,6 @@ extension TodoItemModelQueryProperty
   scheduledDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'scheduledDate');
-    });
-  }
-
-  QueryBuilder<TodoItemModel, int, QQueryOperations> userIdProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'userId');
     });
   }
 }

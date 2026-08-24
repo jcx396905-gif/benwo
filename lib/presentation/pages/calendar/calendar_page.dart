@@ -3,20 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../application/auth/auth_notifier.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/todo_reminder_scheduler.dart';
 import '../../../data/models/big_goal_model.dart';
 import '../../../data/models/todo_item_model.dart';
+import '../../widgets/smartisan_components.dart';
 import '_completed_history_sheet.dart';
 
-typedef _CalendarUserDateParams = ({int userId, DateTime date});
-typedef _CalendarUserRangeParams = ({
-  int userId,
-  DateTime startDate,
-  DateTime endDate,
-});
+typedef _CalendarRangeParams = ({DateTime startDate, DateTime endDate});
 
 DateTime _calendarDateOnly(DateTime date) =>
     DateTime(date.year, date.month, date.day);
@@ -33,33 +28,23 @@ DateTime _mergeDateWithExistingTime(DateTime date, DateTime existing) {
 }
 
 final _calendarDayTodosProvider =
-    StreamProvider.family<List<TodoItemModel>, _CalendarUserDateParams>((
-      ref,
-      params,
-    ) {
+    StreamProvider.family<List<TodoItemModel>, DateTime>((ref, date) {
       final todoRepo = ref.watch(todoItemRepositoryProvider);
-      return todoRepo.watchTodosByDate(params.userId, params.date);
+      return todoRepo.watchTodosByDate(date);
     });
 
-final _calendarGoalsProvider = StreamProvider.family<List<BigGoalModel>, int>((
-  ref,
-  userId,
-) {
+final _calendarGoalsProvider = StreamProvider<List<BigGoalModel>>((ref) {
   final goalRepo = ref.watch(bigGoalRepositoryProvider);
-  return goalRepo.watchGoalsByUserId(userId);
+  return goalRepo.watchGoals();
 });
 
 final _calendarRangeTodosProvider =
-    FutureProvider.family<List<TodoItemModel>, _CalendarUserRangeParams>((
+    FutureProvider.family<List<TodoItemModel>, _CalendarRangeParams>((
       ref,
       params,
     ) {
       final todoRepo = ref.watch(todoItemRepositoryProvider);
-      return todoRepo.getTodosByDateRange(
-        params.userId,
-        params.startDate,
-        params.endDate,
-      );
+      return todoRepo.getTodosByDateRange(params.startDate, params.endDate);
     });
 
 /// Calendar Page - Day View (Task 20)
@@ -93,7 +78,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.palette.canvas,
       appBar: AppBar(
         title: const Text('日历'),
         leading: IconButton(
@@ -116,18 +101,15 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
           ),
           IconButton(
             icon: const Icon(Icons.history_rounded),
-            onPressed: () => CompletedHistorySheet.show(
-              context,
-              ref.read(authNotifierProvider).userId ?? 0,
-            ),
+            onPressed: () => CompletedHistorySheet.show(context),
             tooltip: '已完成历史',
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: AppColors.textSecondary,
-          indicatorColor: AppColors.primary,
+          labelColor: context.palette.gold,
+          unselectedLabelColor: context.palette.mutedInk,
+          indicatorColor: context.palette.gold,
           tabs: const [
             Tab(text: '日'),
             Tab(text: '周'),
@@ -146,8 +128,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
           _buildMonthView(),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 2,
+      bottomNavigationBar: SmartisanGlassBottomNavigationBar(
+        currentIndex: 3,
         onTap: (index) {
           switch (index) {
             case 0:
@@ -157,24 +139,15 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
               context.go('/goals');
               break;
             case 2:
-              break; // Already on calendar
+              context.go('/focus');
+              break;
             case 3:
+              break; // Already on calendar
+            case 4:
               context.go('/settings');
               break;
           }
         },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: '首页'),
-          BottomNavigationBarItem(icon: Icon(Icons.flag_rounded), label: '目标'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month_rounded),
-            label: '日历',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_rounded),
-            label: '设置',
-          ),
-        ],
       ),
     );
   }
@@ -212,13 +185,6 @@ class _DayViewContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authNotifierProvider);
-    final userId = authState.userId;
-
-    if (userId == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
     final dateStr = DateFormat('yyyy年MM月dd日').format(date);
     final weekdayStr = _getWeekdayString(date.weekday);
     final isToday = _isSameDay(date, DateTime.now());
@@ -229,7 +195,7 @@ class _DayViewContent extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.palette.ceramic,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.05),
@@ -275,7 +241,7 @@ class _DayViewContent extends ConsumerWidget {
                       ),
                       decoration: BoxDecoration(
                         color: isToday
-                            ? AppColors.primary.withValues(alpha: 0.1)
+                            ? context.palette.gold.withValues(alpha: 0.1)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -287,8 +253,8 @@ class _DayViewContent extends ConsumerWidget {
                               width: 8,
                               height: 8,
                               margin: const EdgeInsets.only(right: 8),
-                              decoration: const BoxDecoration(
-                                color: AppColors.primary,
+                              decoration: BoxDecoration(
+                                color: context.palette.gold,
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -297,8 +263,8 @@ class _DayViewContent extends ConsumerWidget {
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
                                   color: isToday
-                                      ? AppColors.primary
-                                      : AppColors.textPrimary,
+                                      ? context.palette.gold
+                                      : context.palette.ink,
                                   fontWeight: FontWeight.w600,
                                 ),
                           ),
@@ -306,7 +272,7 @@ class _DayViewContent extends ConsumerWidget {
                           Text(
                             dateStr,
                             style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: AppColors.textSecondary),
+                                ?.copyWith(color: context.palette.mutedInk),
                           ),
                         ],
                       ),
@@ -342,9 +308,9 @@ class _DayViewContent extends ConsumerWidget {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     '今天',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.labelSmall?.copyWith(color: AppColors.primary),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: context.palette.gold,
+                    ),
                   ),
                 ),
             ],
@@ -352,25 +318,21 @@ class _DayViewContent extends ConsumerWidget {
         ),
 
         // To-Do list for this date
-        Expanded(child: _buildTodoList(context, ref, userId)),
+        Expanded(child: _buildTodoList(context, ref)),
       ],
     );
   }
 
-  Widget _buildTodoList(BuildContext context, WidgetRef ref, int userId) {
+  Widget _buildTodoList(BuildContext context, WidgetRef ref) {
     final todosAsync = ref.watch(
-      _calendarDayTodosProvider((
-        userId: userId,
-        date: _calendarDateOnly(date),
-      )),
+      _calendarDayTodosProvider(_calendarDateOnly(date)),
     );
 
-    final goalsAsync = ref.watch(_calendarGoalsProvider(userId));
+    final goalsAsync = ref.watch(_calendarGoalsProvider);
 
     return todosAsync.when(
       data: (todos) => goalsAsync.when(
-        data: (goals) =>
-            _buildTodoListContent(context, todos, goals, userId, ref),
+        data: (goals) => _buildTodoListContent(context, todos, goals, ref),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _buildError(context, '加载目标失败: $e'),
       ),
@@ -383,7 +345,6 @@ class _DayViewContent extends ConsumerWidget {
     BuildContext context,
     List<TodoItemModel> todos,
     List<BigGoalModel> goals,
-    int userId,
     WidgetRef ref,
   ) {
     final goalMap = {for (final g in goals) g.id: g};
@@ -405,7 +366,7 @@ class _DayViewContent extends ConsumerWidget {
     return DragTarget<TodoItemModel>(
       onWillAcceptWithDetails: (details) => true,
       onAcceptWithDetails: (details) {
-        _showDatePickerForTodo(context, ref, details.data, userId);
+        _showDatePickerForTodo(context, ref, details.data);
       },
       builder: (context, candidateData, rejectedData) {
         final isDragging = candidateData.isNotEmpty;
@@ -414,7 +375,7 @@ class _DayViewContent extends ConsumerWidget {
           decoration: isDragging
               ? BoxDecoration(
                   border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.5),
+                    color: context.palette.gold.withValues(alpha: 0.5),
                     width: 2,
                   ),
                   borderRadius: BorderRadius.circular(12),
@@ -445,14 +406,14 @@ class _DayViewContent extends ConsumerWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
+                          color: context.palette.gold.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           '${filteredTodos.length}',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
-                                color: AppColors.primary,
+                                color: context.palette.gold,
                                 fontWeight: FontWeight.w600,
                               ),
                         ),
@@ -466,7 +427,7 @@ class _DayViewContent extends ConsumerWidget {
                           child: Text(
                             '显示已完成',
                             style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: AppColors.textSecondary),
+                                ?.copyWith(color: context.palette.mutedInk),
                           ),
                         ),
                       ],
@@ -482,7 +443,7 @@ class _DayViewContent extends ConsumerWidget {
                   final goal = todo.goalId != null
                       ? goalMap[todo.goalId]
                       : null;
-                  return _buildTodoItem(context, todo, goal, userId, ref);
+                  return _buildTodoItem(context, todo, goal, ref);
                 }, childCount: filteredTodos.length),
               ),
 
@@ -493,12 +454,12 @@ class _DayViewContent extends ConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: isDragging
-                        ? AppColors.primary.withValues(alpha: 0.1)
+                        ? context.palette.gold.withValues(alpha: 0.1)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isDragging
-                          ? AppColors.primary
+                          ? context.palette.gold
                           : Colors.transparent,
                       width: 2,
                     ),
@@ -511,16 +472,16 @@ class _DayViewContent extends ConsumerWidget {
                             ? Icons.calendar_today_rounded
                             : Icons.drag_indicator_rounded,
                         color: isDragging
-                            ? AppColors.primary
-                            : AppColors.textHint,
+                            ? context.palette.gold
+                            : context.palette.hintInk,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         isDragging ? '拖放到这里选择新日期' : '长按任务拖动到其他日期',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: isDragging
-                              ? AppColors.primary
-                              : AppColors.textHint,
+                              ? context.palette.gold
+                              : context.palette.hintInk,
                         ),
                       ),
                     ],
@@ -544,31 +505,27 @@ class _DayViewContent extends ConsumerWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primary.withValues(alpha: 0.1),
-            AppColors.secondary.withValues(alpha: 0.05),
+            context.palette.gold.withValues(alpha: 0.1),
+            context.palette.terracotta.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        border: Border.all(color: context.palette.gold.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.flag_rounded,
-                color: AppColors.primary,
-                size: 20,
-              ),
+              Icon(Icons.flag_rounded, color: context.palette.gold, size: 20),
               const SizedBox(width: 8),
               Text(
                 '进行中的目标',
                 style: Theme.of(
                   context,
-                ).textTheme.titleSmall?.copyWith(color: AppColors.primary),
+                ).textTheme.titleSmall?.copyWith(color: context.palette.gold),
               ),
             ],
           ),
@@ -577,7 +534,7 @@ class _DayViewContent extends ConsumerWidget {
             spacing: 8,
             runSpacing: 8,
             children: goals.take(3).map((goal) {
-              final color = _parseColor(goal.color) ?? AppColors.primary;
+              final color = _parseColor(goal.color) ?? context.palette.gold;
               return Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -603,7 +560,7 @@ class _DayViewContent extends ConsumerWidget {
                     Text(
                       goal.title,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textPrimary,
+                        color: context.palette.ink,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -617,9 +574,9 @@ class _DayViewContent extends ConsumerWidget {
               padding: const EdgeInsets.only(top: 8),
               child: Text(
                 '+${goals.length - 3} 更多目标',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.palette.mutedInk,
+                ),
               ),
             ),
         ],
@@ -631,12 +588,11 @@ class _DayViewContent extends ConsumerWidget {
     BuildContext context,
     TodoItemModel todo,
     BigGoalModel? goal,
-    int userId,
     WidgetRef ref,
   ) {
     final goalColor = goal != null
-        ? (_parseColor(goal.color) ?? AppColors.primary)
-        : AppColors.textSecondary;
+        ? (_parseColor(goal.color) ?? context.palette.gold)
+        : context.palette.mutedInk;
     final isUserCreated = todo.goalId == null;
 
     // Don't allow dragging completed todos
@@ -739,13 +695,13 @@ class _DayViewContent extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: todo.isCompleted
-            ? AppColors.surfaceVariant.withValues(alpha: 0.5)
-            : AppColors.surface,
+            ? context.palette.ceramicRaised.withValues(alpha: 0.5)
+            : context.palette.ceramic,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: todo.isCompleted
-              ? AppColors.border.withValues(alpha: 0.5)
-              : AppColors.border,
+              ? context.palette.hairline.withValues(alpha: 0.5)
+              : context.palette.hairline,
         ),
       ),
       child: Material(
@@ -777,7 +733,7 @@ class _DayViewContent extends ConsumerWidget {
                     width: 4,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: AppColors.textHint.withValues(alpha: 0.5),
+                      color: context.palette.hintInk.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   )
@@ -794,13 +750,13 @@ class _DayViewContent extends ConsumerWidget {
                     height: 24,
                     decoration: BoxDecoration(
                       color: todo.isCompleted
-                          ? AppColors.primary
+                          ? context.palette.gold
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
                         color: todo.isCompleted
-                            ? AppColors.primary
-                            : AppColors.border,
+                            ? context.palette.gold
+                            : context.palette.hairline,
                         width: 2,
                       ),
                     ),
@@ -825,8 +781,8 @@ class _DayViewContent extends ConsumerWidget {
                         todo.content,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: todo.isCompleted
-                              ? AppColors.textHint
-                              : AppColors.textPrimary,
+                              ? context.palette.hintInk
+                              : context.palette.ink,
                           decoration: todo.isCompleted
                               ? TextDecoration.lineThrough
                               : null,
@@ -855,7 +811,7 @@ class _DayViewContent extends ConsumerWidget {
                               context,
                               icon: Icons.person_rounded,
                               text: '自建',
-                              color: AppColors.textHint,
+                              color: context.palette.hintInk,
                             ),
 
                           // AI badge
@@ -864,7 +820,7 @@ class _DayViewContent extends ConsumerWidget {
                               context,
                               icon: Icons.auto_awesome_rounded,
                               text: 'AI',
-                              color: AppColors.secondary,
+                              color: context.palette.terracotta,
                             ),
                         ],
                       ),
@@ -874,12 +830,12 @@ class _DayViewContent extends ConsumerWidget {
 
                 // Drag handle indicator
                 if (!todo.isCompleted)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
                     child: Icon(
                       Icons.drag_indicator_rounded,
                       size: 20,
-                      color: AppColors.textHint,
+                      color: context.palette.hintInk,
                     ),
                   ),
               ],
@@ -931,7 +887,6 @@ class _DayViewContent extends ConsumerWidget {
         final goalRepo = ref.read(bigGoalRepositoryProvider);
         final updatedGoal = BigGoalModel()
           ..id = goal.id
-          ..userId = goal.userId
           ..title = goal.title
           ..description = goal.description
           ..targetDate = goal.targetDate
@@ -948,7 +903,6 @@ class _DayViewContent extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     TodoItemModel todo,
-    int userId,
   ) async {
     final picked = await showDatePicker(
       context: context,
@@ -958,11 +912,11 @@ class _DayViewContent extends ConsumerWidget {
       builder: (dialogContext, child) {
         return Theme(
           data: Theme.of(dialogContext).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
+            colorScheme: ColorScheme.light(
+              primary: context.palette.gold,
               onPrimary: Colors.white,
-              surface: AppColors.surface,
-              onSurface: AppColors.textPrimary,
+              surface: context.palette.ceramic,
+              onSurface: context.palette.ink,
             ),
           ),
           child: child!,
@@ -974,7 +928,6 @@ class _DayViewContent extends ConsumerWidget {
       // Update todo's scheduled date
       final updatedTodo = TodoItemModel()
         ..id = todo.id
-        ..userId = todo.userId
         ..goalId = todo.goalId
         ..content = todo.content
         ..isAIGenerated = todo.isAIGenerated
@@ -998,7 +951,7 @@ class _DayViewContent extends ConsumerWidget {
               '已将任务移动到 ${DateFormat('MM月dd日').format(picked)}',
               style: const TextStyle(color: Colors.white),
             ),
-            backgroundColor: AppColors.primary,
+            backgroundColor: context.palette.gold,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -1015,7 +968,7 @@ class _DayViewContent extends ConsumerWidget {
     required String text,
     Color? color,
   }) {
-    final chipColor = color ?? AppColors.textSecondary;
+    final chipColor = color ?? context.palette.mutedInk;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1051,7 +1004,7 @@ class _DayViewContent extends ConsumerWidget {
             '~${goal.title}',
             style: Theme.of(
               context,
-            ).textTheme.labelSmall?.copyWith(color: AppColors.textPrimary),
+            ).textTheme.labelSmall?.copyWith(color: context.palette.ink),
           ),
         ],
       ),
@@ -1066,21 +1019,21 @@ class _DayViewContent extends ConsumerWidget {
           Icon(
             Icons.event_available_rounded,
             size: 64,
-            color: AppColors.textHint.withValues(alpha: 0.5),
+            color: context.palette.hintInk.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
             showCompleted ? '暂无任务' : '今日无待办',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(color: AppColors.textSecondary),
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: context.palette.mutedInk,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             showCompleted ? '' : '左右滑动切换日期',
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.textHint),
+            ).textTheme.bodyMedium?.copyWith(color: context.palette.hintInk),
           ),
         ],
       ),
@@ -1095,14 +1048,14 @@ class _DayViewContent extends ConsumerWidget {
           Icon(
             Icons.error_outline_rounded,
             size: 64,
-            color: AppColors.error.withValues(alpha: 0.7),
+            color: Theme.of(context).colorScheme.error.withValues(alpha: 0.7),
           ),
           const SizedBox(height: 16),
           Text(
             message,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.error),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -1119,11 +1072,11 @@ class _DayViewContent extends ConsumerWidget {
       builder: (dialogContext, child) {
         return Theme(
           data: Theme.of(dialogContext).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primary,
+            colorScheme: ColorScheme.light(
+              primary: ctx.palette.gold,
               onPrimary: Colors.white,
-              surface: AppColors.surface,
-              onSurface: AppColors.textPrimary,
+              surface: ctx.palette.ceramic,
+              onSurface: ctx.palette.ink,
             ),
           ),
           child: child!,
@@ -1218,13 +1171,6 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authNotifierProvider);
-    final userId = authState.userId;
-
-    if (userId == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
     // Calculate week range
     final weekEnd = _weekStart.add(const Duration(days: 6));
     final dateFormat = DateFormat('M月d日');
@@ -1235,7 +1181,7 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
         Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.palette.ceramic,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.05),
@@ -1271,7 +1217,7 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
         // Day headers
         Container(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-          color: AppColors.surfaceVariant.withValues(alpha: 0.3),
+          color: context.palette.ceramicRaised.withValues(alpha: 0.3),
           child: Row(
             children: List.generate(7, (index) {
               final day = _weekStart.add(Duration(days: index));
@@ -1282,8 +1228,8 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
                     _getWeekdayShort(day.weekday),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: isToday
-                          ? AppColors.primary
-                          : AppColors.textSecondary,
+                          ? context.palette.gold
+                          : context.palette.mutedInk,
                       fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
@@ -1294,22 +1240,21 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
         ),
 
         // Week days list
-        Expanded(child: _buildWeekDaysList(context, ref, userId)),
+        Expanded(child: _buildWeekDaysList(context, ref)),
       ],
     );
   }
 
-  Widget _buildWeekDaysList(BuildContext context, WidgetRef ref, int userId) {
+  Widget _buildWeekDaysList(BuildContext context, WidgetRef ref) {
     final endDate = _weekStart.add(const Duration(days: 6));
     final todosAsync = ref.watch(
       _calendarRangeTodosProvider((
-        userId: userId,
         startDate: _calendarDateOnly(_weekStart),
         endDate: _calendarDateOnly(endDate),
       )),
     );
 
-    final goalsAsync = ref.watch(_calendarGoalsProvider(userId));
+    final goalsAsync = ref.watch(_calendarGoalsProvider);
 
     return todosAsync.when(
       data: (todos) => goalsAsync.when(
@@ -1375,17 +1320,17 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
                     ),
                     decoration: BoxDecoration(
                       color: isDropTarget
-                          ? AppColors.primary.withValues(alpha: 0.3)
+                          ? context.palette.gold.withValues(alpha: 0.3)
                           : isToday
-                          ? AppColors.primary.withValues(alpha: 0.1)
-                          : AppColors.surface,
+                          ? context.palette.gold.withValues(alpha: 0.1)
+                          : context.palette.ceramic,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isDropTarget
-                            ? AppColors.primary
+                            ? context.palette.gold
                             : isToday
-                            ? AppColors.primary.withValues(alpha: 0.3)
-                            : AppColors.border,
+                            ? context.palette.gold.withValues(alpha: 0.3)
+                            : context.palette.hairline,
                         width: isDropTarget ? 2 : 1,
                       ),
                     ),
@@ -1397,8 +1342,8 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
                           height: 40,
                           decoration: BoxDecoration(
                             color: isToday
-                                ? AppColors.primary
-                                : AppColors.surfaceVariant,
+                                ? context.palette.gold
+                                : context.palette.ceramicRaised,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Center(
@@ -1407,7 +1352,7 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
                               style: TextStyle(
                                 color: isToday
                                     ? Colors.white
-                                    : AppColors.textPrimary,
+                                    : context.palette.ink,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -1426,8 +1371,8 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
                                     ?.copyWith(
                                       fontWeight: FontWeight.w600,
                                       color: isToday
-                                          ? AppColors.primary
-                                          : AppColors.textPrimary,
+                                          ? context.palette.gold
+                                          : context.palette.ink,
                                     ),
                               ),
                               const SizedBox(height: 2),
@@ -1440,7 +1385,7 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: AppColors.primary.withValues(
+                                        color: context.palette.gold.withValues(
                                           alpha: 0.1,
                                         ),
                                         borderRadius: BorderRadius.circular(4),
@@ -1451,7 +1396,7 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
                                             .textTheme
                                             .labelSmall
                                             ?.copyWith(
-                                              color: AppColors.primary,
+                                              color: context.palette.gold,
                                             ),
                                       ),
                                     ),
@@ -1464,9 +1409,8 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: AppColors.textHint.withValues(
-                                          alpha: 0.1,
-                                        ),
+                                        color: context.palette.hintInk
+                                            .withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -1475,7 +1419,7 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
                                             .textTheme
                                             .labelSmall
                                             ?.copyWith(
-                                              color: AppColors.textSecondary,
+                                              color: context.palette.mutedInk,
                                             ),
                                       ),
                                     ),
@@ -1485,7 +1429,9 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodySmall
-                                          ?.copyWith(color: AppColors.textHint),
+                                          ?.copyWith(
+                                            color: context.palette.hintInk,
+                                          ),
                                     ),
                                 ],
                               ),
@@ -1495,17 +1441,17 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
 
                         // Drop indicator or expand indicator
                         if (isDropTarget)
-                          const Icon(
+                          Icon(
                             Icons.calendar_today_rounded,
-                            color: AppColors.primary,
+                            color: context.palette.gold,
                           )
                         else
                           AnimatedRotation(
                             turns: isExpanded ? 0.5 : 0,
                             duration: const Duration(milliseconds: 200),
-                            child: const Icon(
+                            child: Icon(
                               Icons.keyboard_arrow_down_rounded,
-                              color: AppColors.textSecondary,
+                              color: context.palette.mutedInk,
                             ),
                           ),
                       ],
@@ -1521,7 +1467,7 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
                 margin: const EdgeInsets.only(left: 24, right: 8, bottom: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceVariant.withValues(alpha: 0.3),
+                  color: context.palette.ceramicRaised.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -1545,8 +1491,8 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
     BigGoalModel? goal,
   ) {
     final goalColor = goal != null
-        ? (_parseColor(goal.color) ?? AppColors.primary)
-        : AppColors.textHint;
+        ? (_parseColor(goal.color) ?? context.palette.gold)
+        : context.palette.hintInk;
 
     // Don't allow dragging completed todos
     if (todo.isCompleted) {
@@ -1622,8 +1568,8 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
               todo.content,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: todo.isCompleted
-                    ? AppColors.textHint
-                    : AppColors.textPrimary,
+                    ? context.palette.hintInk
+                    : context.palette.ink,
                 decoration: todo.isCompleted
                     ? TextDecoration.lineThrough
                     : null,
@@ -1631,18 +1577,18 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
             ),
           ),
           if (todo.isAIGenerated)
-            const Icon(
+            Icon(
               Icons.auto_awesome_rounded,
               size: 12,
-              color: AppColors.secondary,
+              color: context.palette.terracotta,
             ),
           if (!todo.isCompleted)
-            const Padding(
-              padding: EdgeInsets.only(left: 4),
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
               child: Icon(
                 Icons.drag_indicator_rounded,
                 size: 14,
-                color: AppColors.textHint,
+                color: context.palette.hintInk,
               ),
             ),
         ],
@@ -1684,7 +1630,6 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
     // Update todo's scheduled date
     final updatedTodo = TodoItemModel()
       ..id = todo.id
-      ..userId = todo.userId
       ..goalId = todo.goalId
       ..content = todo.content
       ..isAIGenerated = todo.isAIGenerated
@@ -1708,7 +1653,7 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
             '已将任务移动到 ${DateFormat('MM月dd日').format(newDate)}',
             style: const TextStyle(color: Colors.white),
           ),
-          backgroundColor: AppColors.primary,
+          backgroundColor: context.palette.gold,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
@@ -1724,14 +1669,14 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
           Icon(
             Icons.error_outline_rounded,
             size: 48,
-            color: AppColors.error.withValues(alpha: 0.7),
+            color: Theme.of(context).colorScheme.error.withValues(alpha: 0.7),
           ),
           const SizedBox(height: 12),
           Text(
             message,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.error),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -1783,13 +1728,6 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authNotifierProvider);
-    final userId = authState.userId;
-
-    if (userId == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
     final monthFormat = DateFormat('yyyy年M月');
 
     return Column(
@@ -1798,7 +1736,7 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
         Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.palette.ceramic,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.05),
@@ -1834,7 +1772,7 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
         // Week day headers
         Container(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-          color: AppColors.surfaceVariant.withValues(alpha: 0.3),
+          color: context.palette.ceramicRaised.withValues(alpha: 0.3),
           child: Row(
             children: List.generate(7, (index) {
               return Expanded(
@@ -1842,7 +1780,7 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
                   child: Text(
                     _getWeekdayShort(index),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.palette.mutedInk,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1853,23 +1791,22 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
         ),
 
         // Calendar grid
-        Expanded(child: _buildCalendarGrid(context, ref, userId)),
+        Expanded(child: _buildCalendarGrid(context, ref)),
       ],
     );
   }
 
-  Widget _buildCalendarGrid(BuildContext context, WidgetRef ref, int userId) {
+  Widget _buildCalendarGrid(BuildContext context, WidgetRef ref) {
     final firstDay = DateTime(_currentMonth.year, _currentMonth.month, 1);
     final lastDay = DateTime(_currentMonth.year, _currentMonth.month + 1, 0);
     final todosAsync = ref.watch(
       _calendarRangeTodosProvider((
-        userId: userId,
         startDate: _calendarDateOnly(firstDay),
         endDate: _calendarDateOnly(lastDay),
       )),
     );
 
-    final goalsAsync = ref.watch(_calendarGoalsProvider(userId));
+    final goalsAsync = ref.watch(_calendarGoalsProvider);
 
     return todosAsync.when(
       data: (todos) => goalsAsync.when(
@@ -1942,20 +1879,20 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
                 margin: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
                   color: isDropTarget
-                      ? AppColors.primary.withValues(alpha: 0.4)
+                      ? context.palette.gold.withValues(alpha: 0.4)
                       : isSelected
-                      ? AppColors.primary.withValues(alpha: 0.2)
+                      ? context.palette.gold.withValues(alpha: 0.2)
                       : isToday
-                      ? AppColors.primary.withValues(alpha: 0.1)
+                      ? context.palette.gold.withValues(alpha: 0.1)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isDropTarget
-                        ? AppColors.primary
+                        ? context.palette.gold
                         : isToday
-                        ? AppColors.primary
+                        ? context.palette.gold
                         : isSelected
-                        ? AppColors.primary.withValues(alpha: 0.5)
+                        ? context.palette.gold.withValues(alpha: 0.5)
                         : Colors.transparent,
                     width: isDropTarget || isToday ? 2 : 1,
                   ),
@@ -1967,8 +1904,8 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
                       '$day',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: isToday
-                            ? AppColors.primary
-                            : AppColors.textPrimary,
+                            ? context.palette.gold
+                            : context.palette.ink,
                         fontWeight: isToday || isSelected
                             ? FontWeight.bold
                             : FontWeight.normal,
@@ -1980,18 +1917,18 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           if (isDropTarget)
-                            const Icon(
+                            Icon(
                               Icons.calendar_today_rounded,
                               size: 8,
-                              color: AppColors.primary,
+                              color: context.palette.gold,
                             )
                           else ...[
                             if (hasGoalTodos)
                               Container(
                                 width: 4,
                                 height: 4,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.primary,
+                                decoration: BoxDecoration(
+                                  color: context.palette.gold,
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -2001,8 +1938,8 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
                               Container(
                                 width: 4,
                                 height: 4,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.textHint,
+                                decoration: BoxDecoration(
+                                  color: context.palette.hintInk,
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -2048,7 +1985,7 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
           ),
 
           // Divider
-          Divider(color: AppColors.border.withValues(alpha: 0.5)),
+          Divider(color: context.palette.hairline.withValues(alpha: 0.5)),
 
           // Selected date todos
           Expanded(
@@ -2073,7 +2010,7 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
                           child: Text(
                             '无任务',
                             style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: AppColors.textHint),
+                                ?.copyWith(color: context.palette.hintInk),
                           ),
                         )
                       : ListView.builder(
@@ -2111,8 +2048,8 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
     BigGoalModel? goal,
   ) {
     final goalColor = goal != null
-        ? (_parseColor(goal.color) ?? AppColors.primary)
-        : AppColors.textHint;
+        ? (_parseColor(goal.color) ?? context.palette.gold)
+        : context.palette.hintInk;
 
     // Don't allow dragging completed todos
     if (todo.isCompleted) {
@@ -2171,9 +2108,9 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.palette.ceramic,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.hairline),
       ),
       child: Row(
         children: [
@@ -2193,8 +2130,8 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
               todo.content,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: todo.isCompleted
-                    ? AppColors.textHint
-                    : AppColors.textPrimary,
+                    ? context.palette.hintInk
+                    : context.palette.ink,
                 decoration: todo.isCompleted
                     ? TextDecoration.lineThrough
                     : null,
@@ -2202,18 +2139,18 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
             ),
           ),
           if (todo.isAIGenerated)
-            const Icon(
+            Icon(
               Icons.auto_awesome_rounded,
               size: 16,
-              color: AppColors.secondary,
+              color: context.palette.terracotta,
             ),
           if (!todo.isCompleted)
-            const Padding(
-              padding: EdgeInsets.only(left: 4),
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
               child: Icon(
                 Icons.drag_indicator_rounded,
                 size: 18,
-                color: AppColors.textHint,
+                color: context.palette.hintInk,
               ),
             ),
         ],
@@ -2256,7 +2193,6 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
     // Update todo's scheduled date
     final updatedTodo = TodoItemModel()
       ..id = todo.id
-      ..userId = todo.userId
       ..goalId = todo.goalId
       ..content = todo.content
       ..isAIGenerated = todo.isAIGenerated
@@ -2280,7 +2216,7 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
             '已将任务移动到 ${DateFormat('MM月dd日').format(newDate)}',
             style: const TextStyle(color: Colors.white),
           ),
-          backgroundColor: AppColors.primary,
+          backgroundColor: context.palette.gold,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
@@ -2296,14 +2232,14 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
           Icon(
             Icons.error_outline_rounded,
             size: 48,
-            color: AppColors.error.withValues(alpha: 0.7),
+            color: Theme.of(context).colorScheme.error.withValues(alpha: 0.7),
           ),
           const SizedBox(height: 12),
           Text(
             message,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.error),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ),
             textAlign: TextAlign.center,
           ),
         ],

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../application/auth/auth_notifier.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_colors.dart';
@@ -27,12 +26,14 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
 
   // Color options for goal
   final List<Map<String, String>> _colorOptions = [
-    {'name': '莫兰迪蓝绿', 'color': '#7FA99B'},
-    {'name': '暖橙', 'color': '#E8A87C'},
-    {'name': '淡紫', 'color': '#A8B5E8'},
-    {'name': '浅绿', 'color': '#8BD4A8'},
-    {'name': '珊瑚粉', 'color': '#E8A8B5'},
-    {'name': '灰蓝', 'color': '#8BADC2'},
+    {'name': '金铜', 'color': '#9A621C'},
+    {'name': '赭石', 'color': '#A4673E'},
+    {'name': '陶土', 'color': '#A95F43'},
+    {'name': '灰蓝', 'color': '#768899'},
+    {'name': '薰衣草', 'color': '#8B7E9D'},
+    {'name': '玫瑰褐', 'color': '#9B6B64'},
+    {'name': '可可', 'color': '#6E5142'},
+    {'name': '沙色', 'color': '#C5A66B'},
   ];
 
   String? _selectedColor;
@@ -97,20 +98,10 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
     });
 
     try {
-      final userId = ref.read(currentUserIdProvider);
-      if (userId == null) {
-        setState(() {
-          _errorMessage = '用户未登录';
-          _isLoading = false;
-        });
-        return;
-      }
-
       final bigGoalRepo = ref.read(bigGoalRepositoryProvider);
       final targetDate = _calculateTargetDate(_selectedTimeframe);
 
       await bigGoalRepo.createGoal(
-        userId: userId,
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim().isEmpty
             ? null
@@ -122,9 +113,9 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('目标创建成功！'),
-            backgroundColor: AppColors.primary,
+          SnackBar(
+            content: const Text('目标创建成功！'),
+            backgroundColor: context.palette.gold,
           ),
         );
         context.go('/goals');
@@ -185,7 +176,7 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
         ),
       ),
       body: Container(
-        color: AppColors.background,
+        color: context.palette.canvas,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Form(
@@ -199,8 +190,8 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        AppColors.primary.withValues(alpha: 0.1),
-                        AppColors.secondary.withValues(alpha: 0.1),
+                        context.palette.gold.withValues(alpha: 0.1),
+                        context.palette.terracotta.withValues(alpha: 0.1),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -212,12 +203,12 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.2),
+                          color: context.palette.gold.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.lightbulb_outline_rounded,
-                          color: AppColors.primary,
+                          color: context.palette.gold,
                           size: 28,
                         ),
                       ),
@@ -235,7 +226,7 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                             Text(
                               '设定一个清晰的目标，让 AI 帮你拆解成每日任务',
                               style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: AppColors.textSecondary),
+                                  ?.copyWith(color: context.palette.mutedInk),
                             ),
                           ],
                         ),
@@ -256,24 +247,24 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _titleController,
-                  style: const TextStyle(color: AppColors.textPrimary),
+                  style: TextStyle(color: context.palette.ink),
                   decoration: InputDecoration(
                     hintText: '例如：学会游泳、减肥10斤、升职加薪',
-                    hintStyle: const TextStyle(color: AppColors.textHint),
+                    hintStyle: TextStyle(color: context.palette.hintInk),
                     filled: true,
-                    fillColor: AppColors.surfaceVariant,
+                    fillColor: context.palette.ceramicRaised,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.border),
+                      borderSide: BorderSide(color: context.palette.hairline),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: AppColors.primary,
+                      borderSide: BorderSide(
+                        color: context.palette.gold,
                         width: 2,
                       ),
                     ),
@@ -310,24 +301,24 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                 TextFormField(
                   controller: _descriptionController,
                   maxLines: 3,
-                  style: const TextStyle(color: AppColors.textPrimary),
+                  style: TextStyle(color: context.palette.ink),
                   decoration: InputDecoration(
                     hintText: '详细描述你的目标，越具体越好...',
-                    hintStyle: const TextStyle(color: AppColors.textHint),
+                    hintStyle: TextStyle(color: context.palette.hintInk),
                     filled: true,
-                    fillColor: AppColors.surfaceVariant,
+                    fillColor: context.palette.ceramicRaised,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.border),
+                      borderSide: BorderSide(color: context.palette.hairline),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: AppColors.primary,
+                      borderSide: BorderSide(
+                        color: context.palette.gold,
                         width: 2,
                       ),
                     ),
@@ -387,18 +378,18 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? AppColors.primary
-                              : AppColors.surfaceVariant,
+                              ? context.palette.gold
+                              : context.palette.ceramicRaised,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isSelected
-                                ? AppColors.primary
-                                : AppColors.border,
+                                ? context.palette.gold
+                                : context.palette.hairline,
                           ),
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: AppColors.primary.withValues(
+                                    color: context.palette.gold.withValues(
                                       alpha: 0.3,
                                     ),
                                     blurRadius: 8,
@@ -412,7 +403,7 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                           style: TextStyle(
                             color: isSelected
                                 ? Colors.white
-                                : AppColors.textSecondary,
+                                : context.palette.mutedInk,
                             fontWeight: isSelected
                                 ? FontWeight.w600
                                 : FontWeight.normal,
@@ -477,20 +468,19 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? AppColors.secondary
-                              : AppColors.surfaceVariant,
+                              ? context.palette.terracotta
+                              : context.palette.ceramicRaised,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isSelected
-                                ? AppColors.secondary
-                                : AppColors.border,
+                                ? context.palette.terracotta
+                                : context.palette.hairline,
                           ),
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: AppColors.secondary.withValues(
-                                      alpha: 0.3,
-                                    ),
+                                    color: context.palette.terracotta
+                                        .withValues(alpha: 0.3),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -504,7 +494,7 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                           style: TextStyle(
                             color: isSelected
                                 ? Colors.white
-                                : AppColors.textSecondary,
+                                : context.palette.mutedInk,
                             fontWeight: isSelected
                                 ? FontWeight.w600
                                 : FontWeight.normal,
@@ -552,7 +542,7 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: isSelected
-                                    ? AppColors.textPrimary
+                                    ? context.palette.ink
                                     : Colors.transparent,
                                 width: 3,
                               ),
@@ -580,8 +570,8 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: isSelected
-                                      ? AppColors.primary
-                                      : AppColors.textSecondary,
+                                      ? context.palette.gold
+                                      : context.palette.mutedInk,
                                   fontWeight: isSelected
                                       ? FontWeight.w600
                                       : FontWeight.normal,
@@ -630,7 +620,7 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _saveGoal,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: context.palette.gold,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),

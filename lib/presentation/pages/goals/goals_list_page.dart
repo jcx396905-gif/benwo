@@ -2,19 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../application/auth/auth_notifier.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/big_goal_model.dart';
+import '../../widgets/smartisan_components.dart';
 
 class GoalsListPage extends ConsumerWidget {
   const GoalsListPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authNotifierProvider);
-    final userId = authState.userId;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('我的目标'),
@@ -24,36 +21,19 @@ class GoalsListPage extends ConsumerWidget {
         ),
       ),
       body: ColoredBox(
-        color: AppColors.background,
-        child: _buildBody(context, authState, userId),
+        color: context.palette.canvas,
+        child: const _GoalsListContent(),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: userId == null ? null : () => context.go('/goals/create'),
+        onPressed: () => context.go('/goals/create'),
         child: const Icon(Icons.add_rounded),
       ),
       bottomNavigationBar: _buildBottomNavBar(context),
     );
   }
 
-  Widget _buildBody(BuildContext context, AuthState authState, int? userId) {
-    if (authState.isUnknown || authState.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (userId == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          context.go('/login');
-        }
-      });
-      return const _AuthRequiredMessage();
-    }
-
-    return _GoalsListContent(userId: userId);
-  }
-
   Widget _buildBottomNavBar(BuildContext context) {
-    return BottomNavigationBar(
+    return SmartisanGlassBottomNavigationBar(
       currentIndex: 1,
       onTap: (index) {
         switch (index) {
@@ -63,43 +43,32 @@ class GoalsListPage extends ConsumerWidget {
           case 1:
             break;
           case 2:
-            context.go('/calendar');
+            context.go('/focus');
             break;
           case 3:
+            context.go('/calendar');
+            break;
+          case 4:
             context.go('/settings');
             break;
         }
       },
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: '首页'),
-        BottomNavigationBarItem(icon: Icon(Icons.flag_rounded), label: '目标'),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.calendar_month_rounded),
-          label: '日历',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings_rounded),
-          label: '设置',
-        ),
-      ],
     );
   }
 }
 
 class _GoalsListContent extends ConsumerWidget {
-  const _GoalsListContent({required this.userId});
-
-  final int userId;
+  const _GoalsListContent();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final goalsAsync = ref.watch(_watchGoalsProvider(userId));
+    final goalsAsync = ref.watch(_watchGoalsProvider);
 
     return goalsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => _ErrorMessage(
         message: '加载目标失败：$error',
-        onRetry: () => ref.invalidate(_watchGoalsProvider(userId)),
+        onRetry: () => ref.invalidate(_watchGoalsProvider),
       ),
       data: (goals) {
         if (goals.isEmpty) {
@@ -107,7 +76,7 @@ class _GoalsListContent extends ConsumerWidget {
         }
 
         return RefreshIndicator(
-          onRefresh: () async => ref.invalidate(_watchGoalsProvider(userId)),
+          onRefresh: () async => ref.invalidate(_watchGoalsProvider),
           child: ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: goals.length,
@@ -143,7 +112,9 @@ class _GoalsListContent extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('删除'),
           ),
         ],
@@ -166,19 +137,19 @@ class _GoalsListContent extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('删除失败：$e'), backgroundColor: AppColors.error),
+          SnackBar(
+            content: Text('删除失败：$e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
     }
   }
 }
 
-final _watchGoalsProvider = StreamProvider.family<List<BigGoalModel>, int>((
-  ref,
-  userId,
-) {
+final _watchGoalsProvider = StreamProvider<List<BigGoalModel>>((ref) {
   final repo = ref.watch(bigGoalRepositoryProvider);
-  return repo.watchGoalsByUserId(userId);
+  return repo.watchGoals();
 });
 
 class _GoalCard extends StatelessWidget {
@@ -218,7 +189,7 @@ class _GoalCard extends StatelessWidget {
                   IconButton(
                     tooltip: '删除',
                     icon: const Icon(Icons.delete_outline_rounded),
-                    color: AppColors.error,
+                    color: Theme.of(context).colorScheme.error,
                     onPressed: onDelete,
                   ),
                 ],
@@ -230,22 +201,22 @@ class _GoalCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.palette.mutedInk,
                   ),
                 ),
               ],
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.event_available_rounded,
                     size: 16,
-                    color: AppColors.textSecondary,
+                    color: context.palette.mutedInk,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     _formatDate(goal.targetDate),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: context.palette.mutedInk,
                     ),
                   ),
                   const Spacer(),
@@ -291,11 +262,7 @@ class _EmptyGoalsState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.flag_outlined,
-              size: 80,
-              color: AppColors.textHint,
-            ),
+            Icon(Icons.flag_outlined, size: 80, color: context.palette.hintInk),
             const SizedBox(height: 16),
             Text('暂无目标', style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
@@ -303,7 +270,7 @@ class _EmptyGoalsState extends StatelessWidget {
               '创建你的第一个目标吧',
               style: Theme.of(
                 context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              ).textTheme.bodyMedium?.copyWith(color: context.palette.mutedInk),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -337,7 +304,7 @@ class _ErrorMessage extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
-              ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
+              ).textTheme.bodyLarge?.copyWith(color: context.palette.mutedInk),
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
@@ -346,26 +313,6 @@ class _ErrorMessage extends StatelessWidget {
               label: const Text('重试'),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AuthRequiredMessage extends StatelessWidget {
-  const _AuthRequiredMessage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Text(
-          '登录状态已失效，请重新登录。',
-          textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
         ),
       ),
     );

@@ -4,7 +4,6 @@ import '../models/todo_item_model.dart';
 abstract class TodoItemRepository {
   /// Create a new todo
   Future<TodoItemModel> createTodo({
-    required int userId,
     required String content,
     int? goalId,
     bool isAIGenerated = false,
@@ -21,23 +20,22 @@ abstract class TodoItemRepository {
   Future<List<TodoItemModel>> getTodosByGoalId(int goalId);
 
   /// Get todos by scheduled date
-  Future<List<TodoItemModel>> getTodosByDate(int userId, DateTime date);
+  Future<List<TodoItemModel>> getTodosByDate(DateTime date);
 
   /// Get todos for a date range
   Future<List<TodoItemModel>> getTodosByDateRange(
-    int userId,
     DateTime startDate,
     DateTime endDate,
   );
 
-  /// Get all todos for a user
-  Future<List<TodoItemModel>> getTodosByUserId(int userId);
+  /// Get all todos
+  Future<List<TodoItemModel>> getTodos();
 
-  /// Get incomplete todos for a user
-  Future<List<TodoItemModel>> getIncompleteTodos(int userId);
+  /// Get incomplete todos
+  Future<List<TodoItemModel>> getIncompleteTodos();
 
-  /// Get completed todos for a user
-  Future<List<TodoItemModel>> getCompletedTodos(int userId);
+  /// Get completed todos
+  Future<List<TodoItemModel>> getCompletedTodos();
 
   /// Update todo
   Future<void> updateTodo(TodoItemModel todo);
@@ -55,8 +53,8 @@ abstract class TodoItemRepository {
   Future<void> deleteTodosByGoalId(int goalId);
 
   /// Watch todos by date
-  Stream<List<TodoItemModel>> watchTodosByDate(int userId, DateTime date);
+  Stream<List<TodoItemModel>> watchTodosByDate(DateTime date);
 
-  /// Watch all todos for a user
-  Stream<List<TodoItemModel>> watchTodosByUserId(int userId);
+  /// Watch all todos
+  Stream<List<TodoItemModel>> watchTodos();
 }

@@ -15,24 +15,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcome => 'Welcome to BenWo';
 
   @override
-  String get login => 'Login';
-
-  @override
-  String get register => 'Register';
-
-  @override
-  String get email => 'Email';
-
-  @override
-  String get password => 'Password';
-
-  @override
-  String get confirmPassword => 'Confirm Password';
-
-  @override
-  String get logout => 'Logout';
-
-  @override
   String get settings => 'Settings';
 
   @override

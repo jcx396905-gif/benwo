@@ -6,9 +6,6 @@ part 'big_goal_model.g.dart';
 class BigGoalModel {
   Id id = Isar.autoIncrement;
 
-  @Index()
-  late int userId;
-
   late String title;
 
   String? description;
