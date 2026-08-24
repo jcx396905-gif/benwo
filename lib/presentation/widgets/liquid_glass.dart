@@ -16,6 +16,7 @@ export 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
         GlassScaffold,
         GlassAppBar,
         GlassTabBar,
+        GlassTab,
         GlassSegment;
 
 /// 页面背景容器：纯宣纸底色，无渐变。

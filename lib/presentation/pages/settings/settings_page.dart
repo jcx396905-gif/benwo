@@ -6,10 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../application/theme/theme_controller.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/notification_service.dart';
 import '../../../core/utils/todo_reminder_scheduler.dart';
-import '../../widgets/smartisan_components.dart';
+import '../../widgets/apple_components.dart';
+import '../../widgets/liquid_glass.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -77,139 +77,108 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeControllerProvider);
-    final palette = context.palette;
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('设置')),
+      appBar: AppBar(
+        title: const Text('设置'),
+        backgroundColor: Colors.transparent,
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          SmartisanGroup(
+          AppleSection(
             title: '外观',
             footer: '默认跟随系统，切换后立即生效。',
             children: [
-              SmartisanRow(
+              AppleRow(
                 title: '主题',
-                subtitle: _themeModeLabel(themeMode),
-                leading: Icon(Icons.contrast_rounded, color: palette.gold),
-                trailing: Icon(
-                  Icons.chevron_right_rounded,
-                  color: palette.hintInk,
-                ),
+                value: _themeModeLabel(themeMode),
+                icon: Icons.contrast_rounded,
+                iconColor: colorScheme.primary,
                 onTap: _showThemePicker,
               ),
             ],
           ),
-          const SizedBox(height: 22),
-          SmartisanGroup(
+          AppleSection(
             title: 'AI 个性化',
             footer: '三项偏好仅随 AI 目标拆解发送；番茄 AI 只发送当次计划描述。',
             children: [
-              SmartisanRow(
+              AppleRow(
                 title: '沟通、时间与任务节奏',
                 subtitle: '随时编辑或全部清空',
-                leading: Icon(Icons.auto_awesome_rounded, color: palette.gold),
-                trailing: Icon(
-                  Icons.chevron_right_rounded,
-                  color: palette.hintInk,
-                ),
+                icon: Icons.auto_awesome_rounded,
+                iconColor: colorScheme.primary,
                 onTap: () => context.push('/profile'),
               ),
             ],
           ),
-          const SizedBox(height: 22),
-          SmartisanGroup(
+          AppleSection(
             title: '通知',
             children: [
-              SmartisanRow(
+              AppleRow(
                 title: '推送通知',
                 subtitle: _notificationsAvailable ? '接收任务提醒' : '系统通知权限尚未开启',
-                leading: Icon(
-                  Icons.notifications_none_rounded,
-                  color: palette.terracotta,
-                ),
-                trailing: SmartisanMechanicalSwitch(
+                icon: Icons.notifications_none_rounded,
+                iconColor: colorScheme.tertiary,
+                trailing: Switch.adaptive(
                   value: _pushEnabled,
                   onChanged: _notificationsAvailable ? _setPushEnabled : null,
                 ),
               ),
-              SmartisanRow(
+              AppleRow(
                 title: '到点提醒',
                 subtitle: '为设有精确时间的待办安排提醒',
-                leading: Icon(Icons.alarm_rounded, color: palette.terracotta),
-                trailing: SmartisanMechanicalSwitch(
+                icon: Icons.alarm_rounded,
+                iconColor: colorScheme.tertiary,
+                trailing: Switch.adaptive(
                   value: _dueRemindersEnabled,
                   onChanged: _setDueReminders,
                 ),
               ),
-              SmartisanRow(
+              AppleRow(
                 title: '推送频率',
-                subtitle: _frequencyLabel(_pushFrequency),
-                leading: Icon(
-                  Icons.schedule_send_rounded,
-                  color: palette.terracotta,
-                ),
-                trailing: Icon(
-                  Icons.chevron_right_rounded,
-                  color: palette.hintInk,
-                ),
+                value: _frequencyLabel(_pushFrequency),
+                icon: Icons.schedule_send_rounded,
+                iconColor: colorScheme.tertiary,
                 onTap: _showFrequencyPicker,
               ),
             ],
           ),
-          const SizedBox(height: 22),
-          SmartisanGroup(
+          AppleSection(
             title: '关于',
             children: [
-              SmartisanRow(
+              AppleRow(
                 title: '本我',
                 subtitle: '版本 ${AppConstants.appVersion} · 单用户本地模式',
-                leading: Icon(
-                  Icons.psychology_alt_rounded,
-                  color: palette.gold,
-                ),
+                icon: Icons.psychology_alt_rounded,
+                iconColor: colorScheme.primary,
                 onTap: _showAbout,
               ),
-              SmartisanRow(
+              AppleRow(
                 title: 'AI 服务说明',
-                subtitle: 'DeepSeek ${ApiConstants.deepseekModel}',
-                leading: Icon(Icons.hub_outlined, color: palette.mutedInk),
-                trailing: Icon(
-                  Icons.chevron_right_rounded,
-                  color: palette.hintInk,
-                ),
+                value: ApiConstants.deepseekModel,
+                icon: Icons.hub_outlined,
                 onTap: _showAiService,
               ),
-              SmartisanRow(
+              AppleRow(
                 title: '用户协议',
-                leading: Icon(
-                  Icons.description_outlined,
-                  color: palette.mutedInk,
-                ),
-                trailing: Icon(
-                  Icons.chevron_right_rounded,
-                  color: palette.hintInk,
-                ),
+                icon: Icons.description_outlined,
                 onTap: _showAgreement,
               ),
-              SmartisanRow(
+              AppleRow(
                 title: '隐私政策',
-                leading: Icon(
-                  Icons.privacy_tip_outlined,
-                  color: palette.mutedInk,
-                ),
-                trailing: Icon(
-                  Icons.chevron_right_rounded,
-                  color: palette.hintInk,
-                ),
+                icon: Icons.privacy_tip_outlined,
                 onTap: _showPrivacy,
               ),
             ],
           ),
         ],
       ),
-      bottomNavigationBar: SmartisanGlassBottomNavigationBar(
-        currentIndex: 4,
-        onTap: (index) {
+      bottomNavigationBar: GlassTabBar.bottom(
+        selectedIndex: 4,
+        showIndicator: false,
+        glowOpacity: 0,
+        onTabSelected: (index) {
           const routes = [
             '/home',
             '/goals',
@@ -219,6 +188,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ];
           if (index != 4) context.go(routes[index]);
         },
+        tabs: [
+          const GlassTab(icon: Icon(Icons.home_rounded), label: '首页'),
+          const GlassTab(icon: Icon(Icons.flag_rounded), label: '目标'),
+          const GlassTab(icon: Icon(Icons.timer_rounded), label: '专注'),
+          const GlassTab(icon: Icon(Icons.calendar_month_rounded), label: '日历'),
+          const GlassTab(icon: Icon(Icons.settings_rounded), label: '设置'),
+        ],
       ),
     );
   }
@@ -242,11 +218,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       builder: (context) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          child: SmartisanGroup(
+          child: AppleSection(
             title: '选择主题',
             children: ThemeMode.values.map((mode) {
               final selected = ref.read(themeControllerProvider) == mode;
-              return SmartisanRow(
+              return AppleRow(
                 title: _themeModeLabel(mode),
                 trailing: selected ? const Icon(Icons.check_rounded) : null,
                 onTap: () async {
@@ -270,11 +246,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       builder: (context) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          child: SmartisanGroup(
+          child: AppleSection(
             title: '推送频率',
             children: values
                 .map(
-                  (value) => SmartisanRow(
+                  (value) => AppleRow(
                     title: _frequencyLabel(value),
                     trailing: value == _pushFrequency
                         ? const Icon(Icons.check_rounded)

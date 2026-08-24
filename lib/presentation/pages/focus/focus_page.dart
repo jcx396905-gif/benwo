@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -1089,50 +1090,8 @@ class _SoftActionButton extends StatelessWidget {
         side: BorderSide(color: _focusStyle(context).line),
         backgroundColor: context.palette.ceramicRaised,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       ),
-    );
-  }
-}
-
-class _GlassPanel extends StatelessWidget {
-  const _GlassPanel({
-    required this.child,
-    this.margin = EdgeInsets.zero,
-    this.padding = EdgeInsets.zero,
-    this.radius = const BorderRadius.all(Radius.circular(24)),
-    this.color,
-    this.borderColor,
-  });
-
-  final Widget child;
-  final EdgeInsetsGeometry margin;
-  final EdgeInsetsGeometry padding;
-  final BorderRadius radius;
-  final Color? color;
-  final Color? borderColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: margin,
-      padding: padding,
-      decoration: BoxDecoration(
-        color: color ?? _focusStyle(context).paper,
-        borderRadius: radius,
-        border: Border.all(
-          color: borderColor ?? _focusStyle(context).line,
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: context.palette.shadow,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: child,
     );
   }
 }
@@ -1933,6 +1892,33 @@ class _ErrorState extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _GlassPanel extends StatelessWidget {
+  const _GlassPanel({
+    required this.child,
+    this.margin = EdgeInsets.zero,
+    this.padding = EdgeInsets.zero,
+    this.radius = const BorderRadius.all(Radius.circular(24)),
+    this.color,
+    this.borderColor,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry margin;
+  final EdgeInsetsGeometry padding;
+  final BorderRadius radius;
+  final Color? color;
+  final Color? borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      margin: margin,
+      padding: padding,
+      child: child,
     );
   }
 }
