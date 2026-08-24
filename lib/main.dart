@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -50,7 +51,10 @@ Future<void> main() async {
         sharedPreferencesThemeProvider.overrideWithValue(preferences),
         isarDatabaseProvider.overrideWithValue(isar),
       ],
-      child: const BenWoApp(),
+      child: LiquidGlassWidgets.wrap(
+        adaptiveQuality: true,
+        child: const BenWoApp(),
+      ),
     ),
   );
 

@@ -1,9 +1,24 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../../core/theme/app_colors.dart';
 
+/// BenWo 液态玻璃适配层。
+/// 直接复用 liquid_glass_widgets 原生组件；这里只保留少量页面别名，
+/// 方便旧代码迁移，不新增自定义玻璃实现。
+export 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
+    show
+        GlassCard,
+        GlassButton,
+        GlassIconButton,
+        GlassSwitch,
+        GlassTextField,
+        GlassScaffold,
+        GlassAppBar,
+        GlassTabBar,
+        GlassSegment;
+
+/// 页面背景容器：纯宣纸底色，无渐变。
 class LiquidGlassBackground extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -17,110 +32,55 @@ class LiquidGlassBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: context.palette.canvas,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          _MaterialLightField(palette: context.palette),
-          Padding(padding: padding, child: child),
-        ],
-      ),
+      color: AppColors.background,
+      child: Padding(padding: padding, child: child),
     );
   }
 }
 
+/// 面板别名 → 原生 [GlassCard]。
 class LiquidGlassPanel extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
-  final BorderRadiusGeometry borderRadius;
-  final double blur;
-  final Color color;
-  final Color borderColor;
+  final BorderRadius? borderRadius;
 
   const LiquidGlassPanel({
     required this.child,
     super.key,
     this.padding = const EdgeInsets.all(20),
-    this.borderRadius = const BorderRadius.all(Radius.circular(28)),
-    this.blur = 18,
-    this.color = const Color(0xAAFFFAF0),
-    this.borderColor = const Color(0xCCE5D8C6),
+    this.borderRadius,
   });
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.palette;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ClipRRect(
-      borderRadius: borderRadius,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: isDark ? palette.glass : color,
-            borderRadius: borderRadius,
-            border: Border.all(
-              color: isDark ? palette.glassBorder : borderColor,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: palette.shadow,
-                blurRadius: 22,
-                offset: const Offset(0, 12),
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: borderRadius,
-                    border: Border.all(color: palette.glassBorder),
-                  ),
-                ),
-              ),
-              Padding(padding: padding, child: child),
-            ],
-          ),
-        ),
-      ),
-    );
+    final card = GlassCard(padding: padding, child: child);
+    if (borderRadius == null) return card;
+    return ClipRRect(borderRadius: borderRadius!, child: card);
   }
 }
 
-class LiquidGlassChip extends StatelessWidget {
+/// 图标按钮别名 → 原生 [GlassIconButton]。
+class LiquidGlassIconButton extends StatelessWidget {
   final IconData icon;
-  final String label;
+  final VoidCallback? onPressed;
+  final String? tooltip;
+  final double size;
 
-  const LiquidGlassChip({required this.icon, required this.label, super.key});
+  const LiquidGlassIconButton({
+    required this.icon,
+    required this.onPressed,
+    super.key,
+    this.tooltip,
+    this.size = 44,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return LiquidGlassPanel(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-      borderRadius: BorderRadius.circular(999),
-      blur: 14,
-      color: const Color(0xCCFFFAF0),
-      borderColor: const Color(0xBCE5D8C6),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: context.palette.ink, size: 16),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: context.palette.ink,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
+    return GlassIconButton(icon: Icon(icon), onPressed: onPressed);
   }
 }
 
+/// 大图标（登录/注册页头部装饰）。
 class LiquidGlassIcon extends StatelessWidget {
   final IconData icon;
   final double size;
@@ -129,183 +89,40 @@ class LiquidGlassIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Center(
-        child: Icon(
-          icon,
-          color: context.palette.goldPressed,
-          size: size * 0.58,
-          shadows: [
-            Shadow(color: context.palette.glassBorder, blurRadius: 10),
-            Shadow(color: context.palette.gold, blurRadius: 20),
-          ],
-        ),
-      ),
-    );
+    return Icon(icon, color: AppColors.primary, size: size);
   }
 }
 
-class LiquidGlassIconButton extends StatefulWidget {
+/// 玻璃胶囊标签。
+class LiquidGlassChip extends StatelessWidget {
   final IconData icon;
-  final VoidCallback? onPressed;
-  final String? tooltip;
-  final double size;
-  final double iconSize;
+  final String label;
 
-  const LiquidGlassIconButton({
-    required this.icon,
-    required this.onPressed,
-    super.key,
-    this.tooltip,
-    this.size = 48,
-    this.iconSize = 26,
-  });
-
-  @override
-  State<LiquidGlassIconButton> createState() => _LiquidGlassIconButtonState();
-}
-
-class _LiquidGlassIconButtonState extends State<LiquidGlassIconButton> {
-  bool _pressed = false;
-
-  void _setPressed(bool value) {
-    if (_pressed == value) return;
-    setState(() => _pressed = value);
-  }
+  const LiquidGlassChip({required this.icon, required this.label, super.key});
 
   @override
   Widget build(BuildContext context) {
-    final enabled = widget.onPressed != null;
-    final button = GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: enabled ? (_) => _setPressed(true) : null,
-      onTapCancel: enabled ? () => _setPressed(false) : null,
-      onTapUp: enabled
-          ? (_) {
-              _setPressed(false);
-              widget.onPressed?.call();
-            }
-          : null,
-      child: AnimatedScale(
-        scale: _pressed ? 0.9 : 1,
-        duration: const Duration(milliseconds: 110),
-        curve: Curves.easeOutCubic,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 110),
-          width: widget.size,
-          height: widget.size,
-          decoration: BoxDecoration(
-            color: _pressed
-                ? context.palette.gold.withValues(alpha: 0.80)
-                : context.palette.ceramic.withValues(alpha: 0.72),
-            shape: BoxShape.circle,
-            border: Border.all(color: context.palette.hairline),
-            boxShadow: [
-              BoxShadow(
-                color: context.palette.gold.withValues(
-                  alpha: _pressed ? 0.22 : 0.12,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0x66FFFBF3),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0xBFFFFFFF)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: AppColors.primary, size: 15),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
                 ),
-                blurRadius: _pressed ? 20 : 12,
-              ),
-            ],
           ),
-          child: Icon(
-            widget.icon,
-            size: widget.iconSize,
-            color: enabled ? context.palette.ink : context.palette.hintInk,
-            shadows: enabled
-                ? [
-                    Shadow(color: context.palette.glassBorder, blurRadius: 8),
-                    Shadow(color: context.palette.gold, blurRadius: 14),
-                  ]
-                : null,
-          ),
-        ),
+        ],
       ),
     );
-
-    return Semantics(
-      button: true,
-      enabled: enabled,
-      child: widget.tooltip == null
-          ? button
-          : Tooltip(message: widget.tooltip, child: button),
-    );
   }
-}
-
-class _MaterialLightField extends StatelessWidget {
-  const _MaterialLightField({required this.palette});
-
-  final BenWoPalette palette;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(painter: _MaterialLightFieldPainter(palette));
-  }
-}
-
-class _MaterialLightFieldPainter extends CustomPainter {
-  const _MaterialLightFieldPainter(this.palette);
-
-  final BenWoPalette palette;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final basePaint = Paint()..color = palette.canvas;
-    canvas.drawRect(Offset.zero & size, basePaint);
-
-    final beams = [
-      (dx: 0.12, width: 88.0, alpha: 0.18),
-      (dx: 0.48, width: 116.0, alpha: 0.14),
-      (dx: 0.82, width: 76.0, alpha: 0.12),
-    ];
-
-    for (final beam in beams) {
-      final rect = Rect.fromLTWH(
-        size.width * beam.dx - beam.width / 2,
-        -size.height * 0.1,
-        beam.width,
-        size.height * 1.2,
-      );
-      final paint = Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.white.withValues(alpha: 0),
-            palette.ceramic.withValues(alpha: beam.alpha),
-            palette.terracotta.withValues(alpha: beam.alpha * 0.56),
-            Colors.white.withValues(alpha: 0),
-          ],
-          stops: const [0, 0.34, 0.62, 1],
-        ).createShader(rect)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(rect, Radius.circular(beam.width)),
-        paint,
-      );
-    }
-
-    final washPaint = Paint()
-      ..shader =
-          RadialGradient(
-            colors: [
-              palette.gold.withValues(alpha: 0.18),
-              palette.gold.withValues(alpha: 0.14),
-              Colors.transparent,
-            ],
-          ).createShader(
-            Rect.fromCircle(
-              center: Offset(size.width * 0.18, size.height * 0.18),
-              radius: size.width * 0.7,
-            ),
-          );
-    canvas.drawRect(Offset.zero & size, washPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

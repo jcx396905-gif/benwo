@@ -43,6 +43,10 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   timezone: ^0.9.4
 
+  # Liquid Glass
+  liquid_glass_renderer: ^0.2.0-dev.4
+  liquid_glass_widgets: ^0.30.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -53,3 +57,10 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+
+  fonts:
+    - family: LXGW WenKai
+      fonts:
+        - asset: assets/fonts/LXGWWenKai-Regular.ttf
+        - asset: assets/fonts/LXGWWenKai-Medium.ttf
+          weight: 500
