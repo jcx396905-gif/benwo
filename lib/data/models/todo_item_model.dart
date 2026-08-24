@@ -11,10 +11,6 @@ class TodoItemModel {
   @Index()
   int? goalId;
 
-  /// Associated user ID
-  @Index()
-  late int userId;
-
   /// Todo content
   late String content;
 

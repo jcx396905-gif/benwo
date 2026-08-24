@@ -1,7 +1,7 @@
 name: benwo
 description: "BenWo - AI驱动的自我探索与目标达成应用"
 publish_to: 'none'
-version: 1.0.9+10
+version: 1.1.0+11
 
 environment:
   sdk: '>=3.11.4 <4.0.0'
@@ -38,7 +38,6 @@ dependencies:
   # Utilities
   equatable: ^2.0.7
   uuid: ^4.5.1
-  crypto: ^3.0.6
 
   # Notifications
   flutter_local_notifications: ^18.0.1

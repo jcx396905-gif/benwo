@@ -15,32 +15,32 @@ class NotFoundPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline_rounded,
               size: 80,
-              color: AppColors.textHint,
+              color: context.palette.hintInk,
             ),
             const SizedBox(height: 24),
             Text(
               '404',
               style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                color: AppColors.primary,
+                color: context.palette.gold,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               '页面不存在',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: AppColors.textPrimary,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(color: context.palette.ink),
             ),
             const SizedBox(height: 8),
             Text(
               '您访问的页面不存在或已被移除',
               style: Theme.of(
                 context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              ).textTheme.bodyMedium?.copyWith(color: context.palette.mutedInk),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),

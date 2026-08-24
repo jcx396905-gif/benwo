@@ -17,11 +17,11 @@ class LiquidGlassBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: AppColors.background,
+      color: context.palette.canvas,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          const _MaterialLightField(),
+          _MaterialLightField(palette: context.palette),
           Padding(padding: padding, child: child),
         ],
       ),
@@ -42,27 +42,31 @@ class LiquidGlassPanel extends StatelessWidget {
     super.key,
     this.padding = const EdgeInsets.all(20),
     this.borderRadius = const BorderRadius.all(Radius.circular(28)),
-    this.blur = 22,
-    this.color = const Color(0x46FFFFFF),
-    this.borderColor = const Color(0x44FFFFFF),
+    this.blur = 18,
+    this.color = const Color(0xAAFFFAF0),
+    this.borderColor = const Color(0xCCE5D8C6),
   });
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ClipRRect(
       borderRadius: borderRadius,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: color,
+            color: isDark ? palette.glass : color,
             borderRadius: borderRadius,
-            border: Border.all(color: borderColor),
-            boxShadow: const [
+            border: Border.all(
+              color: isDark ? palette.glassBorder : borderColor,
+            ),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x33000000),
-                blurRadius: 26,
-                offset: Offset(0, 18),
+                color: palette.shadow,
+                blurRadius: 22,
+                offset: const Offset(0, 12),
               ),
             ],
           ),
@@ -72,7 +76,7 @@ class LiquidGlassPanel extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     borderRadius: borderRadius,
-                    border: Border.all(color: const Color(0x18FFFFFF)),
+                    border: Border.all(color: palette.glassBorder),
                   ),
                 ),
               ),
@@ -96,18 +100,18 @@ class LiquidGlassChip extends StatelessWidget {
     return LiquidGlassPanel(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       borderRadius: BorderRadius.circular(999),
-      blur: 16,
-      color: const Color(0x24FFFFFF),
-      borderColor: const Color(0x40FFFFFF),
+      blur: 14,
+      color: const Color(0xCCFFFAF0),
+      borderColor: const Color(0xBCE5D8C6),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: AppColors.textPrimary, size: 16),
+          Icon(icon, color: context.palette.ink, size: 16),
           const SizedBox(width: 6),
           Text(
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AppColors.textPrimary,
+              color: context.palette.ink,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -131,11 +135,11 @@ class LiquidGlassIcon extends StatelessWidget {
       child: Center(
         child: Icon(
           icon,
-          color: Colors.white,
+          color: context.palette.goldPressed,
           size: size * 0.58,
-          shadows: const [
-            Shadow(color: Colors.white, blurRadius: 12),
-            Shadow(color: AppColors.primary, blurRadius: 24),
+          shadows: [
+            Shadow(color: context.palette.glassBorder, blurRadius: 10),
+            Shadow(color: context.palette.gold, blurRadius: 20),
           ],
         ),
       ),
@@ -193,24 +197,28 @@ class _LiquidGlassIconButtonState extends State<LiquidGlassIconButton> {
           width: widget.size,
           height: widget.size,
           decoration: BoxDecoration(
-            color: _pressed ? const Color(0x36FFFFFF) : const Color(0x22FFFFFF),
+            color: _pressed
+                ? context.palette.gold.withValues(alpha: 0.80)
+                : context.palette.ceramic.withValues(alpha: 0.72),
             shape: BoxShape.circle,
-            border: Border.all(color: const Color(0x24FFFFFF)),
+            border: Border.all(color: context.palette.hairline),
             boxShadow: [
               BoxShadow(
-                color: Colors.white.withValues(alpha: _pressed ? 0.30 : 0.12),
-                blurRadius: _pressed ? 22 : 14,
+                color: context.palette.gold.withValues(
+                  alpha: _pressed ? 0.22 : 0.12,
+                ),
+                blurRadius: _pressed ? 20 : 12,
               ),
             ],
           ),
           child: Icon(
             widget.icon,
             size: widget.iconSize,
-            color: enabled ? Colors.white : AppColors.textHint,
+            color: enabled ? context.palette.ink : context.palette.hintInk,
             shadows: enabled
-                ? const [
-                    Shadow(color: Colors.white70, blurRadius: 12),
-                    Shadow(color: AppColors.primary, blurRadius: 18),
+                ? [
+                    Shadow(color: context.palette.glassBorder, blurRadius: 8),
+                    Shadow(color: context.palette.gold, blurRadius: 14),
                   ]
                 : null,
           ),
@@ -229,24 +237,30 @@ class _LiquidGlassIconButtonState extends State<LiquidGlassIconButton> {
 }
 
 class _MaterialLightField extends StatelessWidget {
-  const _MaterialLightField();
+  const _MaterialLightField({required this.palette});
+
+  final BenWoPalette palette;
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(painter: _MaterialLightFieldPainter());
+    return CustomPaint(painter: _MaterialLightFieldPainter(palette));
   }
 }
 
 class _MaterialLightFieldPainter extends CustomPainter {
+  const _MaterialLightFieldPainter(this.palette);
+
+  final BenWoPalette palette;
+
   @override
   void paint(Canvas canvas, Size size) {
-    final basePaint = Paint()..color = AppColors.background;
+    final basePaint = Paint()..color = palette.canvas;
     canvas.drawRect(Offset.zero & size, basePaint);
 
     final beams = [
-      (dx: 0.16, width: 58.0, alpha: 0.10),
-      (dx: 0.43, width: 74.0, alpha: 0.14),
-      (dx: 0.77, width: 52.0, alpha: 0.08),
+      (dx: 0.12, width: 88.0, alpha: 0.18),
+      (dx: 0.48, width: 116.0, alpha: 0.14),
+      (dx: 0.82, width: 76.0, alpha: 0.12),
     ];
 
     for (final beam in beams) {
@@ -262,8 +276,8 @@ class _MaterialLightFieldPainter extends CustomPainter {
           end: Alignment.bottomCenter,
           colors: [
             Colors.white.withValues(alpha: 0),
-            Colors.white.withValues(alpha: beam.alpha),
-            AppColors.primary.withValues(alpha: beam.alpha * 0.8),
+            palette.ceramic.withValues(alpha: beam.alpha),
+            palette.terracotta.withValues(alpha: beam.alpha * 0.56),
             Colors.white.withValues(alpha: 0),
           ],
           stops: const [0, 0.34, 0.62, 1],
@@ -279,7 +293,8 @@ class _MaterialLightFieldPainter extends CustomPainter {
       ..shader =
           RadialGradient(
             colors: [
-              AppColors.primary.withValues(alpha: 0.18),
+              palette.gold.withValues(alpha: 0.18),
+              palette.gold.withValues(alpha: 0.14),
               Colors.transparent,
             ],
           ).createShader(

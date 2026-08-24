@@ -8,11 +8,10 @@ import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/datasources/local/isar_database.dart';
-import '../../data/repositories/user_repository.dart';
 import '../../data/repositories/user_profile_repository.dart';
 import '../../data/repositories/big_goal_repository.dart';
+import '../../data/repositories/pomodoro_repository.dart';
 import '../../data/repositories/todo_item_repository.dart';
-import '../../data/repositories/user_settings_repository.dart';
 import '../constants/api_constants.dart';
 
 /// Dependency Injection Container for BenWo App
@@ -263,12 +262,6 @@ void registerRepository<T>(RepositoryFactory<T> factory) {
 // Repository Providers
 // ============================================================================
 
-/// User Repository Provider
-final userRepositoryProvider = Provider<UserRepository>((ref) {
-  final isar = ref.watch(isarDatabaseProvider);
-  return UserRepositoryImpl(isar);
-});
-
 /// User Profile Repository Provider
 final userProfileRepositoryProvider = Provider<UserProfileRepository>((ref) {
   final isar = ref.watch(isarDatabaseProvider);
@@ -287,8 +280,7 @@ final todoItemRepositoryProvider = Provider<TodoItemRepository>((ref) {
   return TodoItemRepositoryImpl(isar);
 });
 
-/// User Settings Repository Provider
-final userSettingsRepositoryProvider = Provider<UserSettingsRepository>((ref) {
+final pomodoroRepositoryProvider = Provider<PomodoroRepository>((ref) {
   final isar = ref.watch(isarDatabaseProvider);
-  return UserSettingsRepositoryImpl(isar);
+  return PomodoroRepositoryImpl(isar);
 });

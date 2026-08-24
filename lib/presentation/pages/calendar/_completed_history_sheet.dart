@@ -2,47 +2,43 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../application/auth/auth_notifier.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/big_goal_model.dart';
 import '../../../data/models/todo_item_model.dart';
 
-final _completedHistoryGoalsProvider =
-    StreamProvider.family<List<BigGoalModel>, int>((ref, userId) {
-      final goalRepo = ref.watch(bigGoalRepositoryProvider);
-      return goalRepo.watchGoalsByUserId(userId);
-    });
+final _completedHistoryGoalsProvider = StreamProvider<List<BigGoalModel>>((
+  ref,
+) {
+  return ref.watch(bigGoalRepositoryProvider).watchGoals();
+});
 
-final _completedHistoryTodosProvider =
-    FutureProvider.family<List<TodoItemModel>, int>((ref, userId) {
-      final todoRepo = ref.watch(todoItemRepositoryProvider);
-      return todoRepo.getCompletedTodos(userId);
-    });
+final _completedHistoryTodosProvider = FutureProvider<List<TodoItemModel>>((
+  ref,
+) {
+  return ref.watch(todoItemRepositoryProvider).getCompletedTodos();
+});
 
 class CompletedHistorySheet extends ConsumerWidget {
   const CompletedHistorySheet({super.key});
 
-  static Future<void> show(BuildContext context, int userId) {
+  static Future<void> show(BuildContext context) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _CompletedHistoryContent(userId: userId),
+      builder: (context) => const _CompletedHistoryContent(),
     );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authNotifierProvider);
-    return _CompletedHistoryContent(userId: authState.userId ?? 0);
+    return const _CompletedHistoryContent();
   }
 }
 
 class _CompletedHistoryContent extends ConsumerStatefulWidget {
-  final int userId;
-
-  const _CompletedHistoryContent({required this.userId});
+  const _CompletedHistoryContent();
 
   @override
   ConsumerState<_CompletedHistoryContent> createState() =>
@@ -57,9 +53,9 @@ class _CompletedHistoryContentState
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: context.palette.canvas,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         children: [
@@ -68,7 +64,7 @@ class _CompletedHistoryContentState
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.textHint.withValues(alpha: 0.3),
+              color: context.palette.hintInk.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -76,7 +72,7 @@ class _CompletedHistoryContentState
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(Icons.history_rounded, color: AppColors.primary),
+                Icon(Icons.history_rounded, color: context.palette.gold),
                 const SizedBox(width: 8),
                 Text(
                   '已完成历史',
@@ -99,13 +95,8 @@ class _CompletedHistoryContentState
     );
   }
 
-  int get _userId {
-    final authState = ref.watch(authNotifierProvider);
-    return authState.userId ?? widget.userId;
-  }
-
   Widget _buildGoalFilterChips() {
-    final goalsAsync = ref.watch(_completedHistoryGoalsProvider(_userId));
+    final goalsAsync = ref.watch(_completedHistoryGoalsProvider);
 
     return goalsAsync.when(
       data: (goals) {
@@ -121,8 +112,8 @@ class _CompletedHistoryContentState
                   selected: _selectedGoalId == null,
                   label: const Text('全部'),
                   onSelected: (_) => setState(() => _selectedGoalId = null),
-                  selectedColor: AppColors.primary.withValues(alpha: 0.2),
-                  checkmarkColor: AppColors.primary,
+                  selectedColor: context.palette.gold.withValues(alpha: 0.2),
+                  checkmarkColor: context.palette.gold,
                 ),
               ),
               Padding(
@@ -132,12 +123,12 @@ class _CompletedHistoryContentState
                   label: const Text('个人任务'),
                   onSelected: (selected) =>
                       setState(() => _selectedGoalId = selected ? -1 : null),
-                  selectedColor: AppColors.textHint.withValues(alpha: 0.2),
-                  checkmarkColor: AppColors.textSecondary,
+                  selectedColor: context.palette.hintInk.withValues(alpha: 0.2),
+                  checkmarkColor: context.palette.mutedInk,
                 ),
               ),
               ...goals.map((goal) {
-                final color = _parseColor(goal.color) ?? AppColors.primary;
+                final color = _parseColor(goal.color) ?? context.palette.gold;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
@@ -171,8 +162,8 @@ class _CompletedHistoryContentState
   }
 
   Widget _buildCompletedTodosList() {
-    final todosAsync = ref.watch(_completedHistoryTodosProvider(_userId));
-    final goalsAsync = ref.watch(_completedHistoryGoalsProvider(_userId));
+    final todosAsync = ref.watch(_completedHistoryTodosProvider);
+    final goalsAsync = ref.watch(_completedHistoryGoalsProvider);
 
     return todosAsync.when(
       data: (todos) => goalsAsync.when(
@@ -241,13 +232,13 @@ class _CompletedHistoryContentState
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: context.palette.gold.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   '$weekdayStr $dateText',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.primary,
+                    color: context.palette.gold,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -256,13 +247,13 @@ class _CompletedHistoryContentState
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceVariant,
+                  color: context.palette.ceramicRaised,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '${todos.length} 个任务',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: context.palette.mutedInk,
                   ),
                 ),
               ),
@@ -279,17 +270,19 @@ class _CompletedHistoryContentState
 
   Widget _buildCompletedTodoItem(TodoItemModel todo, BigGoalModel? goal) {
     final goalColor = goal != null
-        ? (_parseColor(goal.color) ?? AppColors.primary)
-        : AppColors.textHint;
+        ? (_parseColor(goal.color) ?? context.palette.gold)
+        : context.palette.hintInk;
     final isUserCreated = todo.goalId == null;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.palette.ceramic,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: context.palette.hairline.withValues(alpha: 0.5),
+        ),
       ),
       child: Row(
         children: [
@@ -306,13 +299,13 @@ class _CompletedHistoryContentState
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              color: AppColors.textHint.withValues(alpha: 0.3),
+              color: context.palette.hintInk.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.check_rounded,
               size: 16,
-              color: AppColors.textHint,
+              color: context.palette.hintInk,
             ),
           ),
           const SizedBox(width: 12),
@@ -323,7 +316,7 @@ class _CompletedHistoryContentState
                 Text(
                   todo.content,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textHint,
+                    color: context.palette.hintInk,
                     decoration: TextDecoration.lineThrough,
                   ),
                 ),
@@ -337,19 +330,19 @@ class _CompletedHistoryContentState
                       _buildMetaChip(
                         icon: Icons.person_rounded,
                         text: '个人任务',
-                        color: AppColors.textHint,
+                        color: context.palette.hintInk,
                       ),
                     if (todo.isAIGenerated)
                       _buildMetaChip(
                         icon: Icons.auto_awesome_rounded,
                         text: 'AI',
-                        color: AppColors.secondary,
+                        color: context.palette.terracotta,
                       ),
                     if (todo.completedAt != null)
                       _buildMetaChip(
                         icon: Icons.access_time_rounded,
                         text: DateFormat('HH:mm').format(todo.completedAt!),
-                        color: AppColors.textSecondary,
+                        color: context.palette.mutedInk,
                       ),
                   ],
                 ),
@@ -381,7 +374,7 @@ class _CompletedHistoryContentState
             '~${goal.title}',
             style: Theme.of(
               context,
-            ).textTheme.labelSmall?.copyWith(color: AppColors.textPrimary),
+            ).textTheme.labelSmall?.copyWith(color: context.palette.ink),
           ),
         ],
       ),
@@ -423,21 +416,21 @@ class _CompletedHistoryContentState
           Icon(
             Icons.history_rounded,
             size: 64,
-            color: AppColors.textHint.withValues(alpha: 0.5),
+            color: context.palette.hintInk.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
             '暂无已完成任务',
             style: Theme.of(
               context,
-            ).textTheme.titleMedium?.copyWith(color: AppColors.textSecondary),
+            ).textTheme.titleMedium?.copyWith(color: context.palette.mutedInk),
           ),
           const SizedBox(height: 8),
           Text(
             '完成任务后会在这里显示',
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.textHint),
+            ).textTheme.bodySmall?.copyWith(color: context.palette.hintInk),
           ),
         ],
       ),
@@ -451,12 +444,15 @@ class _CompletedHistoryContentState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded, color: AppColors.error),
+            Icon(
+              Icons.error_outline_rounded,
+              color: Theme.of(context).colorScheme.error,
+            ),
             const SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.error),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ],
         ),

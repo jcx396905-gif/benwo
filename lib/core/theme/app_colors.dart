@@ -1,63 +1,166 @@
 import 'package:flutter/material.dart';
 
-/// BenWo App Color Palette - Solid Material + liquid glass surfaces.
+class BenWoPalette extends ThemeExtension<BenWoPalette> {
+  const BenWoPalette({
+    required this.canvas,
+    required this.ceramic,
+    required this.ceramicRaised,
+    required this.ink,
+    required this.mutedInk,
+    required this.hintInk,
+    required this.hairline,
+    required this.gold,
+    required this.goldPressed,
+    required this.terracotta,
+    required this.glass,
+    required this.glassBorder,
+    required this.shadow,
+  });
+
+  final Color canvas;
+  final Color ceramic;
+  final Color ceramicRaised;
+  final Color ink;
+  final Color mutedInk;
+  final Color hintInk;
+  final Color hairline;
+  final Color gold;
+  final Color goldPressed;
+  final Color terracotta;
+  final Color glass;
+  final Color glassBorder;
+  final Color shadow;
+
+  static const light = BenWoPalette(
+    canvas: Color(0xFFF4EFE5),
+    ceramic: Color(0xFFFFFBF3),
+    ceramicRaised: Color(0xFFECE3D4),
+    ink: Color(0xFF27231F),
+    mutedInk: Color(0xFF625B52),
+    hintInk: Color(0xFF887F73),
+    hairline: Color(0xFFD7CCBC),
+    gold: Color(0xFF9A621C),
+    goldPressed: Color(0xFF774811),
+    terracotta: Color(0xFFA95F43),
+    glass: Color(0xC9FFF9EF),
+    glassBorder: Color(0xBFFFFFFF),
+    shadow: Color(0x332D251D),
+  );
+
+  static const dark = BenWoPalette(
+    canvas: Color(0xFF1F1A17),
+    ceramic: Color(0xFF2B2521),
+    ceramicRaised: Color(0xFF37302A),
+    ink: Color(0xFFF1E8D9),
+    mutedInk: Color(0xFFC9BDAC),
+    hintInk: Color(0xFF9D9182),
+    hairline: Color(0xFF51473E),
+    gold: Color(0xFFD5A252),
+    goldPressed: Color(0xFFB98538),
+    terracotta: Color(0xFFD18465),
+    glass: Color(0xD12A2420),
+    glassBorder: Color(0x4DFFF3E1),
+    shadow: Color(0x99000000),
+  );
+
+  @override
+  BenWoPalette copyWith({
+    Color? canvas,
+    Color? ceramic,
+    Color? ceramicRaised,
+    Color? ink,
+    Color? mutedInk,
+    Color? hintInk,
+    Color? hairline,
+    Color? gold,
+    Color? goldPressed,
+    Color? terracotta,
+    Color? glass,
+    Color? glassBorder,
+    Color? shadow,
+  }) => BenWoPalette(
+    canvas: canvas ?? this.canvas,
+    ceramic: ceramic ?? this.ceramic,
+    ceramicRaised: ceramicRaised ?? this.ceramicRaised,
+    ink: ink ?? this.ink,
+    mutedInk: mutedInk ?? this.mutedInk,
+    hintInk: hintInk ?? this.hintInk,
+    hairline: hairline ?? this.hairline,
+    gold: gold ?? this.gold,
+    goldPressed: goldPressed ?? this.goldPressed,
+    terracotta: terracotta ?? this.terracotta,
+    glass: glass ?? this.glass,
+    glassBorder: glassBorder ?? this.glassBorder,
+    shadow: shadow ?? this.shadow,
+  );
+
+  @override
+  BenWoPalette lerp(covariant BenWoPalette? other, double t) {
+    if (other == null) return this;
+    return BenWoPalette(
+      canvas: Color.lerp(canvas, other.canvas, t)!,
+      ceramic: Color.lerp(ceramic, other.ceramic, t)!,
+      ceramicRaised: Color.lerp(ceramicRaised, other.ceramicRaised, t)!,
+      ink: Color.lerp(ink, other.ink, t)!,
+      mutedInk: Color.lerp(mutedInk, other.mutedInk, t)!,
+      hintInk: Color.lerp(hintInk, other.hintInk, t)!,
+      hairline: Color.lerp(hairline, other.hairline, t)!,
+      gold: Color.lerp(gold, other.gold, t)!,
+      goldPressed: Color.lerp(goldPressed, other.goldPressed, t)!,
+      terracotta: Color.lerp(terracotta, other.terracotta, t)!,
+      glass: Color.lerp(glass, other.glass, t)!,
+      glassBorder: Color.lerp(glassBorder, other.glassBorder, t)!,
+      shadow: Color.lerp(shadow, other.shadow, t)!,
+    );
+  }
+}
+
+extension BenWoThemeContext on BuildContext {
+  BenWoPalette get palette =>
+      Theme.of(this).extension<BenWoPalette>() ?? BenWoPalette.light;
+}
+
+/// Compatibility colors for older feature widgets while they consume the new
+/// semantic theme through Material components.
 class AppColors {
   AppColors._();
 
-  // Primary: calm teal on a solid MD-style base.
-  static const Color primary = Color(0xFF8FBFB0);
-  static const Color primaryLight = Color(0xFFCFE4DD);
-  static const Color primaryDark = Color(0xFF4F7F72);
-  static const Color onPrimary = Color(0xFFFFFFFF);
+  static const primary = Color(0xFF9A621C);
+  static const primaryLight = Color(0xFFE8CE9D);
+  static const primaryDark = Color(0xFF774811);
+  static const onPrimary = Color(0xFFFFFFFF);
+  static const secondary = Color(0xFFA95F43);
+  static const secondaryLight = Color(0xFFE7C0AE);
+  static const secondaryDark = Color(0xFF7C402C);
+  static const onSecondary = Color(0xFFFFFFFF);
+  static const background = Color(0xFFF4EFE5);
+  static const surface = Color(0xFFFFFBF3);
+  static const surfaceVariant = Color(0xFFECE3D4);
+  static const onBackground = Color(0xFF27231F);
+  static const onSurface = Color(0xFF27231F);
+  static const onSurfaceVariant = Color(0xFF625B52);
+  static const error = Color(0xFFB64A42);
+  static const onError = Color(0xFFFFFFFF);
+  static const pink = Color(0xFFB87878);
+  static const dustyRose = Color(0xFF9B6B64);
+  static const bronze = Color(0xFF9A713E);
+  static const lavender = Color(0xFF8B7E9D);
+  static const beige = Color(0xFFD8C7AE);
+  static const cream = Color(0xFFF7EEDC);
+  static const textPrimary = Color(0xFF27231F);
+  static const textSecondary = Color(0xFF625B52);
+  static const textHint = Color(0xFF887F73);
+  static const border = Color(0xFFD7CCBC);
+  static const divider = Color(0xFFE0D6C8);
 
-  // Secondary: warm amber accent.
-  static const Color secondary = Color(0xFFE8B57B);
-  static const Color secondaryLight = Color(0xFFF3D6B2);
-  static const Color secondaryDark = Color(0xFFB87E43);
-  static const Color onSecondary = Color(0xFF21170D);
-
-  // Background & Surface
-  static const Color background = Color(0xFF101714);
-  static const Color surface = Color(0xFF1B2420);
-  static const Color surfaceVariant = Color(0xFF24312C);
-  static const Color onBackground = Color(0xFFF4F7F5);
-  static const Color onSurface = Color(0xFFF4F7F5);
-  static const Color onSurfaceVariant = Color(0xFFC4CDC8);
-
-  // Error
-  static const Color error = Color(0xFFFF8A80);
-  static const Color onError = Color(0xFFFFFFFF);
-
-  // Additional Morandi Colors
-  static const Color pink = Color(0xFFE8B4B8);
-  static const Color dustyRose = Color(0xFFD4A5A5);
-  static const Color sage = Color(0xFFA9C9A6);
-  static const Color lavender = Color(0xFFC4B8DF);
-  static const Color beige = Color(0xFFE0D6C8);
-  static const Color cream = Color(0xFFF6EFE4);
-
-  // Text Colors
-  static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFFE0E8E4);
-  static const Color textHint = Color(0xFFB4C0BA);
-
-  // Border & Divider
-  static const Color border = Color(0xFF405049);
-  static const Color divider = Color(0xFF2D3A35);
-
-  // Goal Colors (for different goals)
-  static const List<Color> goalColors = [
-    Color(0xFF8FBFB0), // Primary blue-green
-    Color(0xFFE8B57B), // Warm amber
-    Color(0xFFA9C9A6), // Sage green
-    Color(0xFFC4B8DF), // Lavender
-    Color(0xFFE8B4B8), // Pink
-    Color(0xFFD4A5A5), // Dusty rose
-    Color(0xFFDDD5C7), // Beige
-    Color(0xFF8FB1C4), // Soft blue
+  static const goalColors = <Color>[
+    Color(0xFF9A621C),
+    Color(0xFFA95F43),
+    Color(0xFFA4673E),
+    Color(0xFF768899),
+    Color(0xFF8B7E9D),
+    Color(0xFF9B6B64),
+    Color(0xFF6E5142),
+    Color(0xFFC5A66B),
   ];
-
-  // Kept for compatibility. UI should use solid backgrounds, not gradients.
-  static const Color gradientStart = background;
-  static const Color gradientEnd = background;
 }

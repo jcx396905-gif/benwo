@@ -1,36 +1,15 @@
 import '../models/user_profile_model.dart';
 
-/// Repository interface for UserProfile operations
 abstract class UserProfileRepository {
-  /// Create or update user profile
   Future<UserProfileModel> saveProfile({
-    required int userId,
-    String? name,
-    int? age,
-    String? occupation,
-    String? region,
-    String? mbti,
     String? communicationStyle,
-    String? motivationSensitivity,
     String? bestWorkTime,
-    String? stressResponse,
-    String? socialPreference,
-    String? challenges,
-    String? lifeStatus,
-    int? changeTimeframeMonths,
-    String? threeChanges,
-    bool? hasCompletedOnboarding,
+    String? taskPace,
   });
 
-  /// Get profile by user ID
-  Future<UserProfileModel?> getProfileByUserId(int userId);
+  Future<UserProfileModel?> getProfile();
 
-  /// Watch profile by user ID for changes
-  Stream<UserProfileModel?> watchProfileByUserId(int userId);
+  Stream<UserProfileModel?> watchProfile();
 
-  /// Update onboarding status
-  Future<void> completeOnboarding(int userId);
-
-  /// Delete profile
-  Future<void> deleteProfile(int userId);
+  Future<void> clearProfile();
 }

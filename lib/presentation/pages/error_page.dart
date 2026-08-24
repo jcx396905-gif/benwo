@@ -24,13 +24,17 @@ class ErrorWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 64, color: AppColors.error.withValues(alpha: 0.7)),
+            Icon(
+              icon,
+              size: 64,
+              color: Theme.of(context).colorScheme.error.withValues(alpha: 0.7),
+            ),
             const SizedBox(height: 16),
             Text(
               message,
               style: Theme.of(
                 context,
-              ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
+              ).textTheme.bodyLarge?.copyWith(color: context.palette.mutedInk),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
@@ -40,7 +44,7 @@ class ErrorWidget extends StatelessWidget {
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text('重试'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primary,
+                  foregroundColor: context.palette.gold,
                 ),
               ),
             ],
@@ -80,13 +84,13 @@ class EmptyStateWidget extends StatelessWidget {
             Icon(
               icon,
               size: 80,
-              color: AppColors.textHint.withValues(alpha: 0.5),
+              color: context.palette.hintInk.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
               title,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: AppColors.textSecondary,
+                color: context.palette.mutedInk,
               ),
               textAlign: TextAlign.center,
             ),
@@ -94,9 +98,9 @@ class EmptyStateWidget extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 subtitle!,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppColors.textHint),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: context.palette.hintInk,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -107,7 +111,7 @@ class EmptyStateWidget extends StatelessWidget {
                 icon: const Icon(Icons.add_rounded),
                 label: Text(actionLabel!),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: context.palette.gold,
                   foregroundColor: Colors.white,
                 ),
               ),

@@ -9,28 +9,10 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => 'BenWo';
+  String get appTitle => '本我';
 
   @override
-  String get welcome => '欢迎来到 BenWo';
-
-  @override
-  String get login => '登录';
-
-  @override
-  String get register => '注册';
-
-  @override
-  String get email => '邮箱';
-
-  @override
-  String get password => '密码';
-
-  @override
-  String get confirmPassword => '确认密码';
-
-  @override
-  String get logout => '退出登录';
+  String get welcome => '欢迎来到本我';
 
   @override
   String get settings => '设置';

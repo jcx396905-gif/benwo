@@ -11,39 +11,6 @@ class AppException implements Exception {
   String toString() => 'AppException: $message (code: $code)';
 }
 
-/// Authentication related exceptions
-class AuthException extends AppException {
-  const AuthException({
-    required super.message,
-    super.code,
-    super.originalError,
-  });
-}
-
-class LoginException extends AuthException {
-  const LoginException({
-    super.message = '登录失败',
-    super.code,
-    super.originalError,
-  });
-}
-
-class RegisterException extends AuthException {
-  const RegisterException({
-    super.message = '注册失败',
-    super.code,
-    super.originalError,
-  });
-}
-
-class SessionExpiredException extends AuthException {
-  const SessionExpiredException({
-    super.message = '会话已过期',
-    super.code,
-    super.originalError,
-  });
-}
-
 /// Database related exceptions
 class DatabaseException extends AppException {
   const DatabaseException({
@@ -129,22 +96,6 @@ class NoConnectionException extends NetworkException {
 class ValidationException extends AppException {
   const ValidationException({
     required super.message,
-    super.code,
-    super.originalError,
-  });
-}
-
-class EmailValidationException extends ValidationException {
-  const EmailValidationException({
-    super.message = '邮箱格式无效',
-    super.code,
-    super.originalError,
-  });
-}
-
-class PasswordValidationException extends ValidationException {
-  const PasswordValidationException({
-    super.message = '密码格式无效',
     super.code,
     super.originalError,
   });

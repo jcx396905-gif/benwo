@@ -62,7 +62,7 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
         ],
       ),
       body: Container(
-        color: AppColors.background,
+        color: context.palette.canvas,
         child: goalAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stack) => Center(child: Text('加载失败: $error')),
@@ -95,7 +95,9 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('删除'),
           ),
         ],
@@ -114,9 +116,9 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('目标已删除'),
-              backgroundColor: AppColors.primary,
+            SnackBar(
+              content: const Text('目标已删除'),
+              backgroundColor: context.palette.gold,
             ),
           );
           context.go('/goals');
@@ -126,7 +128,7 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('删除失败: $e'),
-              backgroundColor: AppColors.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
         }
@@ -253,7 +255,7 @@ class _GoalDetailPageState extends ConsumerState<GoalDetailPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(_formatSplitError(errorMessage)),
-              backgroundColor: AppColors.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
         }
@@ -287,19 +289,14 @@ final _watchGoalProvider = StreamProvider.family<BigGoalModel?, int>((
   return repo.watchGoalById(goalId);
 });
 
-final _watchGoalTodosProvider =
-    StreamProvider.family<List<TodoItemModel>, ({int goalId, int userId})>((
-      ref,
-      params,
-    ) {
-      final repo = ref.watch(todoItemRepositoryProvider);
-      return repo
-          .watchTodosByUserId(params.userId)
-          .map(
-            (todos) =>
-                todos.where((todo) => todo.goalId == params.goalId).toList(),
-          );
-    });
+final _watchGoalTodosProvider = StreamProvider.family<List<TodoItemModel>, int>(
+  (ref, goalId) {
+    final repo = ref.watch(todoItemRepositoryProvider);
+    return repo.watchTodos().map(
+      (todos) => todos.where((todo) => todo.goalId == goalId).toList(),
+    );
+  },
+);
 
 class _GoalDetailContent extends ConsumerWidget {
   final BigGoalModel goal;
@@ -307,14 +304,14 @@ class _GoalDetailContent extends ConsumerWidget {
 
   const _GoalDetailContent({required this.goal, required this.onSplitWithAI});
 
-  Color get _goalColor {
+  Color _goalColor(BuildContext context) {
     if (goal.color != null && goal.color!.isNotEmpty) {
       try {
         final hex = goal.color!.replaceFirst('#', '');
         return Color(int.parse('FF$hex', radix: 16));
       } catch (_) {}
     }
-    return AppColors.primary;
+    return context.palette.gold;
   }
 
   String get _statusText {
@@ -328,14 +325,14 @@ class _GoalDetailContent extends ConsumerWidget {
     }
   }
 
-  Color get _statusColor {
+  Color _statusColor(BuildContext context) {
     switch (goal.status) {
       case GoalStatus.inProgress:
-        return AppColors.primary;
+        return context.palette.gold;
       case GoalStatus.completed:
-        return AppColors.sage;
+        return context.palette.goldPressed;
       case GoalStatus.abandoned:
-        return AppColors.textHint;
+        return context.palette.hintInk;
     }
   }
 
@@ -366,9 +363,7 @@ class _GoalDetailContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final todosAsync = ref.watch(
-      _watchGoalTodosProvider((goalId: goal.id, userId: goal.userId)),
-    );
+    final todosAsync = ref.watch(_watchGoalTodosProvider(goal.id));
 
     // Watch for goal completion state and show celebration
     ref.listen<GoalCompletionState>(goalCompletionNotifierProvider, (
@@ -392,11 +387,11 @@ class _GoalDetailContent extends ConsumerWidget {
           // Goal Header Card
           Card(
             elevation: 4,
-            shadowColor: _goalColor.withValues(alpha: 0.3),
+            shadowColor: _goalColor(context).withValues(alpha: 0.3),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
               side: BorderSide(
-                color: _goalColor.withValues(alpha: 0.3),
+                color: _goalColor(context).withValues(alpha: 0.3),
                 width: 1.5,
               ),
             ),
@@ -409,8 +404,8 @@ class _GoalDetailContent extends ConsumerWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    _goalColor.withValues(alpha: 0.1),
-                    _goalColor.withValues(alpha: 0.05),
+                    _goalColor(context).withValues(alpha: 0.1),
+                    _goalColor(context).withValues(alpha: 0.05),
                   ],
                 ),
               ),
@@ -423,11 +418,11 @@ class _GoalDetailContent extends ConsumerWidget {
                         width: 16,
                         height: 16,
                         decoration: BoxDecoration(
-                          color: _goalColor,
+                          color: _goalColor(context),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: _goalColor.withValues(alpha: 0.4),
+                              color: _goalColor(context).withValues(alpha: 0.4),
                               blurRadius: 8,
                               spreadRadius: 2,
                             ),
@@ -435,7 +430,7 @@ class _GoalDetailContent extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Icon(_categoryIcon, size: 24, color: _goalColor),
+                      Icon(_categoryIcon, size: 24, color: _goalColor(context)),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -452,7 +447,7 @@ class _GoalDetailContent extends ConsumerWidget {
                     Text(
                       goal.description!,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: context.palette.mutedInk,
                         height: 1.5,
                       ),
                     ),
@@ -465,18 +460,18 @@ class _GoalDetailContent extends ConsumerWidget {
                       _buildInfoChip(
                         icon: Icons.flag_rounded,
                         label: _statusText,
-                        color: _statusColor,
+                        color: _statusColor(context),
                       ),
                       if (goal.category != null)
                         _buildInfoChip(
                           icon: Icons.category_rounded,
                           label: goal.category!,
-                          color: AppColors.textSecondary,
+                          color: context.palette.mutedInk,
                         ),
                       _buildInfoChip(
                         icon: Icons.calendar_today_rounded,
                         label: _formattedTargetDate,
-                        color: AppColors.textSecondary,
+                        color: context.palette.mutedInk,
                       ),
                     ],
                   ),
@@ -485,27 +480,27 @@ class _GoalDetailContent extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: context.palette.ceramic,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: context.palette.hairline),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Row(
+                          Row(
                             children: [
                               Icon(
                                 Icons.auto_awesome_rounded,
                                 size: 16,
-                                color: AppColors.secondary,
+                                color: context.palette.terracotta,
                               ),
-                              SizedBox(width: 6),
+                              const SizedBox(width: 6),
                               Text(
                                 'AI 解读',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.secondary,
+                                  color: context.palette.terracotta,
                                 ),
                               ),
                             ],
@@ -513,9 +508,9 @@ class _GoalDetailContent extends ConsumerWidget {
                           const SizedBox(height: 8),
                           Text(
                             goal.aiSummary!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
-                              color: AppColors.textSecondary,
+                              color: context.palette.mutedInk,
                               height: 1.4,
                             ),
                           ),
@@ -554,9 +549,9 @@ class _GoalDetailContent extends ConsumerWidget {
                       ),
                       Text(
                         '$completedCount / $totalCount 任务',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
-                          color: AppColors.textSecondary,
+                          color: context.palette.mutedInk,
                         ),
                       ),
                     ],
@@ -567,8 +562,10 @@ class _GoalDetailContent extends ConsumerWidget {
                     child: LinearProgressIndicator(
                       value: progress,
                       minHeight: 10,
-                      backgroundColor: AppColors.surfaceVariant,
-                      valueColor: AlwaysStoppedAnimation<Color>(_goalColor),
+                      backgroundColor: context.palette.ceramicRaised,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        _goalColor(context),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -576,7 +573,7 @@ class _GoalDetailContent extends ConsumerWidget {
                     '${(progress * 100).toInt()}% 完成',
                     style: TextStyle(
                       fontSize: 12,
-                      color: _goalColor,
+                      color: _goalColor(context),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -605,31 +602,31 @@ class _GoalDetailContent extends ConsumerWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: context.palette.ceramic,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.palette.hairline),
                   ),
                   child: Column(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.task_alt_rounded,
                         size: 48,
-                        color: AppColors.textHint,
+                        color: context.palette.hintInk,
                       ),
                       const SizedBox(height: 12),
-                      const Text(
+                      Text(
                         '暂无任务',
                         style: TextStyle(
                           fontSize: 16,
-                          color: AppColors.textSecondary,
+                          color: context.palette.mutedInk,
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         'AI 将会为目标生成任务',
                         style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.textHint,
+                          color: context.palette.hintInk,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -638,7 +635,7 @@ class _GoalDetailContent extends ConsumerWidget {
                         icon: const Icon(Icons.auto_awesome_rounded),
                         label: const Text('AI 拆分任务'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: context.palette.gold,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 24,
@@ -657,7 +654,10 @@ class _GoalDetailContent extends ConsumerWidget {
                 itemCount: todos.length,
                 itemBuilder: (context, index) {
                   final todo = todos[index];
-                  return _TodoItemCard(todo: todo, goalColor: _goalColor);
+                  return _TodoItemCard(
+                    todo: todo,
+                    goalColor: _goalColor(context),
+                  );
                 },
               );
             },
@@ -824,9 +824,9 @@ class _GoalCompletionCelebrationDialogState
 
   Color _getConfettiColor(int index) {
     final colors = [
-      AppColors.primary,
-      AppColors.secondary,
-      AppColors.sage,
+      context.palette.gold,
+      context.palette.terracotta,
+      context.palette.goldPressed,
       AppColors.pink,
       AppColors.lavender,
       AppColors.dustyRose,
@@ -839,17 +839,17 @@ class _GoalCompletionCelebrationDialogState
       width: 300,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.palette.ceramic,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.sage.withValues(alpha: 0.4),
+            color: context.palette.goldPressed.withValues(alpha: 0.4),
             blurRadius: 30,
             spreadRadius: 5,
           ),
         ],
         border: Border.all(
-          color: AppColors.sage.withValues(alpha: 0.3),
+          color: context.palette.goldPressed.withValues(alpha: 0.3),
           width: 2,
         ),
       ),
@@ -861,20 +861,20 @@ class _GoalCompletionCelebrationDialogState
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppColors.sage.withValues(alpha: 0.15),
+              color: context.palette.goldPressed.withValues(alpha: 0.15),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.sage.withValues(alpha: 0.4),
+                  color: context.palette.goldPressed.withValues(alpha: 0.4),
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),
               ],
             ),
-            child: const Icon(
+            child: Icon(
               Icons.celebration_rounded,
               size: 48,
-              color: AppColors.sage,
+              color: context.palette.goldPressed,
             ),
           ),
           const SizedBox(height: 20),
@@ -883,7 +883,7 @@ class _GoalCompletionCelebrationDialogState
             '恭喜达成目标！',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.sage,
+              color: context.palette.goldPressed,
             ),
             textAlign: TextAlign.center,
           ),
@@ -892,13 +892,13 @@ class _GoalCompletionCelebrationDialogState
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.sage.withValues(alpha: 0.1),
+              color: context.palette.goldPressed.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               widget.completedGoal.title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppColors.textPrimary,
+                color: context.palette.ink,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
@@ -909,7 +909,7 @@ class _GoalCompletionCelebrationDialogState
           Text(
             '你已完成所有任务！\n继续加油，保持这个势头！',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
+              color: context.palette.mutedInk,
               height: 1.5,
             ),
             textAlign: TextAlign.center,
@@ -921,7 +921,7 @@ class _GoalCompletionCelebrationDialogState
             child: ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.sage,
+                backgroundColor: context.palette.goldPressed,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -965,10 +965,10 @@ class _TodoItemCard extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: todo.isCompleted
-                    ? AppColors.textHint
+                    ? context.palette.hintInk
                     : (todo.isAIGenerated
                           ? goalColor
-                          : AppColors.textSecondary),
+                          : context.palette.mutedInk),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -985,8 +985,8 @@ class _TodoItemCard extends StatelessWidget {
                           ? TextDecoration.lineThrough
                           : null,
                       color: todo.isCompleted
-                          ? AppColors.textHint
-                          : AppColors.textPrimary,
+                          ? context.palette.hintInk
+                          : context.palette.ink,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -1013,32 +1013,32 @@ class _TodoItemCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                       ],
-                      const Icon(
+                      Icon(
                         Icons.schedule_rounded,
                         size: 12,
-                        color: AppColors.textHint,
+                        color: context.palette.hintInk,
                       ),
                       const SizedBox(width: 2),
                       Text(
                         _formattedDate,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
-                          color: AppColors.textHint,
+                          color: context.palette.hintInk,
                         ),
                       ),
                       if (todo.estimatedMinutes != null) ...[
                         const SizedBox(width: 8),
-                        const Icon(
+                        Icon(
                           Icons.timer_outlined,
                           size: 12,
-                          color: AppColors.textHint,
+                          color: context.palette.hintInk,
                         ),
                         const SizedBox(width: 2),
                         Text(
                           '${todo.estimatedMinutes}分钟',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
-                            color: AppColors.textHint,
+                            color: context.palette.hintInk,
                           ),
                         ),
                       ],
@@ -1048,15 +1048,15 @@ class _TodoItemCard extends StatelessWidget {
               ),
             ),
             if (todo.isCompleted)
-              const Icon(
+              Icon(
                 Icons.check_circle_rounded,
-                color: AppColors.sage,
+                color: context.palette.goldPressed,
                 size: 24,
               )
             else
-              const Icon(
+              Icon(
                 Icons.radio_button_unchecked_rounded,
-                color: AppColors.border,
+                color: context.palette.hairline,
                 size: 24,
               ),
           ],
@@ -1103,9 +1103,9 @@ class _AISplitConfirmationSheetState
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: context.palette.canvas,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         children: [
@@ -1115,7 +1115,7 @@ class _AISplitConfirmationSheetState
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.border,
+              color: context.palette.hairline,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -1128,12 +1128,12 @@ class _AISplitConfirmationSheetState
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.secondary.withValues(alpha: 0.15),
+                    color: context.palette.terracotta.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.auto_awesome_rounded,
-                    color: AppColors.secondary,
+                    color: context.palette.terracotta,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -1151,9 +1151,9 @@ class _AISplitConfirmationSheetState
                         hasLocalGeneratedTodos
                             ? '共 ${splitState.generatedTodos.length} 个任务，本地生成'
                             : '共 ${splitState.generatedTodos.length} 个任务',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.textSecondary,
+                          color: context.palette.mutedInk,
                         ),
                       ),
                     ],
@@ -1175,17 +1175,24 @@ class _AISplitConfirmationSheetState
               margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
+                color: Theme.of(
+                  context,
+                ).colorScheme.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.error_outline, color: AppColors.error),
+                  Icon(
+                    Icons.error_outline,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       splitState.errorMessage!,
-                      style: const TextStyle(color: AppColors.error),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -1210,7 +1217,7 @@ class _AISplitConfirmationSheetState
                         Text(
                           splitState.isLoading ? 'AI 正在生成，任务会逐条出现' : '暂无生成的任务',
                           style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: AppColors.textSecondary),
+                              ?.copyWith(color: context.palette.mutedInk),
                         ),
                       ],
                     ),
@@ -1253,7 +1260,7 @@ class _AISplitConfirmationSheetState
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: context.palette.ceramic,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
@@ -1296,15 +1303,15 @@ class _AISplitConfirmationSheetState
                               if (success && context.mounted) {
                                 Navigator.of(context).pop();
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('任务已生成并保存'),
-                                    backgroundColor: AppColors.primary,
+                                  SnackBar(
+                                    content: const Text('任务已生成并保存'),
+                                    backgroundColor: context.palette.gold,
                                   ),
                                 );
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: context.palette.gold,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
@@ -1336,7 +1343,7 @@ class _AISplitConfirmationSheetState
         return Color(int.parse('FF$hex', radix: 16));
       } catch (_) {}
     }
-    return AppColors.primary;
+    return context.palette.gold;
   }
 }
 
@@ -1417,9 +1424,12 @@ class _GeneratedTodoCard extends StatelessWidget {
                 ),
                 if (todo.isLocalGenerated) ...[
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     '本地生成',
-                    style: TextStyle(fontSize: 12, color: AppColors.textHint),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.palette.hintInk,
+                    ),
                   ),
                 ],
                 const Spacer(),
@@ -1427,7 +1437,7 @@ class _GeneratedTodoCard extends StatelessWidget {
                   onPressed: onRemove,
                   icon: const Icon(Icons.delete_outline_rounded),
                   iconSize: 20,
-                  color: AppColors.error,
+                  color: Theme.of(context).colorScheme.error,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
@@ -1514,22 +1524,22 @@ class _GeneratedTodoCard extends StatelessWidget {
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: context.palette.hairline),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.calendar_today_rounded,
                             size: 18,
-                            color: AppColors.textSecondary,
+                            color: context.palette.mutedInk,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             _formattedDate,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
-                              color: AppColors.textPrimary,
+                              color: context.palette.ink,
                             ),
                           ),
                         ],
@@ -1545,15 +1555,15 @@ class _GeneratedTodoCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: context.palette.hairline),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.timer_outlined,
                           size: 18,
-                          color: AppColors.textSecondary,
+                          color: context.palette.mutedInk,
                         ),
                         const SizedBox(width: 8),
                         SizedBox(
@@ -1574,11 +1584,11 @@ class _GeneratedTodoCard extends StatelessWidget {
                             },
                           ),
                         ),
-                        const Text(
+                        Text(
                           '分钟',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.textSecondary,
+                            color: context.palette.mutedInk,
                           ),
                         ),
                       ],

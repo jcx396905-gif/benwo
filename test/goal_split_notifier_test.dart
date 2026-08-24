@@ -31,7 +31,6 @@ void main() {
     final todos = await notifier.generateTodosFromText(
       input:
           'I will visit my middle school teacher at 10:30, go home at 11:00, and pick up cake at 12:00.',
-      userId: 1,
       defaultDate: DateTime(2026, 6, 8),
     );
 
@@ -63,7 +62,6 @@ void main() {
 
     final todos = await notifier.generateTodosFromText(
       input: 'Pick up package at 18:20:30.',
-      userId: 1,
       defaultDate: DateTime(2026, 6, 8),
     );
 
@@ -89,7 +87,6 @@ void main() {
 
     final todos = await notifier.generateTodosFromText(
       input: '我 10 点钟要睡觉',
-      userId: 1,
       defaultDate: DateTime(2026, 6, 8),
     );
 
@@ -116,7 +113,6 @@ void main() {
 
       final todos = await notifier.generateTodosFromText(
         input: '我 10 点钟要睡觉',
-        userId: 1,
         defaultDate: DateTime(2026, 6, 8),
       );
 
@@ -144,7 +140,6 @@ void main() {
 
     final todos = await notifier.generateTodosFromText(
       input: '上午9点写作业，下午3点半去健身，晚上九点背单词',
-      userId: 1,
       defaultDate: DateTime(2026, 6, 8),
     );
 
@@ -166,7 +161,6 @@ void main() {
       expect(
         () => notifier.generateTodosFromText(
           input: 'go out for fun',
-          userId: 1,
           defaultDate: DateTime(2026, 6, 8),
         ),
         throwsA(isA<DioException>()),
@@ -184,7 +178,6 @@ void main() {
     expect(
       () => notifier.generateTodosFromText(
         input: 'go out for fun',
-        userId: 1,
         defaultDate: DateTime(2026, 6, 8),
       ),
       throwsA(isA<Exception>()),
@@ -214,7 +207,6 @@ void main() {
 
       final todos = await notifier.generateTodosFromText(
         input: 'write homework',
-        userId: 1,
         defaultDate: DateTime(2026, 6, 8),
       );
 
@@ -240,7 +232,6 @@ void main() {
 
     final todos = await notifier.generateTodosFromText(
       input: 'wash clothes and clean desk',
-      userId: 1,
       defaultDate: DateTime(2026, 6, 8),
     );
 
@@ -262,7 +253,6 @@ void main() {
       expect(
         () => notifier.generateTodosFromText(
           input: 'wash clothes and clean desk',
-          userId: 1,
           defaultDate: DateTime(2026, 6, 8),
         ),
         throwsA(isA<TimeoutException>()),
@@ -291,7 +281,6 @@ void main() {
 
       await notifier.generateTodosFromText(
         input: 'wash clothes and clean desk',
-        userId: 1,
         defaultDate: DateTime(2026, 6, 8),
       );
 
@@ -309,17 +298,9 @@ void main() {
       _FakeTodoRepository(),
       _FakeProfileRepository(
         profile: UserProfileModel()
-          ..userId = 1
-          ..name = 'JCX'
-          ..age = 18
-          ..occupation = 'student'
-          ..region = 'Hangzhou'
-          ..mbti = 'INTJ'
-          ..communicationStyle = '鼓励型'
-          ..bestWorkTime = 'night'
-          ..challenges = '拖延症'
-          ..changeTimeframeMonths = 3
-          ..hasCompletedOnboarding = true
+          ..communicationStyle = '分析清晰'
+          ..bestWorkTime = '夜晚'
+          ..taskPace = '轻松小步'
           ..createdAt = DateTime(2026, 6, 8),
       ),
     );
@@ -327,23 +308,42 @@ void main() {
     await expectLater(
       () => notifier.generateTodosFromText(
         input: 'run at 20:00',
-        userId: 1,
         defaultDate: DateTime(2026, 6, 8),
       ),
       throwsA(isA<AiSplitException>()),
     );
 
     expect(apiClient.lastPrompt, contains('用户画像'));
-    expect(apiClient.lastPrompt, contains('JCX'));
-    expect(apiClient.lastPrompt, contains('18'));
-    expect(apiClient.lastPrompt, contains('student'));
-    expect(apiClient.lastPrompt, contains('Hangzhou'));
-    expect(apiClient.lastPrompt, contains('INTJ'));
-    expect(apiClient.lastPrompt, contains('鼓励型'));
-    expect(apiClient.lastPrompt, contains('night'));
-    expect(apiClient.lastPrompt, contains('拖延症'));
-    expect(apiClient.lastPrompt, contains('3个月'));
+    expect(apiClient.lastPrompt, contains('分析清晰'));
+    expect(apiClient.lastPrompt, contains('夜晚'));
+    expect(apiClient.lastPrompt, contains('轻松小步'));
+    expect(apiClient.lastPrompt, isNot(contains('MBTI')));
   });
+
+  test(
+    'free text prompt omits profile section when profile is empty',
+    () async {
+      final apiClient = _FakeDeepSeekApiClient(response: '{"todos": []}');
+      final notifier = GoalSplitNotifier(
+        apiClient,
+        _FakeTodoRepository(),
+        _FakeProfileRepository(profile: UserProfileModel()),
+      );
+
+      await expectLater(
+        () => notifier.generateTodosFromText(
+          input: '整理书桌',
+          defaultDate: DateTime(2026, 6, 8),
+        ),
+        throwsA(isA<AiSplitException>()),
+      );
+
+      expect(apiClient.lastPrompt, isNot(contains('用户画像：')));
+      expect(apiClient.lastPrompt, isNot(contains('沟通风格：')));
+      expect(apiClient.lastPrompt, isNot(contains('最适合的工作时间：')));
+      expect(apiClient.lastPrompt, isNot(contains('任务节奏：')));
+    },
+  );
 
   test('goal split uses cloud result instead of local replacement', () async {
     final notifier = GoalSplitNotifier(
@@ -457,7 +457,6 @@ BigGoalModel _goal({
 }) {
   return BigGoalModel()
     ..id = 1
-    ..userId = 1
     ..title = title
     ..description = description
     ..targetDate = targetDate ?? DateTime(2026, 6, 15)
@@ -510,63 +509,31 @@ class _FakeProfileRepository implements UserProfileRepository {
   final UserProfileModel? profile;
 
   @override
-  Future<void> completeOnboarding(int userId) async {}
+  Future<void> clearProfile() async {}
 
   @override
-  Future<void> deleteProfile(int userId) async {}
-
-  @override
-  Future<UserProfileModel?> getProfileByUserId(int userId) async => profile;
+  Future<UserProfileModel?> getProfile() async => profile;
 
   @override
   Future<UserProfileModel> saveProfile({
-    required int userId,
-    String? name,
-    int? age,
-    String? occupation,
-    String? region,
-    String? mbti,
     String? communicationStyle,
-    String? motivationSensitivity,
     String? bestWorkTime,
-    String? stressResponse,
-    String? socialPreference,
-    String? challenges,
-    String? lifeStatus,
-    int? changeTimeframeMonths,
-    String? threeChanges,
-    bool? hasCompletedOnboarding,
+    String? taskPace,
   }) async {
     return UserProfileModel()
-      ..userId = userId
-      ..name = name ?? ''
-      ..age = age
-      ..occupation = occupation
-      ..region = region
-      ..mbti = mbti
       ..communicationStyle = communicationStyle
-      ..motivationSensitivity = motivationSensitivity
       ..bestWorkTime = bestWorkTime
-      ..stressResponse = stressResponse
-      ..socialPreference = socialPreference
-      ..challenges = challenges
-      ..lifeStatus = lifeStatus
-      ..changeTimeframeMonths = changeTimeframeMonths
-      ..threeChanges = threeChanges
-      ..hasCompletedOnboarding = hasCompletedOnboarding ?? false
+      ..taskPace = taskPace
       ..createdAt = DateTime(2026, 6, 8);
   }
 
   @override
-  Stream<UserProfileModel?> watchProfileByUserId(int userId) {
-    return Stream.value(profile);
-  }
+  Stream<UserProfileModel?> watchProfile() => Stream.value(profile);
 }
 
 class _FakeTodoRepository implements TodoItemRepository {
   @override
   Future<TodoItemModel> createTodo({
-    required int userId,
     required String content,
     int? goalId,
     bool isAIGenerated = false,
@@ -577,7 +544,6 @@ class _FakeTodoRepository implements TodoItemRepository {
   }) async {
     return TodoItemModel()
       ..id = 1
-      ..userId = userId
       ..content = content
       ..goalId = goalId
       ..isAIGenerated = isAIGenerated
@@ -601,12 +567,10 @@ class _FakeTodoRepository implements TodoItemRepository {
   Future<TodoItemModel?> getTodoById(int id) async => null;
 
   @override
-  Future<List<TodoItemModel>> getTodosByDate(int userId, DateTime date) async =>
-      const [];
+  Future<List<TodoItemModel>> getTodosByDate(DateTime date) async => const [];
 
   @override
   Future<List<TodoItemModel>> getTodosByDateRange(
-    int userId,
     DateTime startDate,
     DateTime endDate,
   ) async => const [];
@@ -615,13 +579,13 @@ class _FakeTodoRepository implements TodoItemRepository {
   Future<List<TodoItemModel>> getTodosByGoalId(int goalId) async => const [];
 
   @override
-  Future<List<TodoItemModel>> getTodosByUserId(int userId) async => const [];
+  Future<List<TodoItemModel>> getTodos() async => const [];
 
   @override
-  Future<List<TodoItemModel>> getIncompleteTodos(int userId) async => const [];
+  Future<List<TodoItemModel>> getIncompleteTodos() async => const [];
 
   @override
-  Future<List<TodoItemModel>> getCompletedTodos(int userId) async => const [];
+  Future<List<TodoItemModel>> getCompletedTodos() async => const [];
 
   @override
   Future<void> uncompleteTodo(int todoId) async {}
@@ -630,12 +594,12 @@ class _FakeTodoRepository implements TodoItemRepository {
   Future<void> updateTodo(TodoItemModel todo) async {}
 
   @override
-  Stream<List<TodoItemModel>> watchTodosByDate(int userId, DateTime date) {
+  Stream<List<TodoItemModel>> watchTodosByDate(DateTime date) {
     return const Stream.empty();
   }
 
   @override
-  Stream<List<TodoItemModel>> watchTodosByUserId(int userId) {
+  Stream<List<TodoItemModel>> watchTodos() {
     return const Stream.empty();
   }
 }
