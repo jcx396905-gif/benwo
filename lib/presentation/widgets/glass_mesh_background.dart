@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
 
-/// iOS 26 风格柔和渐变背景: 让 Liquid Glass 卡片有内容可折射/模糊。
-/// 叠加 2-3 个大半径径向渐变色斑, 色调取自 app 大地色系, 保持低饱和不抢前景。
+/// iOS 26 风格 mesh 渐变背景: 让 Liquid Glass 卡片有内容可折射/模糊。
 class GlassMeshBackground extends StatelessWidget {
   final Widget child;
 
@@ -10,45 +8,40 @@ class GlassMeshBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.palette;
     return Container(
-      decoration: BoxDecoration(
-        color: palette.canvas,
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            palette.canvas,
-            palette.gold.withValues(alpha: 0.06),
-            palette.canvas,
+            Color(0xFFE8DCC8),
+            Color(0xFFF2E6D8),
+            Color(0xFFE5D9CF),
+            Color(0xFFEDDFC9),
           ],
         ),
       ),
       child: Stack(
         children: [
-          Positioned(
-            top: -80,
-            right: -60,
-            child: _Blob(
-              size: 320,
-              color: palette.gold.withValues(alpha: 0.22),
-            ),
-          ),
-          Positioned(
-            top: 280,
-            left: -100,
-            child: _Blob(
-              size: 360,
-              color: palette.terracotta.withValues(alpha: 0.14),
-            ),
-          ),
-          Positioned(
-            bottom: -60,
+          const Positioned(
+            top: -60,
             right: -40,
-            child: _Blob(
-              size: 300,
-  color: AppColors.lavender.withValues(alpha: 0.10),
-            ),
+            child: _Blob(size: 380, color: const Color(0xFFD9A441), alpha: 0.45),
+          ),
+          const Positioned(
+            top: 300,
+            left: -120,
+            child: _Blob(size: 420, color: const Color(0xFFC96F4A), alpha: 0.38),
+          ),
+          const Positioned(
+            bottom: -80,
+            right: -80,
+            child: _Blob(size: 400, color: const Color(0xFF8B7E9D), alpha: 0.32),
+          ),
+          const Positioned(
+            bottom: 180,
+            left: 60,
+            child: _Blob(size: 260, color: const Color(0xFFC5A66B), alpha: 0.35),
           ),
           child,
         ],
@@ -60,8 +53,9 @@ class GlassMeshBackground extends StatelessWidget {
 class _Blob extends StatelessWidget {
   final double size;
   final Color color;
+  final double alpha;
 
-  const _Blob({required this.size, required this.color});
+  const _Blob({required this.size, required this.color, required this.alpha});
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +66,7 @@ class _Blob extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
-            colors: [color, color.withValues(alpha: 0)],
+            colors: [color.withValues(alpha: alpha), color.withValues(alpha: 0)],
           ),
         ),
       ),
