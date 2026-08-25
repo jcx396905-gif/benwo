@@ -22,7 +22,8 @@ class GoalsListPage extends ConsumerWidget {
           onPressed: () => context.go('/home'),
         ),
       ),
-      body: const GlassMeshBackground(child: _GoalsListContent()),
+extendBody: true,
+            body: const GlassMeshBackground(child: _GoalsListContent()),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.go('/goals/create'),
         child: const Icon(Icons.add_rounded),

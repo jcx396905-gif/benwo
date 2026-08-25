@@ -84,7 +84,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         title: const Text('设置'),
         backgroundColor: Colors.transparent,
       ),
-      body: GlassMeshBackground(
+extendBody: true,
+            body: GlassMeshBackground(
         child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [

@@ -119,7 +119,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
           ],
         ),
       ),
-      body: GlassMeshBackground(
+extendBody: true,
+            body: GlassMeshBackground(
         child: TabBarView(
           controller: _tabController,
         children: [

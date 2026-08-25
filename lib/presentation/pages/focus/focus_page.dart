@@ -90,7 +90,8 @@ class _FocusPageState extends ConsumerState<FocusPage> {
           ),
         ],
       ),
-      body: GlassMeshBackground(child: _buildBody(today)),
+extendBody: true,
+            body: GlassMeshBackground(child: _buildBody(today)),
       bottomNavigationBar: AppGlassNavBar(index: 2),
     );
   }

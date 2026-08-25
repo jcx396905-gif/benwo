@@ -87,6 +87,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ],
       ),
+      extendBody: true,
       body: GlassMeshBackground(child: _buildBody(today)),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddTodoDialog(context),
