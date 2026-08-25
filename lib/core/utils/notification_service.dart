@@ -112,7 +112,7 @@ class NotificationService {
       importance: Importance.high,
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
-      color: Color(0xFF9A621C),
+      color: Color(0xFF1A1A1A),
       visibility: NotificationVisibility.public,
       category: AndroidNotificationCategory.reminder,
     );
@@ -318,7 +318,7 @@ class NotificationService {
       importance: Importance.high,
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
-      color: Color(0xFF9A621C),
+      color: Color(0xFF1A1A1A),
       visibility: NotificationVisibility.public,
       category: AndroidNotificationCategory.reminder,
     );

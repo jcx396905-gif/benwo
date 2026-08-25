@@ -32,17 +32,17 @@ class BenWoPalette extends ThemeExtension<BenWoPalette> {
   final Color shadow;
 
   static const light = BenWoPalette(
-    canvas: Color(0xFFF4EFE5),
-    ceramic: Color(0xFFFFFBF3),
-    ceramicRaised: Color(0xFFECE3D4),
-    ink: Color(0xFF27231F),
-    mutedInk: Color(0xFF625B52),
-    hintInk: Color(0xFF887F73),
-    hairline: Color(0xFFD7CCBC),
-    gold: Color(0xFF9A621C),
-    goldPressed: Color(0xFF774811),
-    terracotta: Color(0xFFA95F43),
-    glass: Color(0xC9FFF9EF),
+    canvas: Color(0xFFF2EDE3),
+    ceramic: Color(0xFFF8F6F1),
+    ceramicRaised: Color(0xFFE9E1D2),
+    ink: Color(0xFF1A1A1A),
+    mutedInk: Color(0xFF8F8F8B),
+    hintInk: Color(0xFFA89F90),
+    hairline: Color(0xFFDDD6C8),
+    gold: Color(0xFF1A1A1A),
+    goldPressed: Color(0xFF000000),
+    terracotta: Color(0xFFA89F90),
+    glass: Color(0xC9F8F6F1),
     glassBorder: Color(0xBFFFFFFF),
     shadow: Color(0x332D251D),
   );
@@ -125,14 +125,14 @@ extension BenWoThemeContext on BuildContext {
 class AppColors {
   AppColors._();
 
-  static const primary = Color(0xFF9A621C);
-  static const primaryLight = Color(0xFFE8CE9D);
-  static const primaryDark = Color(0xFF774811);
-  static const onPrimary = Color(0xFFFFFFFF);
-  static const secondary = Color(0xFFA95F43);
-  static const secondaryLight = Color(0xFFE7C0AE);
-  static const secondaryDark = Color(0xFF7C402C);
-  static const onSecondary = Color(0xFFFFFFFF);
+  static const primary = Color(0xFF1A1A1A);
+  static const primaryLight = Color(0xFFE9E1D2);
+  static const primaryDark = Color(0xFF000000);
+  static const onPrimary = Color(0xFFF8F6F1);
+  static const secondary = Color(0xFFA89F90);
+  static const secondaryLight = Color(0xFFDDD6C8);
+  static const secondaryDark = Color(0xFF8F8F8B);
+  static const onSecondary = Color(0xFF1A1A1A);
   static const background = Color(0xFFF4EFE5);
   static const surface = Color(0xFFFFFBF3);
   static const surfaceVariant = Color(0xFFECE3D4);
@@ -154,13 +154,13 @@ class AppColors {
   static const divider = Color(0xFFE0D6C8);
 
   static const goalColors = <Color>[
-    Color(0xFF9A621C),
-    Color(0xFFA95F43),
-    Color(0xFFA4673E),
-    Color(0xFF768899),
-    Color(0xFF8B7E9D),
-    Color(0xFF9B6B64),
-    Color(0xFF6E5142),
-    Color(0xFFC5A66B),
+    Color(0xFF1A1A1A),
+    Color(0xFFA89F90),
+    Color(0xFF8F8F8B),
+    Color(0xFFE9E1D2),
+    Color(0xFF625B52),
+    Color(0xFFD7CCBC),
+    Color(0xFFF8F6F1),
+    Color(0xFFDDD6C8),
   ];
 }

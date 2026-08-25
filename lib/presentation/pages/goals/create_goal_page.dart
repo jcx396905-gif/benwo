@@ -27,14 +27,14 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
 
   // Color options for goal
   final List<Map<String, String>> _colorOptions = [
-    {'name': '金铜', 'color': '#9A621C'},
-    {'name': '赭石', 'color': '#A4673E'},
-    {'name': '陶土', 'color': '#A95F43'},
-    {'name': '灰蓝', 'color': '#768899'},
-    {'name': '薰衣草', 'color': '#8B7E9D'},
-    {'name': '玫瑰褐', 'color': '#9B6B64'},
-    {'name': '可可', 'color': '#6E5142'},
-    {'name': '沙色', 'color': '#C5A66B'},
+    {'name': '墨黑', 'color': '#1A1A1A'},
+    {'name': '灰褐', 'color': '#A89F90'},
+    {'name': '中灰', 'color': '#8F8F8B'},
+    {'name': '浅卡其', 'color': '#E9E1D2'},
+    {'name': '深褐灰', 'color': '#625B52'},
+    {'name': '米线', 'color': '#D7CCBC'},
+    {'name': '米白', 'color': '#F8F6F1'},
+    {'name': '浅米', 'color': '#DDD6C8'},
   ];
 
   String? _selectedColor;
