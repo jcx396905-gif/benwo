@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_glass_nav_bar.dart';
 import '../../widgets/glass_mesh_background.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/big_goal_model.dart';
-import '../../widgets/smartisan_components.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 class GoalsListPage extends ConsumerWidget {
@@ -32,27 +32,7 @@ class GoalsListPage extends ConsumerWidget {
   }
 
   Widget _buildBottomNavBar(BuildContext context) {
-    return SmartisanGlassBottomNavigationBar(
-      currentIndex: 1,
-      onTap: (index) {
-        switch (index) {
-          case 0:
-            context.go('/home');
-            break;
-          case 1:
-            break;
-          case 2:
-            context.go('/focus');
-            break;
-          case 3:
-            context.go('/calendar');
-            break;
-          case 4:
-            context.go('/settings');
-            break;
-        }
-      },
-    );
+return AppGlassNavBar(index: 1);
   }
 }
 

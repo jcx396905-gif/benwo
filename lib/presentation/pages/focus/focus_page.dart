@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../widgets/app_glass_nav_bar.dart';
 import '../../widgets/glass_mesh_background.dart';
 
 import 'package:flutter/material.dart';
@@ -15,7 +16,6 @@ import '../../../data/models/pomodoro_plan_model.dart';
 import '../../../data/models/saved_pomodoro_list_model.dart';
 import '../../../data/models/pomodoro_session_model.dart';
 import '../../../data/models/pomodoro_task_model.dart';
-import '../../widgets/smartisan_components.dart';
 
 DateTime _focusDateOnly(DateTime date) =>
     DateTime(date.year, date.month, date.day);
@@ -91,19 +91,7 @@ class _FocusPageState extends ConsumerState<FocusPage> {
         ],
       ),
       body: GlassMeshBackground(child: _buildBody(today)),
-      bottomNavigationBar: SmartisanGlassBottomNavigationBar(
-        currentIndex: 2,
-        onTap: (index) {
-          const routes = [
-            '/home',
-            '/goals',
-            '/focus',
-            '/calendar',
-            '/settings',
-          ];
-          if (index != 2) context.go(routes[index]);
-        },
-      ),
+      bottomNavigationBar: AppGlassNavBar(index: 2),
     );
   }
 

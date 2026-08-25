@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_glass_nav_bar.dart';
 import '../../widgets/glass_mesh_background.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,7 +11,6 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/notification_service.dart';
 import '../../../core/utils/todo_reminder_scheduler.dart';
 import '../../widgets/apple_components.dart';
-import '../../widgets/liquid_glass.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -177,28 +177,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         ],
       ),
       ),
-      bottomNavigationBar: GlassTabBar.bottom(
-        selectedIndex: 4,
-        showIndicator: false,
-        glowOpacity: 0,
-        onTabSelected: (index) {
-          const routes = [
-            '/home',
-            '/goals',
-            '/focus',
-            '/calendar',
-            '/settings',
-          ];
-          if (index != 4) context.go(routes[index]);
-        },
-        tabs: [
-          const GlassTab(icon: Icon(Icons.home_rounded), label: '首页'),
-          const GlassTab(icon: Icon(Icons.flag_rounded), label: '目标'),
-          const GlassTab(icon: Icon(Icons.timer_rounded), label: '专注'),
-          const GlassTab(icon: Icon(Icons.calendar_month_rounded), label: '日历'),
-          const GlassTab(icon: Icon(Icons.settings_rounded), label: '设置'),
-        ],
-      ),
+      bottomNavigationBar: AppGlassNavBar(index: 4),
     );
   }
 

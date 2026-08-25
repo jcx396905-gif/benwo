@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/app_glass_nav_bar.dart';
 import '../../widgets/glass_mesh_background.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +10,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/todo_reminder_scheduler.dart';
 import '../../../data/models/big_goal_model.dart';
 import '../../../data/models/todo_item_model.dart';
-import '../../widgets/smartisan_components.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import '_completed_history_sheet.dart';
 
@@ -132,27 +132,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
         ],
       ),
       ),
-      bottomNavigationBar: SmartisanGlassBottomNavigationBar(
-        currentIndex: 3,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go('/home');
-              break;
-            case 1:
-              context.go('/goals');
-              break;
-            case 2:
-              context.go('/focus');
-              break;
-            case 3:
-              break; // Already on calendar
-            case 4:
-              context.go('/settings');
-              break;
-          }
-        },
-      ),
+      bottomNavigationBar: AppGlassNavBar(index: 3),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../widgets/app_glass_nav_bar.dart';
 import '../../widgets/glass_mesh_background.dart';
 
 import 'package:flutter/material.dart';
@@ -13,7 +14,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/todo_reminder_scheduler.dart';
 import '../../../data/models/big_goal_model.dart';
 import '../../../data/models/todo_item_model.dart';
-import '../../widgets/smartisan_components.dart';
 
 DateTime _homeDateOnly(DateTime date) =>
     DateTime(date.year, date.month, date.day);
@@ -563,27 +563,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Widget _buildBottomNavBar(BuildContext context) {
-    return SmartisanGlassBottomNavigationBar(
-      currentIndex: 0,
-      onTap: (index) {
-        switch (index) {
-          case 0:
-            break; // Already on home
-          case 1:
-            context.go('/goals');
-            break;
-          case 2:
-            context.go('/focus');
-            break;
-          case 3:
-            context.go('/calendar');
-            break;
-          case 4:
-            context.go('/settings');
-            break;
-        }
-      },
-    );
+return AppGlassNavBar(index: 0);
   }
 
   Future<void> _toggleTodoComplete(TodoItemModel todo) async {
