@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_colors.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 /// Create Goal Page - AI-guided goal creation interface
 class CreateGoalPage extends ConsumerStatefulWidget {
@@ -185,19 +186,8 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header
-                Container(
+                GlassCard(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        context.palette.gold.withValues(alpha: 0.1),
-                        context.palette.terracotta.withValues(alpha: 0.1),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
                   child: Row(
                     children: [
                       Container(
@@ -379,13 +369,14 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? context.palette.gold
-                              : context.palette.ceramicRaised,
+                              : context.palette.ceramicRaised.withValues(alpha: 0.55),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isSelected
                                 ? context.palette.gold
-                                : context.palette.hairline,
+                                : context.palette.hairline.withValues(alpha: 0.6),
                           ),
+                          backgroundBlendMode: isSelected ? null : BlendMode.luminosity,
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
@@ -469,13 +460,14 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? context.palette.terracotta
-                              : context.palette.ceramicRaised,
+                              : context.palette.ceramicRaised.withValues(alpha: 0.55),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isSelected
                                 ? context.palette.terracotta
-                                : context.palette.hairline,
+                                : context.palette.hairline.withValues(alpha: 0.6),
                           ),
+                          backgroundBlendMode: isSelected ? null : BlendMode.luminosity,
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
@@ -614,37 +606,20 @@ class _CreateGoalPageState extends ConsumerState<CreateGoalPage> {
                 ],
 
                 // Save Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _saveGoal,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: context.palette.gold,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 2,
+                if (_isLoading)
+                  const SizedBox(
+                    width: 52,
+                    height: 52,
+                    child: Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Text(
-                            '创建目标',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                  ),
-                ),
+                  )
+                else
+                  GlassButton(
+                        label: '创建目标',
+                        icon: const Icon(Icons.flag_rounded),
+                        onTap: _saveGoal,
+                      ),
 
                 const SizedBox(height: 16),
               ],

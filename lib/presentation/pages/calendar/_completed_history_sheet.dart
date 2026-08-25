@@ -54,8 +54,13 @@ class _CompletedHistoryContentState
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
-        color: context.palette.canvas,
+        color: context.palette.canvas.withValues(alpha: 0.92),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        border: Border(
+          top: BorderSide(
+            color: context.palette.hairline.withValues(alpha: 0.6),
+          ),
+        ),
       ),
       child: Column(
         children: [

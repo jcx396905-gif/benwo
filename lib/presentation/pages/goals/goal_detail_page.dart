@@ -8,6 +8,7 @@ import '../../../application/goal/goal_completion_notifier.dart';
 import '../../../application/goal/goal_split_notifier.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_colors.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import '../../../data/models/big_goal_model.dart';
 import '../../../data/models/todo_item_model.dart';
 
@@ -385,31 +386,10 @@ class _GoalDetailContent extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Goal Header Card
-          Card(
-            elevation: 4,
-            shadowColor: _goalColor(context).withValues(alpha: 0.3),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(
-                color: _goalColor(context).withValues(alpha: 0.3),
-                width: 1.5,
-              ),
-            ),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    _goalColor(context).withValues(alpha: 0.1),
-                    _goalColor(context).withValues(alpha: 0.05),
-                  ],
-                ),
-              ),
-              child: Column(
+          GlassCard(
+            margin: EdgeInsets.zero,
+            padding: const EdgeInsets.all(20),
+            child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -520,7 +500,6 @@ class _GoalDetailContent extends ConsumerWidget {
                   ],
                 ],
               ),
-            ),
           ),
 
           const SizedBox(height: 24),
@@ -630,18 +609,10 @@ class _GoalDetailContent extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: onSplitWithAI,
+                      GlassButton(
+                        label: 'AI 拆分任务',
                         icon: const Icon(Icons.auto_awesome_rounded),
-                        label: const Text('AI 拆分任务'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: context.palette.gold,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                        ),
+                        onTap: onSplitWithAI,
                       ),
                     ],
                   ),
@@ -952,13 +923,10 @@ class _TodoItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return GlassCard(
       margin: const EdgeInsets.only(bottom: 8),
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
+      padding: const EdgeInsets.all(12),
+      child: Row(
           children: [
             Container(
               width: 4,
@@ -1061,7 +1029,6 @@ class _TodoItemCard extends StatelessWidget {
               ),
           ],
         ),
-      ),
     );
   }
 }
@@ -1104,8 +1071,13 @@ class _AISplitConfirmationSheetState
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
-        color: context.palette.canvas,
+        color: context.palette.canvas.withValues(alpha: 0.92),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border(
+          top: BorderSide(
+            color: context.palette.hairline.withValues(alpha: 0.6),
+          ),
+        ),
       ),
       child: Column(
         children: [
@@ -1389,17 +1361,10 @@ class _GeneratedTodoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return GlassCard(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shadowColor: goalColor.withValues(alpha: 0.2),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: goalColor.withValues(alpha: 0.3), width: 1),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+      padding: const EdgeInsets.all(16),
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header row
@@ -1599,7 +1564,6 @@ class _GeneratedTodoCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }

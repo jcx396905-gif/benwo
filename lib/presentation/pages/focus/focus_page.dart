@@ -282,6 +282,7 @@ class _PlanContent extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => Padding(
         padding: EdgeInsets.only(
           left: 16,
@@ -289,7 +290,10 @@ class _PlanContent extends ConsumerWidget {
           top: 16,
           bottom: MediaQuery.of(context).viewInsets.bottom + 16,
         ),
-        child: Column(
+        child: GlassCard(
+          margin: EdgeInsets.zero,
+          padding: const EdgeInsets.all(20),
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -338,6 +342,7 @@ class _PlanContent extends ConsumerWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

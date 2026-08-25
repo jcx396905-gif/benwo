@@ -751,8 +751,13 @@ class _HomePageState extends ConsumerState<HomePage> {
             bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
           decoration: BoxDecoration(
-            color: context.palette.ceramic,
+            color: context.palette.ceramic.withValues(alpha: 0.92),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            border: Border(
+              top: BorderSide(
+                color: context.palette.hairline.withValues(alpha: 0.6),
+              ),
+            ),
           ),
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -1021,8 +1026,13 @@ class _HomePageState extends ConsumerState<HomePage> {
             bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
           decoration: BoxDecoration(
-            color: context.palette.ceramic,
+            color: context.palette.ceramic.withValues(alpha: 0.92),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            border: Border(
+              top: BorderSide(
+                color: context.palette.hairline.withValues(alpha: 0.6),
+              ),
+            ),
           ),
           child: SingleChildScrollView(
             child: Padding(

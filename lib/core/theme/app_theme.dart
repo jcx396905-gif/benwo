@@ -160,9 +160,12 @@ class AppTheme {
       ),
       dividerTheme: DividerThemeData(color: palette.hairline, space: 1),
       dialogTheme: DialogThemeData(
-        backgroundColor: palette.glass,
+        backgroundColor: palette.glass.withValues(alpha: 0.92),
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: palette.glassBorder.withValues(alpha: 0.5)),
+        ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: palette.glass,

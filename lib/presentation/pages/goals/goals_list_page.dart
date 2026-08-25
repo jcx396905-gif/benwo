@@ -6,6 +6,7 @@ import '../../../core/di/injection.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/big_goal_model.dart';
 import '../../widgets/smartisan_components.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 class GoalsListPage extends ConsumerWidget {
   const GoalsListPage({super.key});
@@ -165,14 +166,13 @@ class _GoalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
+    return GlassCard(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(20),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+        child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -220,14 +220,17 @@ class _GoalCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  Chip(
-                    label: Text(_statusText(goal.status)),
-                    visualDensity: VisualDensity.compact,
+                  GlassChip(
+                    label: _statusText(goal.status),
+                    icon: const Icon(
+                      Icons.flag_rounded,
+                      size: 14,
+                      color: Color(0xFF8B6F47),
+                    ),
                   ),
                 ],
               ),
             ],
-          ),
         ),
       ),
     );
@@ -273,10 +276,10 @@ class _EmptyGoalsState extends StatelessWidget {
               ).textTheme.bodyMedium?.copyWith(color: context.palette.mutedInk),
             ),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: onCreate,
+            GlassButton(
+              label: '创建目标',
               icon: const Icon(Icons.add_rounded),
-              label: const Text('创建目标'),
+              onTap: onCreate,
             ),
           ],
         ),

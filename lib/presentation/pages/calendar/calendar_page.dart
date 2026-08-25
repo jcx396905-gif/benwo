@@ -9,6 +9,7 @@ import '../../../core/utils/todo_reminder_scheduler.dart';
 import '../../../data/models/big_goal_model.dart';
 import '../../../data/models/todo_item_model.dart';
 import '../../widgets/smartisan_components.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import '_completed_history_sheet.dart';
 
 typedef _CalendarRangeParams = ({DateTime startDate, DateTime endDate});
@@ -192,18 +193,9 @@ class _DayViewContent extends ConsumerWidget {
     return Column(
       children: [
         // Date header
-        Container(
+        GlassCard(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: context.palette.ceramic,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
           child: Column(
             children: [
               Row(
@@ -499,21 +491,9 @@ class _DayViewContent extends ConsumerWidget {
   }
 
   Widget _buildGoalSummaryCard(BuildContext context, List<BigGoalModel> goals) {
-    return Container(
+    return GlassCard(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            context.palette.gold.withValues(alpha: 0.1),
-            context.palette.terracotta.withValues(alpha: 0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.palette.gold.withValues(alpha: 0.2)),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -691,29 +671,17 @@ class _DayViewContent extends ConsumerWidget {
     bool isUserCreated,
     WidgetRef ref,
   ) {
-    return Container(
+    return GlassCard(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: todo.isCompleted
-            ? context.palette.ceramicRaised.withValues(alpha: 0.5)
-            : context.palette.ceramic,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: todo.isCompleted
-              ? context.palette.hairline.withValues(alpha: 0.5)
-              : context.palette.hairline,
-        ),
-      ),
+      padding: const EdgeInsets.all(12),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(20),
           onTap: () {
             // Could open detail sheet here
           },
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
+          child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Goal color indicator
@@ -838,8 +806,7 @@ class _DayViewContent extends ConsumerWidget {
                       color: context.palette.hintInk,
                     ),
                   ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
@@ -1178,18 +1145,9 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
     return Column(
       children: [
         // Week navigation header
-        Container(
+        GlassCard(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          decoration: BoxDecoration(
-            color: context.palette.ceramic,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1215,9 +1173,9 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
         ),
 
         // Day headers
-        Container(
+        GlassCard(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-          color: context.palette.ceramicRaised.withValues(alpha: 0.3),
           child: Row(
             children: List.generate(7, (index) {
               final day = _weekStart.add(Duration(days: index));
@@ -1463,13 +1421,9 @@ class _WeekViewContentState extends ConsumerState<_WeekViewContent> {
 
             // Expanded todos for this day
             if (isExpanded && filteredTodos.isNotEmpty)
-              Container(
+              GlassCard(
                 margin: const EdgeInsets.only(left: 24, right: 8, bottom: 8),
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: context.palette.ceramicRaised.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(8),
-                ),
                 child: Column(
                   children: filteredTodos.map((todo) {
                     final goal = todo.goalId != null
@@ -1733,18 +1687,9 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
     return Column(
       children: [
         // Month navigation header
-        Container(
+        GlassCard(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          decoration: BoxDecoration(
-            color: context.palette.ceramic,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1770,9 +1715,9 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
         ),
 
         // Week day headers
-        Container(
+        GlassCard(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-          color: context.palette.ceramicRaised.withValues(alpha: 0.3),
           child: Row(
             children: List.generate(7, (index) {
               return Expanded(
@@ -2104,14 +2049,9 @@ class _MonthViewContentState extends ConsumerState<_MonthViewContent> {
     BigGoalModel? goal,
     Color goalColor,
   ) {
-    return Container(
+    return GlassCard(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: context.palette.ceramic,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: context.palette.hairline),
-      ),
       child: Row(
         children: [
           Container(
