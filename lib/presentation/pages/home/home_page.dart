@@ -208,14 +208,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            context.palette.gold.withValues(alpha: 0.1),
-            context.palette.terracotta.withValues(alpha: 0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: context.palette.canvas,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.palette.gold.withValues(alpha: 0.2)),
       ),
