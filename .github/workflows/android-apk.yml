@@ -20,6 +20,10 @@ jobs:
         with:
           channel: stable
 
+      - name: Restore gitignored API constants from example
+        run: |
+          cp lib/core/constants/api_constants.example.dart lib/core/constants/api_constants.dart
+
       - name: Create keystore from secrets
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks || echo "no keystore secret, using debug signing"
