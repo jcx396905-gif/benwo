@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../widgets/glass_mesh_background.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -86,7 +87,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ],
       ),
-      body: _buildBody(today),
+      body: GlassMeshBackground(child: _buildBody(today)),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddTodoDialog(context),
         backgroundColor: context.palette.gold,

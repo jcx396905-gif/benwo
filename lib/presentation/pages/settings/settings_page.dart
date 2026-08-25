@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/glass_mesh_background.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -83,7 +84,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         title: const Text('设置'),
         backgroundColor: Colors.transparent,
       ),
-      body: ListView(
+      body: GlassMeshBackground(
+        child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
           AppleSection(
@@ -173,6 +175,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ],
           ),
         ],
+      ),
       ),
       bottomNavigationBar: GlassTabBar.bottom(
         selectedIndex: 4,

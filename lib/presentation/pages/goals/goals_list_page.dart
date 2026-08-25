@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/glass_mesh_background.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,10 +22,7 @@ class GoalsListPage extends ConsumerWidget {
           onPressed: () => context.go('/home'),
         ),
       ),
-      body: ColoredBox(
-        color: context.palette.canvas,
-        child: const _GoalsListContent(),
-      ),
+      body: const GlassMeshBackground(child: _GoalsListContent()),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.go('/goals/create'),
         child: const Icon(Icons.add_rounded),

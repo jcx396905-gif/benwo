@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/glass_mesh_background.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -118,8 +119,9 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
+      body: GlassMeshBackground(
+        child: TabBarView(
+          controller: _tabController,
         children: [
           // Day view - with swipe navigation
           _buildDayViewWithSwipe(),
@@ -128,6 +130,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage>
           // Month view
           _buildMonthView(),
         ],
+      ),
       ),
       bottomNavigationBar: SmartisanGlassBottomNavigationBar(
         currentIndex: 3,

@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../widgets/glass_mesh_background.dart';
 
 import 'package:flutter/material.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
@@ -89,7 +90,7 @@ class _FocusPageState extends ConsumerState<FocusPage> {
           ),
         ],
       ),
-      body: _buildBody(today),
+      body: GlassMeshBackground(child: _buildBody(today)),
       bottomNavigationBar: SmartisanGlassBottomNavigationBar(
         currentIndex: 2,
         onTap: (index) {
